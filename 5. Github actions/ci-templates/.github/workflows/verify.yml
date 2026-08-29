@@ -1,0 +1,356 @@
+name: Verification (Reusable)
+
+# 이 지시서는 혼자 돌지 않는다. 프로젝트 창고에서 "불러서" 쓴다.
+on:
+  workflow_call:
+    inputs:
+      fail_on_skipped:
+        description: '건너뛴 검사가 있으면 불합격 처리할지 여부. 기본은 봐주고 표시만 함'
+        type: boolean
+        default: false
+        required: false
+
+permissions:
+  contents: read
+  pull-requests: read
+  
+jobs:
+
+  # ══════════════════════════════════════════════
+  # 검사반 1 : 기본 검사 (어떤 프로젝트든 똑같이 함)
+  # ══════════════════════════════════════════════
+  ci_fixed:
+    name: ci-fixed (기본 검사반)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 코드 내려받기
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 준비물 검사
+        shell: bash
+        run: |
+          fail=0
+          if [ ! -f Makefile ]; then
+            echo "::error::Makefile 이 없습니다. 약속 위반입니다."
+            fail=1
+          fi
+          for d in tests/dev tests/review; do
+            if [ ! -d "$d" ]; then
+              echo "::error::$d 폴더가 없습니다. 약속 위반입니다."
+              fail=1
+            fi
+          done
+          if [ -f Makefile ]; then
+            for t in setup build lint test-dev test-review; do
+              if ! make -n "$t" >/dev/null 2>&1; then
+                echo "::error::Makefile 에 '$t' 항목이 없거나 잘못됐습니다."
+                echo "::error::들여쓰기가 스페이스가 아닌 '탭'인지 확인하세요."
+                fail=1
+              fi
+            done
+          fi
+          if [ ! -f package-lock.json ] && [ ! -f yarn.lock ] && \
+             [ ! -f pnpm-lock.yaml ] && [ ! -f poetry.lock ] && \
+             [ ! -f requirements.txt ] && [ ! -f Pipfile.lock ] && \
+             [ ! -f pubspec.lock ] && [ ! -f Gemfile.lock ] && \
+             [ ! -f go.sum ] && [ ! -f Cargo.lock ]; then
+            echo "::error::부품 목록 파일이 없습니다. 빈 컴퓨터에서 재현이 불가능합니다."
+            fail=1
+          fi
+          exit $fail
+
+      - name: 비밀번호 유출 검사
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: 파이썬 설치
+        if: hashFiles('.python-version') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: ${{ hashFiles('requirements.txt') != '' && 'pip' || '' }}
+
+      - name: Node 설치
+        if: hashFiles('.nvmrc') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+
+      - name: 부품 설치
+        run: make setup
+
+      - name: 프로그램 만들기
+        run: make build
+
+      - name: 문법 검사
+        run: make lint
+
+  # ══════════════════════════════════════════════
+  # 검사반 2 : 개발AI가 만든 검사 코드 돌리기
+  # ══════════════════════════════════════════════
+  dev_tests:
+    name: dev-tests (개발AI 검사반)
+    needs: ci_fixed
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.guard.outputs.skipped }}
+      total: ${{ steps.guard.outputs.total }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        if: hashFiles('.python-version') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: ${{ hashFiles('requirements.txt') != '' && 'pip' || '' }}
+
+      - name: Node 설치
+        if: hashFiles('.nvmrc') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+
+      - name: 부품 설치
+        run: make setup
+
+      - name: 검사 실행
+        run: make test-dev
+
+      - name: 부정행위 감시
+        id: guard
+        if: always()
+        shell: bash
+        env:
+          FAIL_ON_SKIPPED: ${{ inputs.fail_on_skipped }}
+          OWNER: 개발AI
+          GLOB: reports/dev*.xml
+          EXPECT: reports/dev.xml
+        run: |
+          python3 - <<'PY'
+          import os, sys, glob, xml.etree.ElementTree as ET
+
+          def emit(k, v):
+              p = os.environ.get("GITHUB_OUTPUT")
+              if p:
+                  with open(p, "a") as f:
+                      f.write(f"{k}={v}\n")
+
+          def summary(line):
+              p = os.environ.get("GITHUB_STEP_SUMMARY")
+              if p:
+                  with open(p, "a") as f:
+                      f.write(line + "\n")
+
+          owner  = os.environ.get("OWNER", "")
+          expect = os.environ.get("EXPECT", "")
+          files  = sorted(glob.glob(os.environ.get("GLOB", "")))
+
+          if not files:
+              print(f"::error::결과지({expect})가 안 만들어졌습니다.")
+              print("::error::Makefile 의 해당 타겟이 결과지를 뽑는지 확인하세요.")
+              emit("skipped", "?"); emit("total", "?")
+              sys.exit(1)
+
+          total = skipped = failures = errors = 0
+          for f in files:
+              root  = ET.parse(f).getroot()
+              cases = list(root.iter("testcase"))
+          
+              if cases:
+                  # ▶ 답안지가 실제로 들어 있으면: 낱장을 직접 센다 (가장 정확)
+                  total    += len(cases)
+                  skipped  += sum(1 for c in cases if c.find("skipped") is not None)
+                  failures += sum(1 for c in cases if c.find("failure") is not None)
+                  errors   += sum(1 for c in cases if c.find("error")   is not None)
+              else:
+                  # ▶ 답안지가 없으면: 상자 뚜껑의 총계를 읽는다 (차선책)
+                  suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+                  for s in suites:
+                      total    += int(s.get("tests",    0) or 0)
+                      skipped  += int(s.get("skipped",  0) or 0)
+                      failures += int(s.get("failures", 0) or 0)
+                      errors   += int(s.get("errors",   0) or 0)
+
+          print(f"실행 {total}건 / 실패 {failures} / 오류 {errors} / 건너뜀 {skipped}")
+          emit("skipped", skipped); emit("total", total)
+
+          if skipped > 0:
+              print(f"::warning::건너뛴 검사 {skipped}건 — 검사되지 않은 항목입니다.")
+              summary("")
+              summary(f"> ### ⚠️ {owner} 검사반: 건너뛴 검사 **{skipped}건**")
+              summary(f"> 전체 {total}건 중 {skipped}건은 실행되지 않았습니다. 확인이 필요합니다.")
+
+          if total == 0:
+              print("::error::실행된 검사가 0건입니다. 검사도 안 하고 합격할 수 없습니다.")
+              sys.exit(1)
+
+          if skipped > 0 and os.environ.get("FAIL_ON_SKIPPED", "false").lower() == "true":
+              print("::error::건너뛴 검사가 있어 불합격 처리합니다.")
+              sys.exit(1)
+          PY
+
+      - name: 결과지 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-report
+          path: reports/
+          if-no-files-found: warn
+
+  # ══════════════════════════════════════════════
+  # 검사반 3 : 테스트AI가 만든 검사 코드 돌리기
+  # ══════════════════════════════════════════════
+  review_tests:
+    name: review-tests (테스트AI 검사반)
+    needs: ci_fixed
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      skipped: ${{ steps.guard.outputs.skipped }}
+      total: ${{ steps.guard.outputs.total }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        if: hashFiles('.python-version') != ''
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: '.python-version'
+          cache: ${{ hashFiles('requirements.txt') != '' && 'pip' || '' }}
+
+      - name: Node 설치
+        if: hashFiles('.nvmrc') != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
+
+      - name: 부품 설치
+        run: make setup
+
+      - name: 검사 실행
+        run: make test-review
+
+      - name: 부정행위 감시
+        id: guard
+        if: always()
+        shell: bash
+        env:
+          FAIL_ON_SKIPPED: ${{ inputs.fail_on_skipped }}
+          OWNER: 테스트AI
+          GLOB: reports/review*.xml
+          EXPECT: reports/review.xml
+        run: |
+          python3 - <<'PY'
+          import os, sys, glob, xml.etree.ElementTree as ET
+
+          def emit(k, v):
+              p = os.environ.get("GITHUB_OUTPUT")
+              if p:
+                  with open(p, "a") as f:
+                      f.write(f"{k}={v}\n")
+
+          def summary(line):
+              p = os.environ.get("GITHUB_STEP_SUMMARY")
+              if p:
+                  with open(p, "a") as f:
+                      f.write(line + "\n")
+
+          owner  = os.environ.get("OWNER", "")
+          expect = os.environ.get("EXPECT", "")
+          files  = sorted(glob.glob(os.environ.get("GLOB", "")))
+
+          if not files:
+              print(f"::error::결과지({expect})가 안 만들어졌습니다.")
+              print("::error::Makefile 의 해당 타겟이 결과지를 뽑는지 확인하세요.")
+              emit("skipped", "?"); emit("total", "?")
+              sys.exit(1)
+
+          total = skipped = failures = errors = 0
+          for f in files:
+              root  = ET.parse(f).getroot()
+              cases = list(root.iter("testcase"))
+          
+              if cases:
+                  # ▶ 답안지가 실제로 들어 있으면: 낱장을 직접 센다 (가장 정확)
+                  total    += len(cases)
+                  skipped  += sum(1 for c in cases if c.find("skipped") is not None)
+                  failures += sum(1 for c in cases if c.find("failure") is not None)
+                  errors   += sum(1 for c in cases if c.find("error")   is not None)
+              else:
+                  # ▶ 답안지가 없으면: 상자 뚜껑의 총계를 읽는다 (차선책)
+                  suites = [root] if root.tag == "testsuite" else list(root.iter("testsuite"))
+                  for s in suites:
+                      total    += int(s.get("tests",    0) or 0)
+                      skipped  += int(s.get("skipped",  0) or 0)
+                      failures += int(s.get("failures", 0) or 0)
+                      errors   += int(s.get("errors",   0) or 0)
+
+          print(f"실행 {total}건 / 실패 {failures} / 오류 {errors} / 건너뜀 {skipped}")
+          emit("skipped", skipped); emit("total", total)
+
+          if skipped > 0:
+              print(f"::warning::건너뛴 검사 {skipped}건 — 검사되지 않은 항목입니다.")
+              summary("")
+              summary(f"> ### ⚠️ {owner} 검사반: 건너뛴 검사 **{skipped}건**")
+              summary(f"> 전체 {total}건 중 {skipped}건은 실행되지 않았습니다. 확인이 필요합니다.")
+
+          if total == 0:
+              print("::error::실행된 검사가 0건입니다. 검사도 안 하고 합격할 수 없습니다.")
+              sys.exit(1)
+
+          if skipped > 0 and os.environ.get("FAIL_ON_SKIPPED", "false").lower() == "true":
+              print("::error::건너뛴 검사가 있어 불합격 처리합니다.")
+              sys.exit(1)
+          PY
+
+      - name: 결과지 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-report
+          path: reports/
+          if-no-files-found: warn
+
+  # ══════════════════════════════════════════════
+  # 검사반 4 : 최종 판정 — 생각 안 하고 true/false만
+  # ══════════════════════════════════════════════
+  verdict:
+    name: verdict (최종 판정)
+    needs: [ci_fixed, dev_tests, review_tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 결과 요약표
+        run: |
+          {
+            echo "## 검증 결과"
+            echo ""
+            echo "| 검사반 | 검사 코드 만든 쪽 | 결과 | 실행 | 건너뜀 |"
+            echo "|---|---|---|---|---|"
+            echo "| ci-fixed | 기본 검사 | ${{ needs.ci_fixed.result }} | - | - |"
+            echo "| dev-tests | 개발AI | ${{ needs.dev_tests.result }} | ${{ needs.dev_tests.outputs.total || '?' }} | ${{ needs.dev_tests.outputs.skipped || '?' }} |"
+            echo "| review-tests | 테스트AI | ${{ needs.review_tests.result }} | ${{ needs.review_tests.outputs.total || '?' }} | ${{ needs.review_tests.outputs.skipped || '?' }} |"
+            echo ""
+            echo "※ '만든 쪽'은 누가 만든 검사가 깨졌는지일 뿐, 누구 잘못인지가 아님."
+            echo "※ '건너뜀'이 0이 아니면 그만큼 검사되지 않은 항목이 있다는 뜻임."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 최종 판정
+        run: |
+          if [ "${{ needs.ci_fixed.result }}" != "success" ] || \
+             [ "${{ needs.dev_tests.result }}" != "success" ] || \
+             [ "${{ needs.review_tests.result }}" != "success" ]; then
+            echo "VERDICT = false"
+            exit 1
+          fi
+          echo "VERDICT = true"
+
