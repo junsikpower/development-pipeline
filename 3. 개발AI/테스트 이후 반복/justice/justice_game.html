@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정의와 자연법 — 규범 논리학 (3장 파일럿)</title>
+<style>
+/* ==== SECTION: STYLE-TOKENS ==== */
+:root {
+  /* 이성의 기하학 — 라이트 (양피지) */
+  --color-bg: #F6EFE0;
+  --color-bg-elevated: #FBF7EC;
+  --color-bg-sunken: #EDE3CC;
+  --color-ink: #221F1A;
+  --color-ink-muted: #5A543F;
+  --color-gold: #A9802E;
+  --color-gold-soft: #D9C08A;
+  --color-border: #C9BC9C;
+  --color-border-strong: #A9802E;
+
+  /* 상태색 — 필연/진리(로열블루), 모순/부정의(버건디), 허용(청록) */
+  --color-necessity: #2A4B8D;
+  --color-necessity-soft: #DCE4F3;
+  --color-contradiction: #7A1F2B;
+  --color-contradiction-soft: #F3DCDF;
+  --color-permission: #1F7A6C;
+  --color-permission-soft: #D9EFEA;
+
+  --color-consistent: #1F7A6C;
+  --color-inconsistent: #7A1F2B;
+
+  --font-sans: "Malgun Gothic", "Apple SD Gothic Neo", -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+  --font-serif: "Batang", "Apple SD Gothic Neo", Georgia, "Times New Roman", serif;
+
+  --radius-card: 6px;
+  --radius-badge: 3px;
+  --shadow-card: 0 1px 3px rgba(34,31,26,0.18);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --motion-duration: 180ms;
+  --motion-easing: ease-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* 이성의 기하학 — 다크 (딥 네이비 / 촛불 앰버) */
+    --color-bg: #12172A;
+    --color-bg-elevated: #1B2240;
+    --color-bg-sunken: #0C1020;
+    --color-ink: #ECE4CF;
+    --color-ink-muted: #A79E82;
+    --color-gold: #E8A33D;
+    --color-gold-soft: #6B4E20;
+    --color-border: #3A3F5C;
+    --color-border-strong: #E8A33D;
+
+    --color-necessity: #7C9CE0;
+    --color-necessity-soft: #223059;
+    --color-contradiction: #E08792;
+    --color-contradiction-soft: #4A2027;
+    --color-permission: #6FCDBC;
+    --color-permission-soft: #143A34;
+
+    --color-consistent: #6FCDBC;
+    --color-inconsistent: #E08792;
+  }
+}
+
+[data-reduce-motion="true"] * {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* ==== SECTION: STYLE-COMPONENTS ==== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+#app { min-height: 100%; display: flex; flex-direction: column; }
+
+.app-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-elevated);
+}
+.app-header .brand {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.app-header .brand .la {
+  font-style: italic;
+  color: var(--color-gold);
+  margin-left: var(--space-2);
+}
+.header-nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+
+.screen { flex: 1; padding: var(--space-5); max-width: 960px; margin: 0 auto; width: 100%; }
+.screen[hidden] { display: none; }
+
+.card {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-4);
+}
+
+.term-serif { font-family: var(--font-serif); }
+
+.btn {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-gold);
+  color: var(--color-bg);
+  cursor: pointer;
+}
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn.btn-secondary { background: transparent; color: var(--color-ink); border-color: var(--color-border); }
+
+/* claimType 배지 — 색상 외에 라벨과 테두리 스타일로도 구분 (NFR-05) */
+.badge-claim {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-badge);
+  border-width: 1px;
+  font-weight: 600;
+}
+.badge-claim[data-claim="source"] {
+  border-style: solid;
+  border-color: var(--color-necessity);
+  color: var(--color-necessity);
+  background: var(--color-necessity-soft);
+}
+.badge-claim[data-claim="interpretation"] {
+  border-style: dashed;
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background: transparent;
+}
+.badge-claim[data-claim="model"] {
+  border-style: dotted;
+  border-color: var(--color-contradiction);
+  color: var(--color-contradiction);
+  background: transparent;
+}
+
+/* 대당 사각형 모티프 — 반복 장식 요소 */
+.square-motif {
+  width: 1em; height: 1em;
+  display: inline-block;
+  border: 2px solid currentColor;
+  position: relative;
+  vertical-align: -0.1em;
+}
+.square-motif::before, .square-motif::after {
+  content: "";
+  position: absolute;
+  border-top: 1px solid currentColor;
+  width: 141%;
+  top: 50%; left: -20.5%;
+  transform: rotate(45deg);
+}
+.square-motif::after { transform: rotate(-45deg); }
+
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.overlay[hidden] { display: none; }
+.overlay-panel {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  max-width: 720px; width: 90%;
+  max-height: 85vh; overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.save-banner {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--color-contradiction-soft);
+  color: var(--color-contradiction);
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.85rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-contradiction);
+}
+.save-banner[hidden] { display: none; }
+.save-banner[data-error="true"] { background: var(--color-contradiction-soft); color: var(--color-contradiction); }
+
+/* Reading screen (FR-01) */
+.opening-question { font-size: 1.1rem; color: var(--color-gold); margin-bottom: var(--space-4); }
+.reading-progress { font-size: 0.85rem; color: var(--color-ink-muted); margin-bottom: var(--space-2); }
+.reading-card { margin-bottom: var(--space-4); }
+.reading-body { margin-top: var(--space-3); white-space: pre-wrap; }
+.reading-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.reading-nav { display: flex; gap: var(--space-3); margin-bottom: var(--space-5); }
+.back-link { background: none; border: none; color: var(--color-ink-muted); cursor: pointer; padding: 0 0 var(--space-3) 0; font-size: 0.9rem; }
+
+.term-token {
+  display: inline;
+  background: var(--color-permission-soft);
+  color: var(--color-permission);
+  border: none;
+  border-bottom: 2px dotted var(--color-permission);
+  padding: 0 2px;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+/* Concept deck / synthesis (FR-02) */
+.completion-panel { margin-top: var(--space-5); }
+.concept-deck, .counterexample-deck { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-3) 0; }
+.concept-card { width: 220px; }
+.concept-terms { display: flex; gap: var(--space-2); align-items: baseline; margin-bottom: var(--space-2); }
+.concept-ko { font-weight: 700; }
+.concept-la { font-style: italic; color: var(--color-ink-muted); font-size: 0.85rem; }
+.concept-def { font-size: 0.9rem; margin: var(--space-2) 0; }
+.cx-card { width: 220px; font-size: 0.9rem; }
+.synthesis-panel { margin-top: var(--space-4); border-top: 1px dashed var(--color-border); padding-top: var(--space-4); }
+.synthesis-select { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-3) 0; }
+.synthesis-option { display: flex; align-items: center; gap: var(--space-1); border: 1px solid var(--color-border); border-radius: var(--radius-badge); padding: var(--space-1) var(--space-2); cursor: pointer; }
+#synthesis-feedback { margin-top: var(--space-3); font-size: 0.9rem; }
+.next-step-note { margin-top: var(--space-4); color: var(--color-ink-muted); font-size: 0.85rem; font-style: italic; }
+
+/* Source overlay (FR-07) */
+.overlay-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+.overlay-header h2 { margin: 0; flex: 1; }
+.claim-type-note { font-size: 0.85rem; color: var(--color-ink-muted); }
+.source-excerpt {
+  background: var(--color-bg-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--space-3);
+  white-space: pre-wrap;
+  font-family: var(--font-serif);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.src-range { font-size: 0.8rem; color: var(--color-ink-muted); text-align: right; }
+
+/* Home diagnostics */
+#self-check-diagnostics ul { margin: var(--space-2) 0 0; padding-left: 1.2em; }
+#self-check-diagnostics li { margin-bottom: var(--space-1); font-size: 0.9rem; }
+
+/* Board puzzle (FR-03 / BR-08) */
+.stage-indicator {
+  display: inline-block;
+  color: var(--color-ink-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-badge);
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.85rem;
+}
+.stage-goal {
+  color: var(--color-ink-muted);
+  margin-top: var(--space-3);
+}
+.board-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 190px;
+  gap: var(--space-5);
+  align-items: start;
+  margin: var(--space-5) 0;
+}
+.board-square {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  aspect-ratio: 4 / 2.6;
+  min-height: 340px;
+  overflow: hidden;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-sunken);
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--color-gold-soft) 24%, transparent);
+}
+.board-lines {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: var(--color-ink-muted);
+}
+.rel-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  transition: opacity var(--motion-duration) var(--motion-easing), stroke var(--motion-duration) var(--motion-easing);
+}
+.rel-line[data-style="dashed"] { stroke-dasharray: 8 5; }
+.rel-line[data-style="dotted"] { stroke-dasharray: 2 5; }
+.rel-line[data-style="arrow"] { stroke-width: 2.5; }
+.rel-line[data-active="false"] { opacity: 0.16; }
+.rel-line[data-active="true"][data-satisfied="true"] { color: var(--color-consistent); opacity: 0.9; }
+.rel-line[data-active="true"][data-satisfied="false"] { color: var(--color-inconsistent); opacity: 0.95; }
+.rel-line[data-active="true"][data-satisfied="neutral"] { opacity: 0.72; }
+.board-quadrant {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 170px;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 78%, transparent);
+  cursor: pointer;
+  transition: background var(--motion-duration) var(--motion-easing), box-shadow var(--motion-duration) var(--motion-easing);
+}
+.board-quadrant:hover,
+.board-quadrant:focus-visible { background: var(--color-bg-elevated); box-shadow: inset 0 0 0 2px var(--color-gold-soft); outline: none; }
+.quadrant-label { font-size: 0.95rem; font-weight: 700; }
+.quadrant-label small { color: var(--color-ink-muted); font-weight: 400; }
+.quadrant-cards { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.board-legend { display: grid; gap: var(--space-3); color: var(--color-ink-muted); font-size: 0.82rem; padding-top: var(--space-2); }
+.legend-line {
+  display: inline-block;
+  width: 28px;
+  margin-right: var(--space-1);
+  vertical-align: middle;
+  border-top: 2px solid currentColor;
+}
+.legend-line[data-style="dashed"] { border-top-style: dashed; }
+.legend-line[data-style="dotted"] { border-top-style: dotted; }
+.legend-line[data-style="arrow"] { position: relative; }
+.legend-line[data-style="arrow"]::after { content: "›"; position: absolute; right: -4px; top: -11px; font-size: 1rem; }
+.legend-note { font-style: italic; }
+.board-tray { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--space-3); margin: var(--space-3) 0 var(--space-5); }
+.board-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  transition: transform var(--motion-duration) var(--motion-easing), border-color var(--motion-duration) var(--motion-easing), box-shadow var(--motion-duration) var(--motion-easing);
+}
+.board-card:hover,
+.board-card:focus-visible { border-color: var(--color-gold); box-shadow: 0 0 0 2px var(--color-gold-soft); outline: none; }
+.board-card.selected { border-color: var(--color-gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 35%, transparent); }
+.board-card.dragging { opacity: 0.62; transform: scale(1.02); }
+.tray-card { border-left: 4px solid var(--color-gold); }
+.board-card.consistent { border-left: 4px solid var(--color-consistent); }
+.board-card.inconsistent { border-left: 4px solid var(--color-inconsistent); }
+.board-card-icon { flex: 0 0 auto; font-weight: 800; }
+.board-card.consistent .board-card-icon { color: var(--color-consistent); }
+.board-card.inconsistent .board-card-icon { color: var(--color-inconsistent); }
+.board-card-label { overflow-wrap: anywhere; }
+.tray-empty { color: var(--color-ink-muted); font-style: italic; }
+.feedback-card { margin: var(--space-4) 0; }
+.feedback-card h4 { margin: 0 0 var(--space-2); font-family: var(--font-serif); }
+.rationale { color: var(--color-ink-muted); font-size: 0.9rem; }
+.judgement { font-weight: 700; }
+.judgement-ok { color: var(--color-consistent); }
+.judgement-violation { color: var(--color-inconsistent); }
+.judgement-note { color: var(--color-ink-muted); font-size: 0.86rem; }
+.board-nav { display: flex; justify-content: flex-end; margin-top: var(--space-4); }
+
+/* Counterexample battle (FR-05) */
+.battle-intro { color: var(--color-ink-muted); }
+.battle-grid { display: grid; gap: var(--space-4); margin-top: var(--space-5); }
+.proposition-card { border-top: 4px solid var(--color-contradiction); }
+.proposition-claim { font-family: var(--font-serif); font-size: 1.08rem; }
+.battle-status { display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); font-size: 0.86rem; color: var(--color-ink-muted); }
+.battle-status[data-state="collapsed"] { color: var(--color-consistent); font-weight: 700; }
+.premise-list { display: grid; gap: var(--space-3); margin-top: var(--space-3); }
+.premise-card { border-left: 4px solid var(--color-gold); }
+.premise-card[data-defeated="true"] { border-left-color: var(--color-consistent); }
+.premise-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.premise-text { margin: 0; font-weight: 700; }
+.premise-state { flex: 0 0 auto; font-size: 0.8rem; color: var(--color-ink-muted); }
+.premise-state[data-state="defeated"] { color: var(--color-consistent); font-weight: 700; }
+.badge-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.counterexample-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+.counterexample-action-group { display: inline-flex; flex-wrap: wrap; gap: var(--space-1); }
+.counterexample-button { display: inline-flex; align-items: center; gap: var(--space-2); }
+.counterexample-explain { margin: var(--space-3) 0 0; padding: var(--space-3); background: var(--color-permission-soft); border-radius: var(--radius-card); font-size: 0.9rem; }
+.counterexample-explain strong { color: var(--color-consistent); }
+.battle-feedback { margin-top: var(--space-4); }
+.battle-complete { border-color: var(--color-consistent); background: var(--color-permission-soft); }
+.battle-nav { display: flex; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); }
+
+/* Sandbox (FR-04) */
+.screen-toolbar { display: flex; justify-content: flex-end; margin: calc(var(--space-3) * -1) 0 var(--space-3); }
+.sandbox-toggles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-4) 0; }
+.sandbox-toggle { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-card); cursor: pointer; }
+.sandbox-toggle:has(input:checked) { border-color: var(--color-gold); background: var(--color-gold-soft); }
+.sandbox-toggle input { margin-top: 3px; accent-color: var(--color-gold); }
+.sandbox-toggle span { display: grid; gap: var(--space-1); }
+.sandbox-toggle small { color: var(--color-ink-muted); }
+.sandbox-result { padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-bg-sunken); }
+.sandbox-result-header { margin-bottom: var(--space-2); }
+.sandbox-result-header h3 { margin: 0; flex: 1; }
+.sandbox-vector { font-family: var(--font-serif); letter-spacing: 0.03em; }
+.sandbox-relation-list { display: grid; gap: var(--space-2); padding: 0; margin: var(--space-3) 0 0; list-style: none; }
+.sandbox-relation { display: flex; align-items: baseline; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-left: 4px solid var(--color-border); background: var(--color-bg-elevated); }
+.sandbox-relation[data-valid="true"] { border-left-color: var(--color-consistent); }
+.sandbox-relation[data-valid="false"] { border-left-color: var(--color-inconsistent); }
+.relation-state { flex: 0 0 3.2em; font-weight: 700; }
+.sandbox-relation[data-valid="true"] .relation-state { color: var(--color-consistent); }
+.sandbox-relation[data-valid="false"] .relation-state { color: var(--color-inconsistent); }
+.sandbox-io { margin-top: var(--space-5); }
+.sandbox-io h3 { margin-bottom: var(--space-1); }
+.sandbox-io table { width: 100%; border-collapse: collapse; margin-top: var(--space-3); }
+.sandbox-io th, .sandbox-io td { border: 1px solid var(--color-border); padding: var(--space-2) var(--space-3); text-align: left; }
+.sandbox-io th { background: var(--color-bg-sunken); }
+.sandbox-io tr[data-valid="true"] td:last-child { color: var(--color-consistent); font-weight: 700; }
+.sandbox-io tr[data-valid="false"] td:last-child { color: var(--color-inconsistent); font-weight: 700; }
+
+/* Inquiry notebook (FR-06) */
+.inquiry-quote { border-left: 4px solid var(--color-gold); }
+.inquiry-quote blockquote { margin: var(--space-3) 0; font-family: var(--font-serif); font-size: 1.02rem; white-space: pre-wrap; }
+.inquiry-workspace { margin-top: var(--space-5); }
+.inquiry-workspace h2 { margin-top: var(--space-5); }
+.inquiry-workspace h2:first-child { margin-top: 0; }
+.argument-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-4) 0; }
+.argument-card { display: block; cursor: pointer; }
+.argument-card[data-side="defense"] { border-top: 3px solid var(--color-necessity); }
+.argument-card[data-side="objection"] { border-top: 3px solid var(--color-contradiction); }
+.argument-card:has(.argument-check:checked) { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-gold) 35%, transparent); }
+.argument-header { display: flex; justify-content: space-between; align-items: center; }
+.argument-side { font-weight: 700; color: var(--color-ink-muted); }
+.argument-check { width: 1.1rem; height: 1.1rem; accent-color: var(--color-gold); }
+.inquiry-note { display: block; width: 100%; min-height: 180px; resize: vertical; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-card); color: var(--color-ink); background: var(--color-bg-elevated); font: inherit; line-height: 1.6; }
+.inquiry-note:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+.inquiry-requirements { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); margin: var(--space-2) 0 var(--space-3); color: var(--color-ink-muted); font-size: 0.85rem; }
+.inquiry-nav { display: flex; justify-content: flex-end; margin-top: var(--space-4); }
+
+/* Summary and export (FR-09 / FR-10) */
+.summary-complete { color: var(--color-consistent); font-weight: 700; }
+.summary-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-5) 0; }
+.markdown-preview { max-height: 62vh; overflow: auto; padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-bg-sunken); white-space: pre-wrap; font: 0.88rem/1.6 var(--font-sans); }
+
+/* Concept map (FR-08) */
+.atlas-svg { display: block; width: 100%; max-height: 55vh; margin: var(--space-4) 0; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-bg-sunken); color: var(--color-gold); }
+.atlas-edge { stroke: var(--color-gold); stroke-width: 2; stroke-dasharray: 6 4; vector-effect: non-scaling-stroke; opacity: 0.8; }
+.atlas-node rect { fill: var(--color-bg-elevated); stroke: var(--color-border-strong); stroke-width: 1.5; }
+.atlas-node text { fill: var(--color-ink); font-family: var(--font-sans); font-size: 13px; font-weight: 700; }
+.atlas-node .atlas-node-la { fill: var(--color-ink-muted); font-family: var(--font-serif); font-size: 10px; font-style: italic; font-weight: 400; }
+.atlas-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--space-3); }
+.atlas-card { font-size: 0.88rem; }
+.atlas-card p { color: var(--color-ink-muted); }
+
+@media (max-width: 720px) {
+  .board-layout { grid-template-columns: 1fr; gap: var(--space-3); }
+  .board-legend { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-top: 0; }
+  .board-square { min-height: 300px; }
+  .board-quadrant { min-height: 145px; padding: var(--space-2); }
+  .quadrant-label { font-size: 0.84rem; }
+  .quadrant-label small { font-size: 0.72rem; }
+  .sandbox-toggles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .argument-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rel-line, .board-quadrant, .board-card { transition: none; }
+}
+</style>
+</head>
+<body>
+<!-- ==== SECTION: MARKUP ==== -->
+<div id="app">
+  <div id="save-banner" class="save-banner" role="status" hidden></div>
+  <header class="app-header">
+    <div class="brand">정의와 자연법<span class="la">De Iustitia et Iure Naturae</span></div>
+    <nav class="header-nav">
+      <button type="button" class="btn btn-secondary" id="nav-atlas" disabled>개념 지도</button>
+      <button type="button" class="btn btn-secondary" id="nav-save-state">상태 저장</button>
+      <button type="button" class="btn btn-secondary" id="nav-load-state">상태 불러오기</button>
+      <input type="file" id="file-load-state" accept="application/json,.json" hidden>
+    </nav>
+  </header>
+
+  <main id="main-region">
+    <section id="screen-home" class="screen" data-screen="Home">
+      <h1>서재</h1>
+      <p id="chapter-status-note">콘텐츠 준비 중 — 3장 콘텐츠 데이터가 사용자 검토·확정 전입니다.</p>
+      <div class="card" id="chapter-3-entry">
+        <h2 class="term-serif">3장 — 규범 논리학</h2>
+        <p>대당 사각형: 좋은 사람에게 가능한 것과 해야만 하는 것은 같은가?</p>
+        <button type="button" class="btn" id="btn-enter-chapter-3" disabled>입장 (콘텐츠 확정 대기)</button>
+      </div>
+    </section>
+
+    <section id="screen-reading" class="screen" data-screen="Reading" hidden></section>
+    <section id="screen-board" class="screen" data-screen="Board" hidden></section>
+    <section id="screen-battle" class="screen" data-screen="Battle" hidden></section>
+    <section id="screen-inquiry" class="screen" data-screen="Inquiry" hidden></section>
+    <section id="screen-summary" class="screen" data-screen="Summary" hidden></section>
+  </main>
+
+  <div id="overlay-atlas" class="overlay" hidden>
+    <div class="overlay-panel"></div>
+  </div>
+  <div id="overlay-sandbox" class="overlay" hidden>
+    <div class="overlay-panel"></div>
+  </div>
+  <div id="overlay-source" class="overlay" hidden>
+    <div class="overlay-panel"></div>
+  </div>
+</div>
+
+<script>
+/* ==== SECTION: DATA-SOURCE-TEXT ==== */
+const SOURCE_TEXT = {
+  version: "justice_law.v1",
+  lineCount: 975,
+  hash: "47073df19edf4a76ac4cba0f08cf39d52a794522997e86a7525b070b658840b1",
+  lines: ["# 정의와 자연법 - 라이프니츠","","추가 일시: 2026년 1월 5일 오전 1:04","강의: 세미나","","## 옮긴이 해제","","### 1. 자연법과 정의에 관한 저작","","### 2. 법과 정의의 구별","","- 현대의 ‘법’이란 단어에 대한 규정","    ","    현대는 법을 도덕과 분리하고, 정의와 도덕을 모두 법으로 설명하는 법실증주의 사회다. 따라서 책에서 사용된 droit/jus같은 단어를 ‘법’으로 해석한다면 자연적인 법으로서의 해석을 배제하게 된다.","    ","- 라이프니츠에게 ‘법’과 ‘정의’가 다른 이유","    ","    정의는 라이프니츠에게 필연적 진리기 때문이다. ‘정의’에 대한 학문은 오로지 이성적으로, 논리학 기호나 수학의 규칙 등을 사용하여 증명 가능하다. 경험에 근거를 두지 않는다고도 말한다. 반면 법은 우연적 진리의 영역에 속한다.","    ","- ‘정의’가 권력자의 ‘권력’에서 나온다는 사람들이 틀린 이유","    ","    정의가 권력에서 나온다는 사람들은 정의를 법과 혼동한 것이다. 법은 틀릴 수 있다. 부정의할 수 있다. 따라서 권력자의 권력이 나쁘다면, 거기서 나온 법이 부정의할 수 있다. 그러나 정의는 권력에서 나오는 것이 아니며, 나쁜 권력은 더더욱 아니다. 심지어 정의가 부정의하다는 말은 논리학적으로 모순적이다. ","    ","- ‘정의’가 먼저 존재하고, 신이 ‘정의’를 선택한다","    ","    신조차 그가 ‘정의’를 만드는 것이 아닌, 이미 있는 ‘정의’를 선택한다. 따라서 ‘정의’는 필연적이다. 혹시 법과 정의를 동일시한다면 법에 부합하는 것이 정의로운 것이 된다. 그러나 자연법 논의를 거부하는 ‘법실증주의’가 권리의 정당성을 찾을 때, 정의가 아니라 법적 사실과 경험에 의존하는 것은 권리의 정당성이 우연적 진리인 법에서 비롯됨을 나타낸다.","    ","    라이프니츠에 따르면, 우리는 정의를 행하는 사례가 없어도 무엇이 정의인지 알 수 있다.","    ","","### 3. 트라시마코스의 정의","","정의가 우연적 진리라는 홉스, 데카르트, 트라시마코스 및 대부분의 라이프니츠 이전 학자들","","- 트라시마코스","    ","    “정의로운 것이란 가장 힘 있는 자의 마음에 들고 그들에게 유익한 것”","    ","    그러나 라이프니츠는 정의가 그런 것이라면 그 어떤 법의 판결도 정의로울 것이고, 권력자가 어떤 악행을 저질러도 성공하기만 한다면 정의로울 것이라고 말한다.","    ","- 홉스","    ","    “신이 전능하기 때문에 모든 것을 행할 권리를 가지고 있다”","    ","    그런데 라이프니츠는 이런 주장은 정의가 통치자의 의지와 권력에 의존한다고 말하는 것이며, 이런 견해는 확실하고 정해진 정의가 없다는 얘기와 같다고 말한다.","    ","- 라이프니츠의 비판","    ","    정의를 ‘우연적 진리’로 여기는 것은 정의라는 개념의 의미를 완전히 바꾸는 것. 우리는 나쁜 사람이 성공하는 경우, 부정의한 행동이 처벌받지 않는 경우 등을 일상적으로 경험한다. 그런데 정의가 트라시마코스나 홉스의 뜻대로 의미가 바뀐다면 그런 행위들이 부정의한 것이 아니며, 사실상 성공하기만 한다면 부정의한 행위는 없게 된다. 즉 정의와 부정의가 권력자의 의지에 의존하는 자의적인 것이 된다. 성공한 쿠데타는 정당화되며, 바로잡을 수 없게 된다.","    ","","### 4. 지혜로운 사람의 박애","","- 정의(正義)에 대한 정의(定義)의 필요성","    ","    정의(正義)에 대한 학문이 正義 개념을 定義하고, 증명함으로써 입증되는 학문이라면, 먼저 정의(正義)라는 개념이 무엇인지 정의(定義) 해야 한다. 이것이 있어야만 어떤 것이 정의로운지 아닌지의 형식적인 기준을 제시할 수 있다. 자연법 철학과 정의 이론의 궁극적 목표다.","    ","- 정의(正義)란?","    ","    정의 = 지혜 + 좋음. ","    ","    좋음 = 모두에게 이로운 것을 행하고, 해로운 것을 막으려는 경향성.","    ","    좋음의 목표 = 가장 큰 이익. ","    ","    이익에 대한 앎 = 지혜.","    ","    따라서 좋음이라는 이익으로의 경향성대로 행동하기 위해선 이익에 대한 앎인 지혜가 필요함.","    ","    모든 사람이 이익을 얻는 조건 = 보편적 자비 = 다른 모든 사람이 이익을 얻는 것에서 기쁨을 느낌","    ","    자비란 ‘사랑하거나 귀중히 여기는 태도’. 사랑하는 것, 또는 귀중히 여기는 것이란 다른 사람의 행복을 즐거워하고 나의 행복으로 받아들이는 것.","    ","    결론적으로 정의란, 서로가 남과 나의 이익 모두에서 행복을 느낀다는 전제하에서 모두의 이익을 최대로 증진하려는 의지를 갖고, 이러한 전제하에서 이익을 증진시키기 위한 최고의 방법을 아는 것이다. 그리고 의지를 통해 아는 것을 행한다.","    ","    이것이 라이프니츠가 말하는 정의(正義)의 정의(定義), ‘지혜로운 사람의 박애’다.  ","    ","- 그렇다면 타인을 위해 희생해야만 정의(正義)인가?","    ","    누구든지 자신의 이익을 추구하는 것은 합리적이다. 라이프니츠에 따르면 사람들을 정의롭게 행동하게 만드는 첫 번째 원리가 ‘자기 자신의 유익’이다.","    ","- 자기 이익과 타인의 이익이 충돌한다면.","    ","    이 문제를 해결하기 위해 라이프니츠는 ‘사랑’이라는 개념을 도입한다.","    ","    누군가를 사랑한다는 것 = 그 사람의 이익과 행복으로부터 기쁨을 얻는 것.","    ","    따라서 우리가 타인을 사랑한다면, 그 자의 이익을 추구할 것이다.","    ","    → 내 의문점: 아니 그런데 ‘사랑’에 의거하더라도 타인의 이익을 위해 자신을 희생할 수도 있고, 그래도 자기 이익을 더 신경쓸 수도 있는데 자기 이익과 타인의 이익이 충돌한다는 문제상황은 ‘사랑’이 전혀 해결하지 못하고 있지 않는가? 그저 ‘사랑’을 통해 타인의 이익을 우선할 수 있는 경향성이 생길 수 있다는 정도만 뒷받침할 뿐이다. 라이프니츠를 변호해본다면 그는 사랑에 의거해서 행해진 것이라면 타인의 이익을 우선하든 자신의 이익을 우선하든 상관없이 정의(正義)라고 하고 싶은건가?","    ","- 사리사욕을 따르는 사람에게 사랑의 감정을 요구할 수 있는가?","    ","    라이프니츠는 그가 제시한 ‘자연법의 세 등급’ 중 ‘형평의 자연법’을 적용함으로써 문제를 해결한다. 자신 뿐 아니라 타인의 이익을 추구하는 것이 ‘인간에게 자연적 권리이자 의무’라고 주장한다.","    ","    형평의 원리에 따르면 타인에게 피해를 주거나 타인이 얻을 이익을 막는 행동은 곧 자신에게 돌아오게 된다. 내가 타인이 얻을 수 있는 이익을 못하게 막는다면, 타인도 내가 그런 기회가 생겼을 때 막으려할 것이기 때문이다. 이런 악순환을 인지하고 타인의 이익을 고려하는 것이 ‘지혜’다.","    ","    → 내 의문점: 형평의 원리에 의거하여 사랑을 해야겠다고 지혜로서 받아들이는게 과연 사랑인가? 사랑은 좀 더 직관적이고 선천적인 느낌인데 이성에 의해 사랑을 받아들이는 느낌이다.","    ","","### 5. 규범 논리학","","라이프니츠에 따르면 자연법 이론은 경험이 아니라 정의(定義)에 의존하며, 감각적 증명이 아닌 이성적 증명에 의존하는 학문이다. 정의 개념은 신조차 바꿀 수 없는 필연적 진리며, 正義에 대한 정의(定義)와 논리학 규칙으로 증명 가능하다. ","","- 규범 논리학의 창시자","    ","    라이프니츠는 정의와 자연법에 관련된 주요 개념들을 정의하고 그 정의로부터 연역적으로 도출될 수 있는 정리들을 기술했다.  이 작업으로 인해 라이프니츠는 규범 논리학이라는 새로운 분야를 발견한 것으로 알려지게 된다.","    ","- 라이프니츠의 정의와 자연법에 관련된 주요 개념 정의","    ","    [자연적] 권리 및 의무는 좋은 사람의 자질 같은 것임. ","    ","    정의 = 모든 사람을 사랑하는 태도","    ","    좋은 사람 = 모든 사람을 사랑하는 사람","    ","    (자연적)권리 = 좋은 사람에게 잠재력(적)인 것(허용된 것).","    ","    (자연적)의무 = 좋은 사람에게 필연적인 것.","    ","- 정의의 양상 논리로의 번역","    ","    vir Bonus(좋은 사람)이라는 가상의 주체를 설정하여, 좋은 사람에게 일어날 수 있는 것(존재론적 사실)과 해야만 하는 것(규범적 당위)가 동일하거나 함축관계로 연결될 수 있다는 것을 양상 논리를 통해 보여주고자 함.","    ","    라이프니츠는 법적/도덕적 개념들을 양상 논리 위에 재정의함.","    ","    (논리학에서)가능한 것 = (법학에서)정의로운 것","    ","    (논리학에서)불가능한 것 = (법학에서)부정의한 것","    ","    (논리학에서)필연적인 것 = (법학에서)의무","    ","    (논리학에서)우연적인 것 = (법학에서)의무가 아닌 것","    ","    정의롭고 의무인 것의 기준은 '좋은 사람'에게 적용되는 기준이다.","    ","- 자연법의 규범 논리적 구조 도식","    ","    라이프니츠는 양상논리로 번역한 정의 개념들을 대당 사각형이라는 도식으로 그 관계를 보여준다.","    ","    ![CamScanner 2026. 01. 05. 15.11.jpg](%EC%A0%95%EC%9D%98%EC%99%80%20%EC%9E%90%EC%97%B0%EB%B2%95%20-%20%EB%9D%BC%EC%9D%B4%ED%94%84%EB%8B%88%EC%B8%A0/8fc96600-4ada-45c9-883f-7851519a8eab.png)","    ","    정의로운 것이 가능성에 있다는 것은 정의로운 것이 가변적이라는 뜻이 아니라, 좋은 사람의 이성의 범위(가능한 행위 집합or도덕적 자유)을 의미하는 것이며, 그 중에서도 필연적인 의무는 그 집합 중 하나를 해야만 하는 상태를 가리킴.","    ","    - **의무(A: 필연성):** 이는 \"모순율\"에 근거합니다. 좋은 사람(Vir Bonus)이 그 행위를 하지 않는다고 가정했을 때 우주의 조화와 이성에 '모순'이 발생한다면, 그 행위는 '의무'가 됩니다,.","    - **정의로운 것/허용(I: 가능성):** 이는 \"충족이유율(어떤 것도 이유 없이 존재하지 않는다)\"에 근거합니다. 선한 사람이 그 행위를 하는 것이 이성적으로 '가능'하고 조화롭지만, 그것을 하지 않는다고 해서 곧바로 모순(부정의)에 빠지는 것이 아니라면, 그것은 '허용'의 영역입니다","    - '체스 게임의 규칙'과 같습니다. \"퀸은 대각선으로 갈 수 있다\"는 규칙은 허용(가능성)입니다. \"왕이 체크메이트를 당하면 게임이 끝난다\"는 규칙은 필연(의무)입니다. 이 두 규칙은 체스라는 게임이 성립하기 위해 **둘 다 똑같이 영원하고 필연적인 규칙**입니다.","    - 하지만 게이머에게 \"퀸을 대각선으로 옮기는 것\"은 **선택 사항**이지만, \"체크메이트를 피하는 것\"은 반드시 해야만 하는 일(당위)이 됩니다.","    - **당위성의 원천, '최선(Optimum)':** 왜 어떤 도덕 명제는 당위성을 갖는가? 그것은 그 행위가 **'최선의 질서'를 위해 필수불가결하기 때문**입니다. 신이 정의를 선택하는 근거가 바로 '충족이유율'이며, 그 결과가 '최선(Optimum)'이다.","    ","    → 내 의문점: 그런데 가능성과 우연성은 사실상 논리적 동치 아닌가? 일어날 수 있는 것이란 말은 일어나지 않을 수 있는 것이란 의미를 함축하며, 일어나지 않을 수 있는 것은 일어날 수 있는 것이란 의미 또한 함축하니까. 물론 필연성, 가능성, 우연성 그 단어명만 놓고 봤을 땐 직관적으로 필연적이라는건 가능하다는거고, 필연적인데 우연적인건 불가능하다고 생각되지만, 일어나지 않을 수 없는 것, 일어날 수 있는 것, 일어나지 않을 수 있는 것이란 해석으로 치환해서 생각해보면 오류가 생기는 것 같다. 따라서 나는 필연성, 가능성, 우연성에 대한 도식의 해석이 틀린 것 같다. ","    ","- 라이프니츠에겐 모든 진리가 동일한 ‘이유’에서 근거하는가?","    ","    아니다.","    ","    라이프니츠의 논리에 따르면, **모든 진리가 동일한 '이유'를 갖는 것은 아닙니다.**","    ","    - **모순율(Principle of Contradiction):** \"A는 A가 아닐 수 없다\"처럼 그 반대가 논리적으로 불가능한 '필연적 진리'를 지배합니다.","    - **충족이유율(Principle of Sufficient Reason):** 반대가 논리적으로 가능하지만(모순은 아니지만), \"왜 하필 다른 것이 아니고 이것인가?\"에 대한 충분한 근거가 필요한 '우연적/사실적 진리'를 지배합니다.","    - 학생이 질문한 '허용된 행위(가능성)'는 그것을 하지 않아도 우주에 논리적 모순이 생기지는 않지만, 그것을 하는 것이 하지 않는 것보다 더 '적합(Convenient)'하거나 **'조화로운'** 이유가 있기 때문에 존재하게 됩니다.","- 자연법의 규범 논리학적인 구조 증명이 개인의 도덕적 자질 증진에 기여하는가?","    ","    그런 것은 아니다. ‘타인에 피해를 주지 말라’는 규범 명제가 의무라 해서, 어떤 사람이 그 의무를 인정하지만 타인에게 피해를 줄 수도 있다. 왜냐하면 개인의 행동은 개인의 자유에 달려있기 때문이다.","    ","- 결론","    ","    ‘모든 사람을 사랑하는 사람’이 자연법 명제를 의무로 여기고, 그 명제대로 행하는 것은 도덕적으로 필연적이다. 또한 그런 행위를 의무로 그가 여기는 이유는 ‘모든 사람을 사랑하는 사람이’ 그렇게 행동하는 것이 가능하기 때문이다.","    ","    → 내의문점: 논리적 문제와 도덕적 문제 총 세 가지가 있다. 첫 번째 논리적인 문제는, 가능성은 의무의 필요조건 중 하나일 뿐인데 어떻게 가능성 때문에 의무가 발생한다고 하는 것인가? 두 번째 도덕적인 문제는 트롤리 딜레마처럼 모두를 살릴 가능성이 없다고 여겨지는 상황에서 내가 이들의 목숨을 선택할 사람이라면 모두를 살리는게 의무가 아닌가? 불가능하다 해서 의무가 아니게 되는가? 마지막 세 번째 문제는 ‘좋은 사람’은 단지 모든 사람을 사랑하는 사람일 뿐인데, 어떤 두 사람이 둘 다 ‘좋은 사람’이라 할 때, 이 둘의 가능성의 영역은 동일한가? 만약 트롤리 딜레마 상황에서 한 명은 아이언맨이고, 한 명은 일반인이라면 가능성의 영역이 달라지고, 의무도 달라지지 않는가?","    ","","## 자연법의 세 등급","","이 목차에서 자연법의 원리만을 탐구할 것","","- 다양한 사상가들의 자연법에 대한 정의","    ","    플라톤: 자연법의 기초란 공통의 이익, 공공의 유익에 있다.","    ","    트라시마코스: 정의로운 것(Justum)이란 더 힘 있는 자에게 유익한 것","    ","    아리스토텔레스&스토아학파: 자연법의 기초란 자연에 따라 사는 것. 사물의 최적의 상태와 완전한 상태에 부합하면 다 정의로운 것.","    ","    에피쿠로스: 내게 실제로 유익한 것, 마음의 즐거움과 정신의 평온을 가져다주는 것이 자연법.","    ","    키케로: 자연법의 기초는 “누구도 자기 자신만을 위해 태어나지 않았다. 조국도, 부모도, 또 친구들도 자기들의 권리를 주장한다.","    ","    → 이 말은 각 인간 개인 모두가 사회적 존재기 때문에 그 안에서 공동체 서로에 대해 의무와 권리로 가질 각자의 몫이 있다는 것이다. 이 서로에 대한 의무와 권리가 자연법의 기초다.","    ","    흐로티위스:  흐로티위스에게 인간은 자기 보존 뿐 아니라 사회 보존의 욕구 또한 있는 사회적 존재다. 따라서 사회 보존의 욕구를 따르는 인간의 이성이 자연법의 원천이다. 자연법이란 인간이 사회적 본성을 지녔다 전제했을 때, 올바른 이성의 명령이고, 따라서 자연법은 인간의 사회적 본성과 이성적 본성과 일치해야 한다.","    ","    팔라비치노: 자연이 마음에 들어하는 것은 무엇이든 정의로운 것이다.","    ","    홉스: 인간은 타인의 권력 밖에 있다면 서로에게 전쟁을 일으킬 권리를 갖는다. 그러나 인간은 이성에 의거해 전쟁을 끝내고 평화를 얻기 위해 상위 권력 하에 들어간다. 이렇게 국가가 설립된다면, 국가가 마음에 들어하는 것이 곧 법이고, 자연법은 없다.","    ","    폰 펠덴: 아리스토텔레스의 원리를 재도입하고 다듬음.","    ","    로버트 섀록: 마음을 즐겁게 하는 것이 최고로 좋은 것, 죄악을 행할 때는 자연스레 마음을 거슬리게 함. 거슬린다면 부정의임.","    ","- 자연법의 세 등급","    ","    모든 사상가들의 견해를 통합한 세 등급의 자연법 체계를 설명하겠다.","    ","    자연법에는 엄격한 권리(법)[Jus strictum), 형평(aequitas), 경건(pietas)이 있다. 뒤로 갈 수록 더 완전한 법이며, 앞의 법을 정당화해준다. 각 법이 혹시 충돌한다면, 앞의 법이 폐지된다.","    ","    첫 번째 Jus strictum은 홉스의 전쟁의 권리, 평화의 권리(법)와 동일하다. 타인에 전쟁을 걸지 않는다면 평화는 유지된다. 따라서 엄격법의 명령은 ‘누구에게도 피해를 주지 말라’는 것이다.","    ","    두 번째 aequitas는 평등의 법으로, 타자와의 이해관계가 균형을 이루는 것이다. 아리스토텔레스의 기하학적 정의와 일치한다. 핵심은 여기서 균형을 이뤄야할 것은 전쟁에 전쟁으로, 법에 처벌로 이루는 것이 아니라 어떤 사람의 부정의나 정의로 인해 다른 사람에게 그에 대한 정의로운 의무가 발생하는 것이다. 예를 들어 교묘한 속임수로 나에게로의 채무를 면한 사람이 있다면, 법적으로는 의무를 면했으나 자연법적으로는 정의로운자라면 따를 의무가 존재한다. 반대로 내게는 흐로티위스의 말대로라면 ‘자격’을 준다. 그러나 라이프니츠에겐 보편적 정의보다 한 단계 낮은 분배적 정의에 근거한 권리다. 형평의 명령은 ‘각자에게 자신의 것을 주라’이다.","    ","    세 번째 pietas는 ‘상급자의 (자연적)의지’가 핵심이다. 트라시마코스의 사상과 비슷하나 법을 제정하는 상급자의 태도가 다르다. 여기서 상급자에는 신도 해당한다. 신의 의지 중 일부는 자연에서 비롯한 자연적 의지고, 또 다른 일부는 율법이다. 신의 자연적 의지에서 pietas(경건)이 나오고, 신의 율법에서 실증적 신법, 즉 신의 계시에 의한 법이 나오는데 실증적 신법은 자연법의 체계에는 해당하지 않는다. 자연법은 신 이전에 존재한다.","    ","    사회계약에 따라 인간 상급자가 나오기도 하는데 인간 상급자로부터 나오는 법은 시민법(국가가 기뻐하는 우연적 진리의 법)이다. 따라서 완전한 사랑과 사랑을 실현하기 위한 지혜를 갖고 있는 신으로부터 당연히 나온 자연적 의지가 가장 상위의 자연법이며, 인간도 신보다 부족한 계층에 있고 정도의 차이가 있을 뿐 질적으로 같은 자연법을 알고, 같은 방식으로 사고한다.","    ","","## 흐로티위스의 자연법에 관한 기록","","- 흐로티위스의 정의 규정에 대한 라이프니츠의 비판","    ","    흐로티위스는 자신의 손해를 감수하고 다른 사람의 편익을 걱정하는 것이 어리석은 것이 아니라고 한다. 그러나 라이프니츠는 이것이 어리석다 한다. 자신의 이익을 추구하지 않는건 불가능하다 여겼기 때문이다. 하지만 실제로는 흐로티위스도 인간은 사회와 공존하려는 자연적 경향이 있어 타인의 이익도 고려하지만 자신의 이익 또한 고려하기에 라이프니츠와 크게 다르지 않다","    ","    흐로티위스는 정의로운 것은 신이 존재하지 않더라도 사회의 보존을 위해 중요하다고 얘기했는데, 이는 라이프니츠가 정의로운 것을 필연적 진리로 여겼다는 점에서 크게 다른 생각은 아니나 라이프니츠는 흐로티위스가 신의 존재를 부정한 것처럼 보고 못마땅하게 여겼다. 다만 라이프니츠가 보편적 정의라고 부르는 최상위의 자연법을 위해서 신과 신에 대한 경건이 필요하다고 주장한 점에서는 흐로티위스와 다르다.","    ","    신이 존재하지 않아 죽음 이후에 신이 없게 된다면, 보상이 없다면 자신의 희생으로 조국, 또는 타자의 안녕을 구하는 것이 어리석은 일이 되기 때문이다. 왜냐면 신이 없는 세계에서 자기 파멸을 선택하는 것은 ‘지혜로운 사람의 박애’라고 할 수 없기 때문이다. 물론 신이 없지만 있다고 믿는 어리석은 상상에 의해 실수로 행복해질 수는 있다. 그러나 신이 없다면 결국 ‘정의로운 것’은 없을 것이다.‘ ‘좋은 사람’이 자기를 희생할 근거가 사라지기 때문이다.","    ","    → 내 의문점: 왜 정의로운 것이 아예 없다고 얘기하지? 물론 자기 희생에 대해 정의로운 것이 없다고 할 수는 있지만 그 외에 대해서는 여전히 필연적 진리로서 정의로운 것이 있지 않은가?","    ","    → 라이프니츠는 정의의 의미가 홉스적인 규정의 자의적인 의미로 바뀐다는 뜻에서 말한 것이다. 여전히 수학적 규칙으로서는 남아있을지라도 인간을 구속할 수는 없다는 의미였다고 한다.(솔직히 아직도 이해가 가지는 않는다.) → 핵심은 **진리로서의 정의는 남지만, 규범으로서의 정의는 사라진다**","    ","- 흐로티위스의 자연법  규정에 대한 라이프니츠의 비판","    ","    그리고 흐로티위스는 자연법의 구성요소로 법률, 세금, 판사직, 의도의 추측, 사실관계 입증, 마지막으로 이 구성요소들로 최종적으로 만들어진 대법전이 있다고 했는데 이러한 구성은 교환적 정의에 대한 법은 규정할 수 있을지 몰라도 완전한 법은 아니다. 보편적으로나 형평적으로 정의로운 법은 아니다. 우연적이며 부정의할 여지 있다. 따라서 이 규정은 엄격법의 구성요소에 불과하다. ","    ","    플로렌티누스는 인간이 서로간 유사하기 때문에 발생하는 타인에 대한 공감 능력과 공통의 근원(아담과 노아의 자손)을 갖기 때문에 발생하는 타인에 대한 애착을 강조한다. 이 얘기를 라이프니츠가 한 이유는 흐로티위스는 법적 장치가 자연적인 것처럼 여겼지만, 라이프니츠는 인간 서로에 대한 애착, 공감이 자연법의 근원이라고 얘기하고 싶었기 때문이다. 참고로 플로렌티누스가 말하는 공감 능력은 우리가 생각하는 ‘감정’이 아니라 존재론적 동질성에서 기인하는 이성적 능력이다. 즉 이성적 본성에서 자연법이 나오는 것이다.","    ","- 홉스의 흐로티위스 자연법 비판에 대한 라이프니츠의 비판","    ","    홉스는 흐로티위스에 대해 그런 대법전을 만드는 ‘지혜로운 자들의 합의가 (자연)법’인건 아니라며 비판한다. 라이프니츠는 홉스의 비판을 인정하면서도, 지혜로운 자들이 필연적인 정의의 원리로부터 어쩔 수 없이 도출된 합의를 통해 (자연)법의 추정은 가능하다고 한다. 그것이 진리는 아니더라도, 반증이 없을 시 진리로 받아들일 근거는 된다는 말이다. 스스로 기호를 사용해 수학적 증명이 가능해도 먼저 증명한 학자의 권위를 빌려 작업을 시작하듯 말이다. 여기서 말하는 ‘근거’란 진리를 결정해주는 주체라기 보다 증명 과정을 줄이고 진리를 빠르게 도달하게 하는 보조적 역할을 의미한다. 결국 지혜로운 자들의 합의, 즉 이성에서 법의 정당성의 근거를 찾을 수 있는 것이다.","    ","","## 자연법의 원리","","- 들어가면서… 라이프니츠의 기본 생각들","    ","    ※ 이 파트를 읽을 때, prudently를 잘 해석할 것. 목차에선 초반엔 신중함. 후반엔 현명함으로 해석된다. 해석이 용이하지 않다.","    ","    인간은 세계를 정복했다. 원하는 것을 할 수 있다. 그러나 무엇을 원해야 하는 지에 대해선 모르는 부분이 있다. 인간 자신에 대해, 신체는 영혼을, 영혼은 자기 자신을 잘 모른다.  인간에 대해 즐거운 것, 유익한 것, 정의로운 것에 대한 학문을 정립하지 못했다. ","    ","    정의로운 것에 대한 학문은 윤리학, 유익한 것은 정치학, 즐거운 것은 의학이다. 통념상으로 정의로운 것은 공적인 이익, 유익한 것은 사적인 이익으로 구분되는데, 실제로 이 둘은 연결될 수 있다.","    ","    의학은 인간의 쾌를 증진하고 고통을 피하는 자연과학의 학문인데, 이 학문엔 이미 뛰어난 실험 결과들이 있지만 정리가 되지 않아 아직 무질서하기 때문에  라이프니츠는 이 학문의 근저에서 반성적 지식이 작동해야 하다고 보았다. 그는 자신의 자연법 이론이 신체 의학을 보완하는 영혼 혹 정신 의학의 일부라 보았다.","    ","- 자연법의 원리 1: 자연법 이론은 연역적 진리다","    ","    자연법 이론은 경험이 아니라 개념을 정의하는 것에 의존. 따라서 감각적 증명이 아닌 이데아와 같은 명석판명한 관념의 증명임. 따라서 자연법의 원리는 현상의 사실이 아니다. 아까 말했듯 개념을 정의함으로써 존재한다. 따라서 정의에 해당하는 현상이 없을 때도 정의는 존재하며, 그 정의에 따라 현상을 평가할 수 있다. 이 정의들은 근본 명제라 할 수 있는데, 이 근본 명제들은 파생 명제들의 조건적 진리에 해당한다. 왜 조건적이냐면 근본 명제들은 현상세계에서 참일수도, 아닐 수도 있기 때문이다. 조건이 모두 충족될 때 따라나오는 결과를 보여주기 때문에 조건적 진리이다. 파생 명제는 정의로부터 이성적으로 연역된 정리들을 의미한다.","    ","    이 근본 명제들은 서로 정의된 자신들의 개념에서 서로 꼬리를 물고 이어지는 정의들의 연속, 즉 연역적으로 추론되어 서로를 증명하고, 파생 명제를 드러낸다. 연역적 증명을 위해선 각각의 개념이 명석판명한 관념에 의해 정의되어야 한다.","    ","    수학으로 칠 때, 근본 명제는 정의, 파생 명제는 정의들의 결합에 따른 정리로 보면 쉽다.","    ","- 자연법의 원리 2: 자연법 이론의 개념을 정의하는 방법","    ","    우리는 사람들이 흔히 사용하는 다양한 사례(언어적 용례)들을 모은 후, 귀납적으로 공통된 하나의 정의를 마련한다. 공통된 것을 찾을 때 명석판명한 관념, 이데아에서 비롯한 이성이 활용된다. 이렇게 만들어진 개념들은 ‘가능성’을 무조건 가져야 한다.","    ","    만약 이러한 방식을 활용하지 않고 특정 인간이 특정 단어를 자의적으로  해석하거나 사용한다면 자연법 이론의 올바른 명제를 찾을 때 어려움이 생길 수 있는데, 사례를 모아 단어를 완벽히 정의해두면 이러한 문제를 방지할 수 있다. 정의를 하나 잘 만들어두면, 앞으로 마주칠 무수히 많은 개별 사례들을 일일이 조사하지 않아도, 그 정의에 대입하여 연역적으로 참/거짓을 판별할 수 있다. 즉, 귀납(발견의 과정)을 통해 정의를 얻고 나면, 그 후로는 연역(증명의 과정)을 통해 수고를 던다는 구조다.","    ","    결국 귀납으로 얻은 현상계의 사례를 이데아와 대조하여 필연적 진리로서의 개념을 정의하고, 이 개념들끼리 연역적으로 추론하여 파생 명제들을 추론하는 게 자연법을 수립하는 구조다.","    ","- 자연법의 원리 3: 올바른 것은 나와 타인의 이익을 모두 고려한다","    ","    정의(正義)는 일종의 덕이다. 아리스토텔레스적 덕을 말한다. 이러한 모든 덕은 정념의 억제다. 따라서 올바른 이성의 명령에 어떤 것도 저항할 수 없게 된다. 그리고 이러한 올바른 이성은 ‘현명함prudentia, 즉 이익과 손해와 관련된 판단력’과 동일하다. 우리가 사랑하는 사람들의 행복으로부터 얻는 우리의 기쁨 또한 우리의 이익이다. 이러한 이익이 없는데도 어떤 것을 올바른 것, 의무라고 말한다면 그것은 말이 되지 않는다. 왜냐하면 현명한 인간이 설득되지 않기 때문이다.","    ","    현명한 인간이 의무로 받아들이게 설득된 모든 것은 정의롭고, 그것이 유익하다는건 필연적이다. 여기서 필연성은 논리적 필연성이 아닌 도덕적 필연성이다. 도덕적 필연성이란 좋은 사람에게 있어서 자연적 필연성과 동등한 효력을 갖는 것을 말한다. 자연적 필연성은 물리적 필연성' 혹은 '현상 세계의 인과적 필연성'을 의미. 즉 좋은 사람에겐 자연 법칙 수준의 강제력을 지닌다는 뜻.","    ","     좋은 사람의 본성에서 나오는 필연성이다. ","    ","    ※ **도덕적 필연성:** 좋은 사람(Vir Bonus)이라면 그 상황에서 그렇게 행동할 수밖에 없는 내적 구속력","    ","    우리는 다음과 같은 두 가지 결론을 얻는다. 첫째, 모든 필연적인 것은 정의로운 것이다. 왜냐면 현명한 사람이 받아들인 필연적인 의무는 정의로운 것이니까. 또 규범 양상 논리에서 필연성이 가능성을 함축한다고 이미 얘기하긴 했다. 둘째, 모든 의무는 유익한 것이다. 혹은 모든 부정의는 해로운 것이다. 왜냐면 현명한 사람은 자신에게 유익하지 않는 의무에 설득되지 않기 때문이다. 근거들에 비추어봤을 때,  이 두 가지 결론들은 이미 존재하는 언어적 용례(다양한 사례)에서 도출된 결론들이다. ","    ","    ◦ **필연=정의:** \"반드시 해야 하는 일(필연)은 당연히 할 수 있는 일(가능/정의)이다\"라는 논리 규칙에서 도출.","    ","    ◦ **의무=유익:** \"손해보는 짓을 의무라고 부르지 않는다\"는 언어 습관에서 도출.","    ","    이제는 나와 타인의 이익을 얼만큼 고려해야 하는지가 남았다.","    ","- 자연법의 원리 4: 인간의 사례에서 도출되는 몇 가지 명제들","    ","    첫째, 자신의 이익을 위한 것이 아닐 때에 다른 사람에게 피해를 주려고 하는 것은 부정의하다.  둘째, 필요치도 않은데 다른 사람을 멸망시키려고 하는 것은 부정의하다. 셋째, 자신의 이득을 위해 다른 사람에게 손해를 끼치려고 하는 것은 부정의하다. 넷째, 공동의 손해를 감수하지 않으려고 하는 것은 부정의하다.(같은 사건에 사람은 모두 같은 권리가 적용되는 게 공평하기 때문이다.)","    ","- 자연법의 원리 5: 왜 나와 타인의 이익을 모두 고려해야 정의로운가?","    ","    나와 타인의 이익을 모두 고려하는 것이 정의라 하지 않았을 때, 다른 몇 가지 방식으로 정의를 정의해보자. ","    ","    1. 누구도 손해 입지 않도록 원해야 정의롭다?","    ","    → 이런 경우엔 내 안전을 최우선 하는 행위가 부정의하게 될 수 있다.","    ","    1. 자신의 손해를 피하기 위해 한 행동은 항상 정의로운가?","    ","    → 그렇다면 내 손해를 막기 위해 타인에 큰 고통을 안겨주는 것이 정당화된다.","    ","    1. 자신의 필요로 인해 생긴 일만이 정의로운가?","    ","    → 내 필요(생존)(당장 급할 때)을 보장하기 위해서 하는 것만이 정의로운 것이라면 타인의 이익은 고려대상에 넣을 수 조차 없는 긴박한 상황이다. 그리고 이런 긴박한 상황에서 만약 정당한 이익 추구(상업, 경쟁 등) 같은 긴박한 생존 상황을 벗어나는 것 이상의 이득을 위한 경쟁을 한다면 모두 부정의가 된다. ","    ","    1. 공공에 무해한 것은 정의로운 것인가?","    ","    → 그렇다면 나보다 공공을 우선하게 된다.","    ","    1. 전쟁의 원인이 되지 않으면 정의로운 것인가?","    ","    → 그렇다면 전투에 처했을 때 다른 사람을 죽게 하면 안된다. 내가 죽는다면 최소한 내가 전쟁의 원인이 되진 않을 것이다.","    ","    1. 현명한 사람으로부터 이의 제기를 받지 않는다면 정의로운 것인가?","    ","    → 6번의 내용 자체는 맞다. 그러나 6번의 대우로 부정의한 것은 현명한 사람에게 이의제기를 받는다고 생각할 때, 대우의 역은 성립하지 않는다. 따라서 현명한 사람에게 이의제기를 받는다고 모두 부정의한 것은 아니다.","    ","    결국 현명한 사람에게 이의제기를 받지 않는다면 정의롭지만, 이의제기를 받는다고 부정의한 것은 아니게 되므로 正義의 定義로 삼기엔 문제가 있다.","    ","    → 윤준식의 의문: 정의의 정의로 삼기에 문제가 있다는 건 내가 추가한 말이고, 본래 대우의 역이 성립하지 않는다고까지만 라이프니츠는 말했는데, 그 내용이 지금 내가 추가한 내용을 말하려고 한 게 맞는지 궁금하고, 또 그게 맞다면 왜 정의의 정의로 삼기에 문제가 있다는 건지 알고 싶다. 내 생각으론 세계의 여러 현상들을 평가할 수 있는 기준으로 작용하기 어렵기 때문이라 생각하긴 했다.","    ","    그리고 또 문제가 논리적으론 문제가 되지만, 라이프니츠가 말한 도덕적 필연성에 따르면 좋은 사람에게 이의제기를 받은 건 부정의한 게 되지 않는가? ","    ","    →**맞긴 하다. 그러나 이의제기를 받은 것이 부정의함의 원인이 되는 건 아니다. 이의제기를 통해 부정의하다는 것을 인식할 수는 있지만 그렇다 해서 그게 원인인 것은 아니다. 부정의하기 때문에 현명한 사람이 불평하는 것이지, 불평하기 때문에 부정의한 것이 아니다. 인과관계를 명확히 해야한다.**","    ","    1. 정의로운 것은 이성적 본성과 일치하는 것인가?","    ","    → 이것 또한 아니다. 왜냐면 7번의 말은 결국 이성적 본성과 정의로운 것이 ‘일치’하면 된다는 것인데, 그렇다면 오류나 질병 같은 것은 이성적 본성과 일치하지 않기 때문에 부정의한 것이 된다. ","    ","    윤준식의 의문: 이건 좀 문제가 있는 게, 오류나 질병이 그럼 정의롭나? 하는 생각이 든다. 정의롭다할 합당한 근거가 없기 때문이다. 혹시 오류나 질병이 그 자체로는 가치중립적이라 부정의하지 않다는 거라면, 세상 모든 것들이 그 자체로는 가치중립적이기 때문에 모든 명제와 단어가 그 자체만으론 정의, 부정의를 따질 수 없고 현상계에서 실제 사례로 드러날 때만 정의로운지 따져볼 수 있다. 즉 그런식으로 질병과 오류를 정의한 것이라면 그것은 옳지 않다. 다른 단어들에는 그 기준을 적용하지 않았기 때문이다.","    ","    물론, 내 질병과 오류는 내 탓이 아니니까 부정의하지 않은 거 아니냐!라고 하는 것도 이해는 간다. 그러나 내 질병을 관리하지 못해 타인에 옮기는 경우엔 부정의한 것이 된다. 질병 이외의 예시로 폭행의 경우도 내 목숨을 구하기 위해 행한 폭행은 부정의하다 할 수 없다. ","    ","    결국 내가 말하고 싶은 핵심은, 라이프니츠의 생각과 달리 정의로운 것은 이성적 본성과 일치해야 한다는 점이다. 이성적 본성과 일치하지 않는 것은 부정의한 것이다. 그러나 부정의하다 해서 무조건 나쁜 건 아니다. 정의롭지는 않으나 악하지도 않은 중간의 위치에 있다면 말이다.","    ","    **부정의하다는 것이 꼭 나쁜 것은 아니다. 중립도 존재한다.”**","    ","    **생각해보니 갑자기 든 생각인데 “질병과 오류는 행하는게 아니라 당하는거잖아. 왜 부정의한 주체에게 인간이 당했다해서 그 인간이 부정의한 죄인이 되지?”**","    ","    **논리적으로 정의로움의 반대로서의 부정의에 오로지 나쁜 사례만 들어간다는게 좀 이해가 안가긴 하지만, 내 핵심 결론은 결국 라이프니츠의 부정의의 정의대로 나쁜 의미로 부정의를 생각하더라도 질병과 오류가 부정의할 수 있는거지. 최소한 지금 라이프니츠가 반박한 방식으로는 반박이 안되지. 왜냐면 질병과 오류가 부정의해도 그 부정의한 주체에 당하는 인간이 부정의하다 할 순 없는거잖아.**","    ","    → 결국 제미나이는 단어에 대한 의지가 담지될 때, 악한 의지가 담지될 때 그 단어가 부정의해진다 하긴 했고, 그 단어의 외연, 상태 자체는 부정의한 것이 아니라 하긴 했다… 결국 의도가 중요하다는 것이다.","    ","    ---","    ","    ---","    ","    추가적으로, 누군가를 과도하게 사랑하는 것, 그래서 내 손해까지 감수하는 것은 부정의한 것이 아닌 어리석은 것이다.  왜냐하면 그러한 사랑을 한 나 자신을 제외하고 누구에게도 부정의한 일이 일어나지 않았기 때문이다. 나에게 부정의하다는 말은 애초에 성립될 수 없다. 그것은 정의로운 것이란 용어를 ‘이익’이라는 단어와 혼동했을 때만 성립할 수 있다.","    ","    → 윤준식의 의문: 그렇다면 쿠르티우스가 죽은 일 같은 건 부정의한 게 아니라 어리석은 것일 뿐인건가? 그렇다면 그런 어리석은 사람이 많아질 수록 세상이 정의로워질 것 같다. 왜냐하면 어리석은 행위는 부정의를 불러오진 않으면서, 종종 공동체의 행복을 가져오기 때문이다. 특히 희생이 그러하다. 뭔가 생각해보면 실제로도 이게 맞는 것도 같다는 생각이 들긴 한다.","    ","    → 제미나이는 이러한 어리석은 행위가 신에 의해 최고의 이익이 되도록 만들어져야 한다고 라이프니츠가 말했다 한다. 즉 이런 어리석어 보이는 행위를 그는 하기를 바랬다는 것이다. ","    ","    ---","    ","    ---","    ","    현명함에 어긋나지 않는 것이 모두 정의로운 것은 아니다. 만약 그렇다면 내가 해를 끼칠 수 있는 권리가 있다 할 때, 현명함에 어긋나지 않으려면 최대한 교활하게 해를 끼쳐야 할 것이다. ","    ","    → 윤준식의 의문: 라이프니츠는 각주에서 ‘해를 끼칠 수 있는 권리’가 부정의하다 했다. 엄격법에 위반하기 때문이다. 근데 왜 ‘현명함에 어긋나지 않는 것이 모두 정의로운 것은 아니다’라는 명제를 비판하기 위해 부정의한 권리의 예시를 가져오는 건가? 정당한 반론이 아니다. 부정의한 행위를 하는 것 자체가 현명함에 어긋나는 것이다. 따라서 라이프니츠는 ‘현명함에 어긋나지 않는 것이 모두 정의로운 것은 아니다’라는 명제를 성공적으로 비판하지 못했다.","    ","    → 제미나이의 답변: 라이프니츠는 귀류법을 통해 그런 해를 끼칠 수 있는 권리를 교활하게 행하는 것이 옳다는 홉스적 정의관을 맞다고 했을 때, 그것이 우리가 최고의 정점이라 여기는 정의의 통념적 가치관에 위배된다는 것을 말하고자 했던 것이다.","    ","    ---","    ","    ---","    ","    1. 양심에 반하지 않는 것은 정의로운 것인가?","    ","    → 양심에 반한다는 것은 무엇인가? 만약 이를 신의 섭리에 따라 본유적 개념으로 정립돼 있는 것으로 본다면, 정의로운 것이란 신이라는 재판관의 어떤 처벌도 두려워하지 않는 당당한 상태다. 그러려면 모든 것을 아는 신 앞에서 죄가 없어야 한다. 죄가 없으면 처벌받지 않는다. 그러면 정의 = 처벌받지 않음이 된다. 그런데 만약 처벌받을 것이 무서워 어떤 것을 지키고, 그게 정의라 한다면 우리는 받아들일 수 있는가? 받아들일 수 없기 때문에 양심에 반하지 않는 것이 정의롭다고 할 순 없다. 물론 정의로운 것은 좋은 사람의 양심에 반하지 않는다. 핵심은 정의가 선재하고, 그것을 원인으로 양심에 반하지 않는다는 결과가 나오는 것이다. 반대로 양심에 반하지 않는 게 원인이 될 순 없다. 선후관계의 문제로 명제를 기각했다는 점에서 6번의 논리와 비슷하다.","    ","    ---","    ","    ---","    ","    지금까지 라이프니츠는 正義의 定義에 대한 틀린 경우를 얘기해보았다고 한다.","    ","    결론적으로 그가 생각하는 正義의 定義에서 핵심은 다른 사람의 이익과 함께 나의 이익을 고려하는 것이다. 그러나 내 이익을 목적으로 다른 사람의 이익을 고려하거나, 다른 사람의 이익을 목적으로 내 이익을 고려하는 것은 아니다. 그렇게 생각한다면 내 이익에 도움이 안될 경우 다른 사람의 이익을 고려하지 않기 때문이다. 예를 들어 내가 아무 힘 들이지 않고 다른 사람의 목숨을 구할 수 있다해도 내 이익을 목적으로 하는 사람이라면 그 목숨을 구하지 않을 것이다.","    ","    → 윤준식의 의문: 아니… 다른 사람의 이익이 내게 행복으로, 즉 이익으로 다가오니까 다른 사람 이익 고려하는거라매. 그럼 내 이익을 목적으로 다른 사람의 이익을 고려하는 거 맞잖아. 라이프니츠는 내 이익을 목적으로 하는 사람이라면 아무 수고없이 타인의 목숨을 구할 수 있어도 안할거라는 예시를 들었는데, 그럴 수가 없지. 왜냐면 라이프니츠에 따르면 좋은 사람은 모든 사람을 사랑하고, 다른 사람이 잘 되는 것에서 큰 기쁨을 느끼기 때문에 그것이 이익이 된다매. 그러니까 내 이익이 있어서 타인의 이익을 고려하는 게 맞는거지. 아무리 봐도 라이프니츠는 통념과 학문적 진리를 통합하지 못하고 있다는 생각이 든다.","    ","    → 제미나이의 답변: 핵심은 좋은 사람에겐 다른 사람의 이익 그 자체가 목적이 되는 것이고, 교활한 사람에겐 내 이익을 목적으로 다른 사람의 이익을 수단화하는 것이다.","    ","    ---","    ","    ---","    ","    라이프니츠에 따르면, 다른 사람의 이익을 바라는 이유에는 두 가지가 있다. 첫 번째는 우리 자신의 이익을 위해서이고, 두 번째는 그것을 마치 우리 자신의 이익처럼 여기기 때문이다. 전자는 계산적인 이유고, 후자는 사랑하는 사람의 이유다. ","    ","    →윤준식의 의문: 아니 내 이익을 목적으로 타자의 이익 고려하는 게 맞네! 혹시 두 번째 이유를 더 강조하고 싶어서 그런건가?","    ","    ---","    ","    ---","    ","    누군가는 어떻게 내 이익과 타인의 이익이 동등할 수 있냐 묻는다. 그러나 라이프니츠는 만약 타인의 이익이 그 자체로 ‘즐거운 일’이라면, 그것은 그 자체로 목적이 될 것이라 한다. 왜냐하면 즐거움(jucundus)은 그 자체로 목적이 되는 일이기 때문이다. → 아리스토텔레스의 행복에 대한 관점과 비슷한 것 같다.","    ","    결국 핵심은 다른 사람의 이익이 내게 ‘즐겁’기 때문에 그 자체로 목적이 되며, 이익이 되는 것이다. 물론 다른 사람의 이익이 즐겁기 위해선 내가 ‘좋은 사람’이어야 한다. 악덕한 사람은 다른 사람의 이익이 그 자체로 즐겁지 않을 것이다.","    ","    라이프니츠는 이 얘기에서 사랑의 정의 또한 도출할 수 있다고 한다. 그에게 ‘누군가를 사랑한다는 것’은 그에게 이익이 되는 것이 우리에게 기쁨(delec-tatio)이 되는 것이라 한다. 그런데 동물이나 식물같은 비이성적인 존재들은 사랑받을 수 없다고 한다. 그들은 자신에게 이로운 것을 찾으려 하지 않기 때문이다. 이 말은 곧 자신에게 그 자체로 목적이 되는 즐거운 것을 찾지 않는다는 말과 같다. ","    ","    → 윤준식의 의문: 근데 비이성적인 존재들이 누군갈 사랑할 순 없어도 사랑받을 수는 있지 않나? 사랑 받는다는 것은 사랑하는 주체가 있는지가 중요한거지 사랑 받는 대상이 사랑을 할 수 있냐 없냐가 중요한 게 아니다.","    ","    → 제미나이의 답변: 사랑의 정의는 타인의 행복을 나의 기쁨으로 삼는 것인데, 핵심은 타인이 행복을 느낄 수 있어야 한다. 그런데 비이성적인 존재는 행복을 느낄 능력이 없다. 그래서 사랑의 대상이 될 수 없다. 우리가 강아지를 보고 기쁨을 느끼는 것은 강아지의 행복 때문이 아니라, 강아지가 나에게 주는 귀여움(나의 쾌락) 때문이라면, 그것은 ‘욕망의 사랑(소유)’이다. 참고로 후기 라이프니츠는 강아지에 영혼을 불어넣어준다고 한다.","    ","- 최종적 라이프니츠의 正義에 대한 定義","    ","    최종 正義에 대한 定義: 다른 사람을 사랑하는 태도, 혹은 문제가 생길 때마다 다른 사람의 이익에 대한 기대에서 자신의 쾌락을 획득하는 태도이다. ‘형평(aequum)’은 문제가 생길 때마다 다른 모든 사람을 사랑하는 것이다. 형평을 추구하는 것은 우리의 의무이다.  부정의는 문제가 생길 때마다 다른 사람의 이익을 기뻐하지 않는 것이다. 정의로운 것(허용된 것)은 부정의하지 않은 모든 것이다. 따라서 정의로운 것은 형평, 즉 문제가 생길 때마다 다른 사람의 이익을 기뻐하는 것일 뿐만 아니라 부정의하지 않은 것, 즉 문제가 생기지 않을 때에도 사람들이 원하는 것을 행하는 것이다.","    ","    → 윤준식의 의문: 형평의 원리는 기하학적 정의 아닌가? 그래서 ‘문제가 생길 때’ 모두를 사랑하라는건가? 교환적 상황에 따라 내게 어떤 권리나 의무가 할당될 때? 잘 이해가 안가는 말이다. ","    ","    → 제미나이의 답변: ‘문제가 생길 때’라는 표현은 나의 행동이 타인의 이익이나 손해와 관련되어, **‘이것이 정의로운가?’라는 질문이 제기되는 모든 상황**”을 뜻한다. 예를 들어, 내가 혼자 방에서 노래를 부르는 것은 타인과 무관하므로 ‘사안(quaestio)’이 발생하지 않다. 이때는 그냥 ‘허용된 것(Licitum/Justum)’입니다.하지만 내가 타인의 물건을 가져가려 한다면, 타인의 이익과 충돌하므로 ‘사안(quaestio)’이 발생한다. 이때 필요한 것이 ‘형평(Aequum)’이다. 이러한 사안이 발생했을 때 그들을 사랑하는 것(타인의 이익을 고려하는 것)은 의무다.","    ","    ---","    ","    ---","    ","    “jus는 정의로운 것을 행할 수 있는 potentia이다.”","    ","    → 윤준식의 의문: 결론적으로 자연법은 정의로운 것을 행할 수 있는 힘인건데… 이 말이 틀렸다고는 생각하지 않지만 지금까지의 논의에서 도출되는 최종 명제라 할만한가? 차라리 정의로운 것을 가능하게 하는 사랑, 모두의 이익을 고려하게 하는 사랑 이런 표현이 맞는 거 아닌가?","    ","    → 제미나이의 답변: 사랑은 원인이고, jus(자연권)는 사랑이라는 원인에 의해 규정된 결과적인 상태다. 사랑에 의해 jus라는 potentia가 생긴 것이다. ","    ","","## 자연법의 원리 - 정의와 정리","","이 장에선 정의와 자연법에 관련된 단어들에 대한 정의를 제시하고, 그 정의들을 나열하고 있다. 따라서 이 내용을 모두 나열하는 것은 의미가 없고, 다른 장에서의 탐구를 통해 모두 도출 가능한 것들이다.","","- 정확히 안다는 것(pernoscere)","    ","    눈 여겨 볼만한 것은, ‘정확히 안다는 것(pernoscere)’이 있는데, 사물이 그 자체로 또는 다른 사물과 결합하여 작용을 가할 수 있는 것과 작용을 받을 수 있는 것을 아는 것이다. 정확히 안다는 것은 이해한다는 것으로, 이해한다는 것은 깊숙히 읽는다는 의미다. 단순히 인식한 사람은 사물을 정확히 아는 것이 아니다. 그 사물에서 일어날 수 있는 작용의 내용에 대해 알아야 한다.","    ","- 법학(Jurisprudentia)의 정의","    ","    법학(Jurisprudentia)의 정의와 관련하여 라이프니츠는 “법학은 행동이 정의롭거나 부정의하다고 일컬어지는 한에서 그 행동에 관한 학문이다. 정의로운 행동은 공공에 유익한 것이고, 부정의한 행동은 공공에 손해인 것이다. 공공은 말하자면 첫 번째 공공은 세계, 즉 그것의 통치자가 신인 세계이고, 그다음은 인류이고, 마지막은 국가를 의미한다.”","    ","    물론 법학이 실천적 학문이긴 해도, 그것의 모든 명제가 오로지 좋은 사람에 대한 정의를 통해서만 증명될 수 있고, 귀납이나 사례들에 의존하지 않기 때문에, 라이프니츠는 그것을 학문이라고 부른다.","    ","    라이프니츠는 법학을 의무(officium)에 관한 학문, 즉 좋은 사람에게서 불가능한 것과 필연적인 것, 즉 생략하는 것이 불가능한 것에 관한 학문이라고 부른다.","    ","- 자유와 의무의 정의, 도덕적 포텐시아와 자연적 포텐시아","    ","    좀 의아한? 정의가 있는데 다음의 두 가지다.","    ","    자유: 도덕적 힘/능력, 즉 좋은 사람에게 적합한 자연적 힘/능력과 일치하는 것이다. → 좋은 사람이 도덕적 힘과 자연적 힘이 같다는 건 이해하겠는데 그게 왜 자유인가?","    ","    의무: 자연적 힘에 비해 도덕적 힘의 부족이다. → 그럼 이건 좋은 사람이 되기 부족하다는 건가?","    ","    지금까지는 좋은 사람을 가정한 채, 좋은 사람에게 자유인 것과 의무인 것으로 나눈 줄 알았는데 여기서의 정의는 좋은 사람이 자연적 힘과 자신의 도덕적 힘을 일치시켜 행동이 자유로운? 상황을 자유라 하고, 흔히 공자가 말하듯 원하는 대로 행동해도 덕스러운 상태가 되지 않아 의무로 지켜야 하는 상태를 의무라 하는 것 같다? 근데 이런 정의는 뭔가 좀 이상하다.","    ","    라이프니츠는 결론까지 이어서 얘기한다. “따라서 자유는 좋은 사람에게서 가능한 행동 혹은 우연적 행동이라고 불리거나 정의로운 행동과 선택권이 주어진 행동이라고 불리는 행동의 방식이다. 의무는 반대로 불가능한 행동 혹은 필연적 행동이라고 불리거나 부정의한 행동과 의무적 행동이라고 불리는 행동이다. ","    ","    곧 밝히겠지만, 도덕적 힘/능력이 자연적 힘/능력을 넘어서는 일은 결코 없다.","    ","- 라이프니츠의 최종적인 자연법의 양상","    ","    최종적으로 라이프니츠는 자연법의 양상에 해당하는 명제 22개를 갖고 오게 되는데, 이 명제들은 아직 正義의 定義에 대한 보편적 개념(환위 해도 항상 참인 명제)은 아니지만 좋은 사람의 가능, 불가능, 필연, 우연에 관한 여러 전칭 명제들을 가져왔다. 이는 법학의 수학화, 연역화를 위한 노력의 일환이다.","    ","","## 정의와 자연법에 관하여","","- 요약","    ","    라이프니츠 자신의 정의 개념과 권리, 의무 개념을 정의하며 자신과 다른 로마에서의 jus의 사용에 대해 제시하고, 로마에서 jus의 일종인 자연법, 만민법, 시민법을 비판하고 법을 자연법과 실증법으로 나눈다.","    ","    여기까지가 jus에 대한 개념 정의에 대한 내용이었고, 그다음 문단부턴 자연법에 의거 정의롭게 행동하기 위한 원리 세 가지를 설명한다.이는 엄격법 → 형평 → 종교의 자연법 구성과 연결된다.","    ","    마지막으로 이러한 자연법의 구성이 실제 국가에서 어떻게 반영되어 있는지를 보여준다. 공법과 사법, 성문법과 관습법을 통해서.","    ","    라이프니츠는 로마법의 유명한 3대 법언을 자신의 3단계 자연법과 매칭시키며 글을 맺는다.","    ","","---","","- 라이프니츠의 정의와 그와 관련된 용어들 정의(jus의 정의 포함)","    ","    정의(justitia)는 지혜로운 사람의 박애이며, 선하고 현명한 사람의 판단과 일치하는 것이다.","    ","    - **논리**","        ","        좋은 사람 = 선하고 현명한 사람 = 사랑 + 지혜","        ","    ","     또는 인간에 대한 인간의 감정, 즉 자비와 증오를 올바른 이성에 따라 조절하고 지도하는 덕이다. ","    ","    - **논리**","        ","        좋은 사람이란 그저 감정적으로 사랑하기만 하는 존재가 아니라, 이성에 의거해 무엇을 얼마나 사랑하고, 무엇을 미워해야 하는지 조절할 수 있어야 한다. 좋은 사람이 그러한 행위를 할 수 있게 해주는 조절 능력으로서의 덕이 ‘정의’다.","        ","    ","    따라서 우리는 모든 사람을 평등히 대해야 하고, 다른 사람의 덕을 사랑하고 악덕은 미워해야 한다.","    ","    - **논리**","        ","        ‘정의’에 의거했을 때, 우리는 모든 사람을 사랑해야하고, 우리가 미워해야할 것은 사람이 아니라 나쁜 행위, 악덕이 된다.","        ","        ◦ 따라서 **\"악덕은 미워하되 사람은 미워하지 말라\"**는 기독교적/법학적 격언이 라이프니츠의 **\"정의 = 지혜 + 사랑\"** 공식에서 논리적으로 도출되는 것입니다.","        ","    ","    정의로운 것(허용된 것) = 좋은 사람에게 가능한 것","    ","    금지된 것 = 좋은 사람에게 불가능한 것","    ","    의무인 것 = 좋은 사람에게 필연적인 것","    ","    자유로운 것 = 좋은 사람에게 우연적인 것","    ","    권리(jus) = 도덕적으로 행할 수 있는 힘/능력","    ","    의무(obligatio) = 도덕적 필연성","    ","- 로마에서의 jus정의","    - 쓰잘떼기 없음","        ","        (I, 15, 『학설휘찬』 조건과 증명에 관하여)","        ","        **Dig. 1.15.0. De officio praefecti vigilum.** ","        ","        **‘야경대장의 직무에 관하여’ 라는 부분이고, 야경대장은 로마 제국의 화재 예방과 치안을 담당했다.**","        ","    ","    학설휘찬은 유스티니아누스 황제가 편찬한『로마법 대전(Corpus Juris Civilis)』의 네 개의 법전 중 하나다.","    ","    권리는 도덕적 힘(가능한 것)(facultas)이고, 의무는 도덕적 필연성이다. 도덕적이라는 것은 좋은 사람의 관점에서 볼 때를 의미한다. 왜냐하면 우리는 우리의 신앙심과 수치심을 해치는 일, 그리고 좋은 풍습에 완전히 어긋나는 일을 할 수 없다고 믿어야 하기 때문이다.","    ","    - **물리적 세계:** 깡패는 힘이 세서 사람을 때릴 수 있습니다(물리적 힘/가능성).","    - **도덕적 세계:** 하지만 '좋은 사람(Vir Bonus)'은 사람을 때리는 나쁜 짓을 차마 **'할 수 없습니다(Moral Impossibility)'**.","    ","    그 근거가 학설휘찬.","    ","    - (학설휘찬의, 28, 7, 15)","        ","        Dig. 28.7.15","        ","        Papinianus 16 quaest.","        ","        Filius, qui fuit in potestate, sub condicione scriptus heres, quam senatus aut princeps improbant, testamentum infirmet patris, ac si condicio non esset in eius potestate: nam quae facta laedunt pietatem existimationem verecundiam nostram et, ut generaliter dixerim, contra bonos mores fiunt, nec facere nos posse credendum est.","        ","        **\"아버지의 권력(Potestas) 아래 있던 아들이, 원로원이나 황제가 승인하지 않는(부당하게 여기는) 조건 하에 상속인으로 지명되었다면, 그는 아버지의 유언을 무효화할 것이다. 이는 마치 그 조건이 아들의 권한(능력) 안에 있지 않은 것과 같다. 왜냐하면 우리의 경건함(Pietas), 평판(Existimatio), 수치심(Verecundia)을 해치는 행위들, 그리고 일반적으로 말해 선량한 풍속(Bonos Mores)에 반하여 행해지는 것들은, 우리가 할 수 있다고 믿어서는 안 되기(할 수 없는 것으로 간주되어야 하기) 때문이다.\"**","        ","    ","    그러나 ‘jus’라는앞의 장에서 쓰인대로 권한(facultas)를 의미하기도 하고,  학설휘찬 부분에서는 다양한 다른 의미를 가진다. 그 중에서 중요한 사용처는  인간 사회를 지도하고 보존하는 올바른 이성 자체를 의미하기도 한다. 그러한 jus의 의미는 객관적 법으로서 만민법이다.","    ","    - (학설휘찬의, I, 1, 11~12)","        ","        Dig. 1.1.0. De iustitia et iure. Dig. 1.1.11","        ","        Paulus 14 ad sab.","        ","        Ius pluribus modis dicitur: uno modo, cum id quod semper aequum ac bonum est ius dicitur, ut est ius naturale. altero modo, quod omnibus aut pluribus in quaque civitate utile est, ut est ius civile. nec minus ius recte appellatur in civitate nostra ius honorarium. praetor quoque ius reddere dicitur etiam cum inique decernit, relatione scilicet facta non ad id quod ita praetor fecit, sed ad illud quod praetorem facere convenit. alia significatione ius dicitur locus in quo ius redditur, appellatione collata ab eo quod fit in eo ubi fit. quem locum determinare hoc modo possumus: ubicumque praetor salva maiestate imperii sui salvoque more maiorum ius dicere constituit, is locus recte ius appellatur.","        ","        Dig. 1.1.12","        ","        Marcianus 1 inst.","        ","        Nonnumquam ius etiam pro necessitudine dicimus veluti \" est mihi ius cognationis vel adfinitatis. \"","        **[제11법문: 파울루스]**","        ","        ‘Jus(법/권리)’라는 단어는 여러 가지 의미로 사용됩니다.","        ","        **첫째,** 언제나 형평에 맞고 선한 것을 ‘Jus’라고 부르는 경우입니다. **자연법(Jus Naturale)**이 이에 해당합니다.","        ","        **둘째,** 각 국가에서 모든 사람 혹은 다수에게 유용한 것을 ‘Jus’라고 부르는 경우입니다. **시민법(Jus Civile)**이 이에 해당합니다. 또한 우리 로마에서는 **명예법(Jus Honorarium, 법무관법)**도 올바르게 ‘Jus’라고 불립니다.","        ","        심지어 법무관(Praetor)이 불공정하게 판결을 내릴 때조차도, 그는 “Jus(재판)를 행한다”고 말해집니다. 이때의 ‘Jus’는 법무관이 실제로 행한 그(불공정한) 행위를 가리키는 것이 아니라, 법무관이 마땅히 행했어야 할 직무를 가리키는 말이기 때문입니다.","        ","        **또 다른 의미로,** ‘Jus’가 행해지는(재판이 열리는) **‘장소’**를 ‘Jus(법정)’라고 부르기도 합니다. 이는 그곳에서 행해지는 행위의 이름을 따서 장소를 부르는 것입니다. 그 장소는 다음과 같이 정할 수 있습니다. 법무관이 자신의 제국 통치권의 위엄과 조상들의 관습을 해치지 않는 범위 내에서 재판을 선언하기로 정한 곳이면, 그곳이 어디든 올바르게 ‘Jus’라고 불립니다.","        ","        **[제12법문: 마르키아누스]**","        ","        때로는 ‘Jus’를 **‘친족 관계(유대)’**의 의미로도 사용합니다. 예를 들어 “나에게는 혈연이나 인척의 Jus(관계)가 있다”고 말하는 경우입니다.","        ","        \"라이프니츠는 『학설휘찬』의 해당 조항들(Dig. 1.1.11~12)을 인용하면서, 로마법에서 'Jus'가 장소(법정)나 친족 관계 등 다양한 뜻으로 쓰이지만, 철학적으로는 크게 두 가지 핵심 의미로 요약된다고 봅니다.","        ","        1. **주관적 권리(Right):** 내가 무언가를 할 수 있는 **도덕적 능력(Potentia/Facultas)**.","        ","        2. **객관적 법(Law):** 사회를 보존하는 **올바른 이성(Recta Ratio)** 그 자체.","        ","        그리고 이 챕터(Titulus I)에서 다루는 자연법, 만민법, 시민법은 주로 2번, 즉 **'이성의 법칙'**으로서의 Jus를 다루고 있다고 분석합니다.\"","        ","    ","    법학자들은 자연법(jus naturale)을 ‘자연이 모든 동물에게 가르친 것’이라고 정의한다. 이것 또한 학설휘찬에서 나오고, 출산 양육, 결혼 등이 포함된다. 이 자연법은 인간 뿐 아니라 모든 동물에게도 적용된다. 자연법은 3개가 있는데 이 중 폭력에 대한 건 만민법에 가깝다고 라이프니츠는 분석한다.","    ","    - (학설휘찬의, I, 1, 1. 3)","        ","        Dig. 1.1.1.3","        ","        Ulpianus 1 inst.","        ","        Ius naturale est, quod natura omnia animalia docuit: nam ius istud non humani generis proprium, sed omnium animalium, quae in terra, quae in mari nascuntur, avium quoque commune est. hinc descendit maris atque feminae coniunctio, quam nos matrimonium appellamus, hinc liberorum procreatio, hinc educatio: videmus etenim cetera quoque animalia, feras etiam istius iuris peritia censeri.","        ","        **[학설휘찬 1. 1. 1. 3 번역]**","        ","        \"자연법이란 자연이 모든 동물에게 가르친 것입니다. 왜냐하면 이 법은 인류에게만 고유한 것이 아니라, 땅과 바다에서 태어나는 모든 동물, 그리고 심지어 새들에게도 공통된 것이기 때문입니다. 여기에서 우리가 ‘결혼’이라고 부르는 남성과 여성의 결합이 유래하며, 자녀의 출산과 양육도 여기에서 유래합니다. 실로 우리는 다른 동물들, 심지어 야생 짐승들조차도 이 법에 대한 지식을 가진(이 법에 숙련된) 것으로 간주됨을 봅니다.\"","        ","        **라이프니츠의 텍스트 분석 (소스파일 근거)** 라이프니츠는 로마법이 제시하는 자연법의 목록을 다음과 같이 나열합니다 [소스파일 6권의 1권, 760]:","        ","        1. 남녀의 결합 (Conjunctio maris et feminae)","        ","        2. 자녀 양육 (Educatio)","        ","        3. **폭력을 폭력으로 물리치는 것 (Vim vi repellere)**","        ","        **② 문제의 \"3항(Lex 3)\"**","        ","        - 님이 인용한 울피아누스의 글(Lex 1, §3) 뒤에 나오는 **제3법문(Lex 3)**에서 플로렌티누스(Florentinus)는 이렇게 말합니다:","        - 그런데 로마법에서는 일반적으로 **\"폭력에 대한 정당방위\"**를 **만민법(Jus Gentium)**의 영역으로 분류합니다.","        ","        **③ 라이프니츠의 지적:** 라이프니츠는 **\"이 목록의 마지막 부분(폭력을 폭력으로 물리치는 것, Lex 3)은 자연법이라기보다는 만민법(Jus Gentium)을 가리키는 것으로 보인다\"**고 비평합니다 [소스파일 6권의 1권, 760].","        ","    ","    - **라이프니츠의 로마법에서의 세 법 분류에 대한 비판**","        ","        **로마법(학설휘찬)** 자체가 이 단어를 중의적으로 쓰고 있기 때문입니다.","        ","        - **로마법의 구조:** 『학설휘찬』 1권 1장은 \"Jus(법/권리)란 무엇인가?\"를 다루면서, 자연법, 만민법, 시민법과 같은 **법의 종류(Law)**를 나열하기도 하고, 동시에 사람이 법에 의해 갖게 되는 **권한(Right)**을 설명하기도 합니다.","        - **라이프니츠의 의도:** 라이프니츠는 이 혼란을 정리하기 위해 **\"Jus(객관적 법)가 정해짐으로써 비로소 개인에게 Jus(주관적 권리/능력)가 생긴다\"**는 논리적 순서를 세우고 있습니다.","        ","        **만민법 (Jus Gentium):** 오직 올바른 이성(sola recta ratio)이 인간에게 가르칠 수 있는 것","        ","        **시민법 (Jus Civile):** “국가가 승인한 것(quod civitati placuit)” 혹은 “각 국가에서 유용한 것”","        ","        특정한 사회(국가)가 의지(Will/Voluntas)를 통해 제정한 법입니다.","        ","        라이프니츠는 로마법의 이 3분법(자연법/만민법/시민법)이 **논리적으로 엄밀하지 않다**고 비판합니다.","        ","        - **비판 이유:** “법학자들의 이런 구분(동물적 자연법 vs 이성적 만민법)은 **내재적 차이(intrinsecis differentiis)**에서 비롯된 것이 아니다”라고 지적합니다. 동물이 하는 행동과 인간이 하는 행동을 굳이 법의 종류로 나눌 필요가 없다는 것입니다 [소스파일 6권의 5권, 2778; 번역본 PDF 79쪽].","        - **라이프니츠의 새로운 분류:** 그는 법을 크게 두 가지로 나누는 것이 타당하다고 봅니다.","        ","        1. **자연법 (Jus Naturale):** 만민법을 포함하여, 본질적으로 옳고 그른 것 (이성과 본성에 근거).","        ","        2. **합법적 법/실증법 (Jus Legitimum/Positivum):** 시민법처럼, 제정되었기 때문에 비로소 법이 되는 것 (권위에 근거) [소스파일 6권의 5권, 2778; 번역본 PDF 79쪽].","        ","        핵심은 로마의 만민법, 자연법, 시민법 분류는 틀렸고, 자연법과 실증법으로 나뉘어야 한다고 봄. 로마의 자연법은 동물도 공유하는 본능의 영역이며, 법이 아니라 자연의 사실들을 담고 있다. 오히려 만민법이 인간의 이성으로 제정한 법이기 때문에 라이프니츠의 자연법과 일치함. 실증법은 국가의 필요에 의해 제정된 법이다.","        ","    ","","---","","이 부분부터 라이프니츠의 자연법의 세 등급과 정의 개념을 이해할 때 중요한 부분이다.","","- 우리를 정의롭게 하는 세 가지 원리","    ","    첫 번째 원리: 자기 자신의 유익(utilitas propria)","    ","    → 누구에게도 피해를 주지 않는 것, 또한 타인을 자극하지 않는 것, 다른 이를 도와 공통 이익을 늘리는 것.","    ","    두 번째 원리: 인간성과 명예에 대한 감각","    ","    → 왜냐하면 우리에게 아무런 위험이 없더라도, 우리는 다른 사람의 불행에 마음이 아프고, 다른 사람의 행복을 기뻐하고, 우리는 덕에 합당한 보상이 뒤따른다는 것을 알기 때문이다. 그리고 ‘정의’와 ‘좋은 사람’이라는 명사는 인간에 대한 인간의 이런 (따뜻한) 마음 상태로 이루어진다.","    ","    왜냐하면 첫 번째 원리에 따라 행동하는 사람은 좋은 사람이라기 보다는 용의주도하고 교활한 사람이라고 불리기 때문이다.","    ","    첫 번째 원리를 따르는 사람은 다른 사람들이 유용할 떄에만 우호 관계를 추구하고, 두 번째 원리를 따르는 사람은 명예롭고 진실한 우호 관계를 추구한다.","    ","    모든 인간에게 이런 인간성에 대한 참된 감각이 내재되어 있기 때문에, 양심의 가책이 생겨나고, 잘못된 행동을 하는 인간은 자기 스스로 만족하지 못하게 되고, 내면에서부터 고통과 타격을 느끼게 된다. 이것이 자연적 처벌이다.","    ","    세번째 원리: 종교","    ","    → 많은 사람들은 두 번째 원리를 잊게 되고, 첫번째 원리에 따라 행동하며 처벌을 피할 수 있다는 희망을 갖고 행동하게 되는데, 이런 사람들로부터의 공격, 배신, 사기 등으로부터 인간은 보호받을 수 없다. ","    ","    결국 자연법(jus naturale)의 최고의 완전함은 최고의 지성과 최고의 능력을 가진 실체이자 아무도 속일 수 없고 피할 수 없는 신에 대한 숭배에서 찾아야 한다. 신 덕분에 유익한 것과 명예로운 것이 동일한 것이 되고, 처벌받지 않는 죄는 없으며, 어떤 훌륭한 행동이 헛되거나 보상받지 못하는 경우는 없다.","    ","    지혜로운 사람의 덕은 영혼에 최고의 즐거움(덕 그 자체가 목적)이기 때문에, 그 자체로 보상이다. → 여기서 덕은 영혼의 완전함? 지성적 사랑을 실천하는 힘? 이라는데… 뭔소릴까.","    ","    만약 누군가 진정한 지혜에 도달하지 못한다면, 종교는 그의 번역본에선 명예 → Honestas(도덕성/정직함/명예로움)에 무엇인가를 더해준다. ","    ","    **의미:** 지혜로운 사람은 덕 그 자체의 기쁨 때문에 도덕적(Honestas)으로 삽니다. 하지만 지혜가 부족한 사람은 덕의 기쁨을 모릅니다. 이때 종교(신에 대한 두려움과 보상의 약속)가 개입하여, 그 사람이 도덕적으로 살 수 있도록 **'동기(이유)'를 보태줍니다(superaddit).**","    ","","---","","- 이 원리들이 현실 사회에서 어떻게 구현되는가? - 공법과 사법","    ","    법은 인간 사회의 완성에 관계된 것들에 대한 올바른 이성의 명령이며, 인간 사회의 가장 완전한 형태는 국가이기 때문에, 국가의 범위 안에서 국가 자체의 완성을 목표로 하는 법을 공법(jus publicum)이라고 부른다. ","    ","    국가 밖에는 공법이란 없고, 나머지는 사법(privatum)이다. 사법에는 개인의 유익에 관한 법이 있다. 국가 간의 거래에서 한 국가는 하나의 인격체와 같기 때문에 사법이 적용된다.","    ","    그러나 여러 국가가 하나의 지배권으로 합쳐졌을 땐 다르다.","    ","    또한 사법뿐만 아니라 공법도 자연법이거나 합법적 법이라는 것은 분명하다. 각 국가에서 적용되어야 하는 공통적인 어떤 공법이 있어야만 하기 때문이다.","    ","    공법(Jus Publicum)**은 만민법이나 시민법 중 하나로 귀속되는 것이 아니라, **그 두 가지 성격을 모두 가질 수 있는 상위 범주**입니다. \"공법은 국가 자체의 완성(perfectionem ipsius civitatis)을 목표로 하는 법이다.”","    ","    1. **자연적 공법 (Natural Public Law):** 모든 국가가 국가로서 존립하기 위해 반드시 지켜야 하는 **이성의 명령**. (예: 통치자는 공공의 이익을 위해야 한다.) → 님이 말한 **'만민법/자연법'**적 요소.","    ","    2. **합법적/실증적 공법 (Legitimate/Positive Public Law):** 각 국가가 편의에 따라 정한 특수한 헌법이나 행정 규칙. (예: 대통령 임기는 5년이다.) → 님이 말한 **'시민법'**적 요소.","    ","    따라서 공법은 **'국가의 운영에 관한 법'**이라는 **주제(Topic)**에 따른 분류이지, 그것이 자연적인지 인위적인지(Source)에 따른 분류가 아닙니다.","    ","    국가 밖에는 상위의 정부(Super-State)가 없습니다. 따라서 국가 A와 국가 B의 관계는 마치 **개인(A)과 개인(B)이 만나는 것**과 똑같습니다.","    ","    - **결론:** 국가 간의 조약, 통상, 전쟁 규칙 등(오늘날의 국제법)은 라이프니츠의 관점에서는 **'거대한 개인들 간의 거래'**이므로 **사법(Private Law)**의 원리(계약 준수, 상호 존중 등)를 따릅니다.","    ","    4. 네 번째 의문: 국가가 합쳐지면 무엇이 다른가? (수직적 관계의 형성)","    ","    **① 님의 질문:** \"여러 국가가 하나의 지배권으로 합쳐졌을 땐 다르다는데, 뭐가 다른가?\"","    ","    **② 답변:**","    ","    - **상황:** 국가 A와 B가 합쳐져서 연방이나 제국(Empire)이 되면, 이제 A와 B는 대등한 개인(사법 관계)이 아니라, **전체(제국)의 부품(Part)**이 됩니다.","    - **변화:** 이때부터는 그들 사이의 관계를 규율하는 법이 **'사법'**이 아니라 **'공법(Jus Publicum)'**이 됩니다. 왜냐하면 이제 그들의 관계는 **'국가(전체)의 완성'**을 목표로 하는 내부 규칙이 되기 때문입니다.","    ","    5. 다섯 번째 의문: 사법/공법과 자연법의 관계","    ","    **① 질문 A:** \"사법이 왜 자연법이라는 건지 이해가 안 간다.\"","    ","    - **답변:** 사법의 핵심 내용(계약을 지켜라, 남의 물건을 훔치지 마라, 손해를 배상하라)은 국가가 법을 만들기 전부터 **이성(Reason)**이 명령하는 바입니다.","    ","    ◦ 내가 님에게 돈을 빌렸으면 갚아야 한다는 것은, 법전(시민법)이 없어도 인간의 양심과 이성(자연법)이 알 수 있습니다. 그래서 **사법의 기초는 자연법**입니다.","    ","    **② 질문 B:** \"'각 국가에서 적용되어야 하는 공통적인 어떤 공법이 있어야만 하기 때문이다'라는 말은 왜 나온 건가?\"","    ","    - **답변:** 이 문장은 **\"공법에도 자연법(Natural Law)의 영역이 있다\"**는 것을 증명하기 위해 나온 핵심 근거입니다.","    - **논증 구조:**","    ","    1. 많은 사람들은 공법(헌법, 행정법)은 국가가 마음대로 정하는 **'실증법(Positive Law)'**이라고만 생각한다.","    ","    2. **하지만(라이프니츠의 반박):** 어느 국가든 '국가'라고 불리려면 반드시 지켜야 하는 **공통적이고 필수적인 규칙(이성의 명령)**이 있다. (예: 통치자는 백성을 보호해야 한다, 공공의 안녕이 우선이다.)","    ","    3. **결론:** 이 '공통적인 규칙'은 국가가 마음대로 정한 게 아니라 이성이 명령한 것이므로, **공법 안에도 자연법(필연적 진리)이 존재한다.**","    ","- 이 원리들이 현실 사회에서 어떻게 구현되는가? - 시민법","    ","    시민법은 성문법이거나 관습법이다. 성문법은 문서로 도입되고 보존, ","    ","    관습법은 묵시적 동의로 도입되고 사람들의 습관에 의해 보존","    ","    그래서 관습법이 더 유효. (내면화된 습관이 외적인 명령보다 더 강력하고 유효하기 때문)이라는데 이건 제미나이 생각.","    ","    관습법은 사람들의 칭찬과 비난으로부터 배워진다. 관습법은 자연법과 유사하다. 왜냐하면 자연이 인간을 이끄는(trahit) 것처럼 습관(consuetudo)도 인간을 이끌기 때문이며, 습관은 **제2의 천성(altera natura, 또 하나의 자연)**이기 때문이다.","    ","    → **습관이 되면 마치 본능(자연법)처럼 자연스럽게 행동하게 된다는 뜻! 자연법만큼 강력하다!**","    ","    이 문단은 **\"시민법(국가의 법)은 원래 인위적인 것이지만, 그것이 '관습'이 되면 마치 '자연법'처럼 강력한 힘을 갖게 된다\"**는 것을 설명하기 위해 나온 것","    ","","---","","- 로마법의 3대 법언을 라이프니츠의 자연법의 세 가지 주요 명령으로 마무리","    1. 명예롭게 살아라","    ","    → 보편적 정의의 명령, 즉 개인적인 덕목까지 모든 덕을 함양하는 것, 왜냐하면 우리가 덕을 닦으으로써 사회를 돕기에 더 적합한 사람이 된다.","    ","    ex. 예를 들어, 내가 매일 술만 마시고(절제 부족) 게으르다면(근면 부족), 남에게 해를 끼치지는 않아도(엄격법 준수), 남을 도울 능력은 없습니다.","    ","    1. 누구에게도 피해를 주지 마라","    ","    → 특수한 정의인 교환적 정의의 명령. 산술적 평등(책의 본문에선 기하학적 평등으로 오역)을 유지해 누구도 이전보다 적게 가지지 않도록 하고, 누구도 이전보다 더 많이 가지지 않도록 하기 위한 것. 그래야만 사람들이 자신이 소유한 재산에 관해서 어떠한 차별도 없이 평등하게 여길 것이기 떄문이다.","    ","    → 이미 가지고 있는 재산에 대해서는, 그 사람이 훌륭한지 멍청한지 **'차별 없이(sine prosopolepsia)'** **'똑같은 권리 주체'**로 취급한다는 뜻. 엄격법(교환적 정의)에서는 **사람의 존엄(dignitas)이나 공로를 따지지 않는다. 모든 인간을 동등하게(aequales) 취급.**","    ","    1. 각자에게 자신의 것을 주라","    ","    → 분배적 정의의 명령. 개인에게 분배될 공공재에 관한 것인데 이때 각 개인의 공로와 능력, 공공의 유익, 즉 기하학적 정의를 고려하는 것이 중요하다.","    ","","## 도덕과 정치에서 타인의 입장","","우리가 덕에서나 정치에서나  타인의 입장에 있을 때, 부정의한 것으로 여겼을 모든 것은 우리에게도 부정의한 것으로 의심된다. ","","- 타인의 입장을 고려해 얻은 최종적인 자연법이 지켜야할 원리","    ","    따라서 원리의 참된 의미는 다음과 같다. “사람들이 당신에게 행하지 않기를 원하는 것을 쉽게 행하지 마라. 혹은 사람들이 당신에게 거절하지 않기를 원하는 일을 쉽게 거절하지 마라.”","    ","    → 그니까 타인에게 당하고 싶지 않은걸 타인에게도 하지말고, 타인에게 거절당하고 싶지 않은걸 타인에게서 거절하지 말라는 뜻.","    ","","86쪽 2번째줄 정치에서 가장 안전한 것은 예방 조치를 취하고 자신을 방어할 때 최악의 상황을 가정하는 것이다.  반면 다른 사람에게 해를 입히고 공격하는 것에 관한 문제에서는 최대한 착하게 해야 한다.","","6: 도덕조차도 이런 종류의 정치적 태도를 허용한다.","","## 공동체의 구분","","- 정의, 공동체, 자연적 공동체의 정의","    ","    ‘정의’는 공동체의 덕 또는 공동체를 유지하는 덕이다.","    ","    그리고 공동체는 공통의 목적을 가지고 있는 다양한 사람들의 연합이다.","    ","    그런데 자연적 공동체는 인위적인 계약이 아니라, 자연(혹은 신의 설계)이 본래부터 원하는 공동체다.","    ","- 자연이 뭘 원하는지 뭘보고 알 수 있을까","    ","    자연이 무엇을 원한다는걸 어떤 조건이 충족됐을  알 수 있을까? ","    ","    1. 우리에게 욕구가 있고, 그것을 이룰 힘도 있을 때","    2. 어떤 일이 꼭 필요하거나 계속해서 이득이 될 때","    ","    자연은 헛된 일을 하지 않고 최선의 것을 추구한다. 따라서 우리에게 욕구가 생기고, 힘이 생기고, 어떤 것이 꼭 필요하거나 이득이 되는 것은 모두 자연의 최적으로 바라는 것이다.","    ","- 공동체의 종류","    ","    ","    | **단계** | **공동체 종류** | **핵심 목적 및 특징** |  |","    | --- | --- | --- | --- |","    | **1** | **부부 (Man & Weib)** | 인류의 종 보존을 위한 필수적 결합 |  |","    | **2** | **부모와 자녀** | 자녀의 양육, 교육, 완성을 목적으로 함 (미래를 위한 현재의 헌신) |  |","    | **3** | **주인과 종** | 지성(주인)과 육체적 힘(종)의 결합. 단, 인간의 영혼은 불멸하므로 가혹한 노예제는 부정됨 |  |","    | **4** | **가정 (Haushaltung)** | 위 사회들이 결합하여 형성됨. 일상의 필수적 요구(의식주) 해결 |  |","    | **5** | **시민 공동체 (Staat)** | 도시, 왕국 등. 현세의 복지와 안전, 행복을 도모함 |  |","    | **6** | **신의 교회 (Kirche)** | 전 인류를 포괄하는 보편적 공동체. 목적은 **영원한 행복** |  |","    |  |  |  |  |","    ","    가장 완전한 공동체는 그 목적이 보편적이고 지고한 행복(Glückseeligkeit)인 공동체이다.(즉 6번) 행복(Glückseeligkeit)'은 단순한 쾌락이 아니라, '이성적인 영혼이 우주의 질서와 조화를 인식하며 얻는 지속적인 기쁨이다.","    ","- 노예제에 대한 당시 기준 독특한 견해","- 공동체의 구분","    ","    이러한 공동체의 구분은 다음과 같이 할 수 있다.","    ","    1. 모든 사회는 평등 사회 or 불평등 사회로 나뉜다.","    ","    → 모두가 동등한 권력을 가질 때 평등 사회고, 한 사람이 다른 사람을 통치할 때 불평등 사회다.","    ","    1. 모든 사회는 제한적 사회거나 무제한적 사회다.","    ","    → 제한적이라는 것은 일정 수준으로 한정되었다는 뜻이다. 상무역, 상업 같은 특정한 목적을 위해 형성된 사회다. 반면 무제한적 사회는 삶 전체와 공동선에 관심을 갖는다. 예를 들어 무제한적 평등사회라면  한정되지 않게 평등하다는 것이고, 무제한적 불평등 사회라면 통치자와 신하들 간에 존재하며 부모 자식 간 일어나는 ‘개선’을 위해서나 노예 주인 간의 ‘보존’을 위해서 존재한다.","    ","    - **개선:** 부모-자식 관계처럼 피통치자를 **성숙**하게 만드는 것이 목적입니다.","    - **보존:** 주인-종 관계처럼 피통치자의 **안전과 생계**를 유지하는 것이 목적입니다.","    1. 모든 사회는 1대1의 단순사회거나 이런 단순사회가 여러 개 모여 만들어진 복합사회다.","    ","    **단순/복합의 논리:** 단순히 모여있다고 복합 사회가 되는 것이 아니라, '단순 사회(1:1 관계)'들이 **공통의 목적(가정의 평화, 도시의 번영 등)**을 위해 층층이 쌓여가는 '계층 구조'임을 명시하면 라이프니츠의 조화(Harmony) 사상이 더 잘 드러납니다.","    ","","## 만민 외교법 서문","","- 시민법과 만민법의 정의","    ","    시민법: 로마의 시민들에게 적용되는 법","    ","    만민법: 로마제국 내에 이민족들 간 혹은 로마 시민과 이민족 간 적용되는 법 로마가 대제국으로 발전하며 모든 민족에 공통적으로 적용될 수 있는 법으로 인식이 바뀜.","    ","- 역사의 두 분류, 공적 역사, 비밀 역사","    ","    국가 간의 조약은 여러 번 무시되어왔고, 전쟁을 한 뒤 다시 조약을 하는 일이 반복되었다.","    ","    두 종류의 역사가 존재한다. 하나는 겉으로 드러난 공적 역사, 다른 하나는 secret history(비밀 역사)다.","    ","    각 역사엔 다른 두 규칙이 존재한다. 공적 역사에서는 거짓을 말하지만 않으면 되고, 비밀 역사에서는 진실을 말해야만 한다.","    ","    따라서 공적 역사에는 기록되지 않는 역사들이 많이 존재한다. 영웅들의 멋있는 역사 뒤에도 사사로운 욕정이 끼어있을지도 모른다. 이런 욕망이 역사를 움직이는 것은 사실이다.","    ","- 공적 역사와 비밀 역사 중 무엇을 믿을까?","    ","    그러나 이러한 비밀 역사는 검증하기 어렵고 왜곡되기 쉽다. 비밀역사는 풍자나 이야기의 방식으로 널리 퍼진다.","    ","    따라서 이런 이야기를 쉽게 믿어서는 안된다. 종이로 인쇄된 ‘공문서집’이 역사의 가장 확실한 부분이다.","    ","- 만민 외교법 책에 담긴 자연법에 관한 내용","    ","    이 ‘만인 외교법’ 책은 자연법과 만민법을 이해하는 데 가장 큰 도움이 된다. ","    ","    자연법과 정의 개념에 대해 아직 우리는 명확한 개념을 갖지 못한다. 내가 개념을 제시하겠다.","    ","    권리는 일종의 도덕적 권능/힘이고,","    ","    의무는 일종의 도덕적 필연성이다.","    ","    도덕적이란 말은 ‘자연적’이란 말과 같은 것이다.","    ","    좋은 사람이란 이성이 허용하는 한, 모든 사람을 사랑하는 사람이다.","    ","    따라서 정의란 지혜로운 사람의 박애다.","    ","    만약 누군가가 이러한 정의의 정의에 대해, 자신의 이익은 무시하고 타인의 이익만 고려하는 어리석은 것이라고 한다면, 그건 틀린 것이다.","    ","    왜냐하면 ‘박애’는 ‘보편적 자비’이고, ‘자비’는 사랑하거나 귀중히 여기는 태도인데, 사랑하거나 귀중히 여기는 태도는 다른 사람의 행복을 즐거워하고 내 행복으로 받아들이는 태도기 때문이다.","    ","    즉, 박애란 보편적으로 행해지는 다른 사람의 행복을 즐거워하는 태도이다. 그렇기 때문에 보상 없는 사랑은 정말 보상 없는 게 아니다. 타인의 행복이 우릴 즐겁게 함으로 그것 자체가 목적이 되는 것이다. 그 중 신의 사랑이 최고다.","    ","    이러한 박애를 인도하는 것이 ‘지혜’다. 지혜란 ‘행복에 대한 앎’ 그 자체다.","    ","    결국 권리와 의무, 박애, 지혜의 의미를 담고 있는 정의 그 자체에서 자연법이 나온다. 나의 행복을 위해 타인의 행복을 도모하는 것이 가장 이성적(지혜롭다)이다라는 깨달음에서 자연법이 나온다는 것이다. 그리고 이러한 자연법에는 뭐 교환적, 분배적, 보편적 정의와 대응하는 엄격한 권리, 형평, 경건이 있다는 얘기를 5페이지 이상 쭉 한다.(이미 과거에 정리를 자세히 했으므로 생략)  ","    ","- 자연법 외에도 존재하는 실정법","    ","    자연법 외에도 실정법이 존재한다. 국가에서 제정하고 시대와 장소에 따라 바뀔 수 있는 그런 법. 그런데 그리스도인들에게는 다른 하나가 더 있다. 바로 성서에 있는 실증적 신법이다. 교회법 같은 게 있다. 이들은 실정법이 한 국가에서 운용되는 법인 것처럼 종교라는 하나의 국가에 있다고 보는 것이 적절하다. ","    ","","### **일반학을 위한 일련의 정의들** - 행복, 지혜, 덕","","- 이 목차의 목적과 일반학이란?","    ","    이 단편은 라이프니츠가 기획했던 ‘일반학(scien-tia Generalis)’ 집필을 위해 행복, 지혜, 덕에 대해 정의한 부분이다.","    ","    일반학이란 인류의 모든 지식을 기호와 논리로 체계화하여, 새로운 진리를 발견하고 오류를 검증함으로써, 궁극적으로 인류를 행복과 신의 영광으로 이끄는 종합 학문","    ","- 단계적으로 정의된 개념들","    ","    즐거움: 나와 타인에서 발견되는 완전성에 대한 지식 또는 감정","    ","    → 따라서 감각의 즐거움은 오히려 더 큰 불완전함으로 돌아올 수 있는 것들.","    ","    감각의 즐거움 중 가장 정신의 즐거움과 근접한 것은 음악과 대칭의 즐거움. 완전성의 근거를 쉽게 이해할 수 있는 방법. 하지만 여기에 너무 시간을 쓰면 안됨.","    ","    행복: 즐거움이 지속되는 상태","    ","    지혜: 행복에 대한 앎","    ","    덕: 지혜에 따라 행동하려는 ‘태도’","    ","    정의: 박애 혹은 지혜에 일치하는, 사랑하는 태도","    ","    **덕**은 지혜의 규칙을 따르는 모든 종류의 '행동을 포괄합니다.절제, 용기, 인내처럼 자기 자신과 관련된 행동도 포함","    ","    **정의**는 지혜의 규칙을 따르되, 그중에서도 특히 **'사랑(박애)'**, 즉 '타인의 행복을 자신의 기쁨으로 삼는 태도'에 국한된 습관","    ","    따라서 **모든 정의로운 행위는 덕이 있는 행위**이지만(사랑도 행동의 일종이므로), **모든 덕이 있는 행위가 곧바로 정의인 것은 아니다.**","    ","- 지식의 두 종류 이성, 사실.","    ","    지식의 두 종류: 사실의 지식과 이성의 지식. 지각과 지성. 이성의 지식은 보편적이며 우리에게 완전성을 부여. 반면 사실의 지식은 그 상황에선 유용하지만 일시적.","    ","    완전한 존재는 신.","    ","","## 좋음과 정의의 본성에 대하여","","- 신이 원하는 모든 것이 정의로운 이유","    ","    신이 절대적인 권리를 갖기 때문에 신이 원하기 때문에 그것이 좋고 정의인 것이 아니다. 다른 형식적(본질적) 이유가 존재한다. 그리고 이 이유는 신과 인간에 공통적이어야 한다. 만약 그렇지 않으면 “신이 정의롭다”, “인간이 정의롭다”라 할 때 ‘정의롭다’의 의미가 서로 다르게 된다. 이는 한 단어에 하나의 의미라는 담론의 기본 규칙에 어긋난다. 물론 신과 인간의 정의로운 방식에 있어 차이는 있다. 그러나 그것은 정도의 차이일 뿐이다. ","    ","- 정의로운 것과 법은 부정의할 수 있는가?","    ","    논리학적으로 정의로운 것은 부정의할 수 없지만, 법은 부정의할 수 있다. 법을 제정하고 유지하는 것은 권력이고, 권력이 지혜와 선한 의지를 결여한다면 부정의할 수 있기 때문이다. 그러나 신의 법(신이 자신의 의지로 우주에 부여한 질서)은 언제나 정의롭다. ","    ","- 정의의 본질","    ","    결국 정의의 형식적 이유(본질)란 지혜와 좋음(선함(bonté))이 결합된 것이다. 정의의 목표는 가장 큰 선(이익)이다. 그런데 그 선에 대한 지식을 알아야 하고, 그 지식이 지혜다.","    ","    선함(bonté)은 모두에게 선을 행하고 악을 막으려는 ‘경향성’이다. 따라서 의지의 영역이다. 지혜가 지성의 영역인 것과 대비된다. 정의는 이 둘 모두를 갖고 있다.","    ","    여기에 힘이 추가되면, 정의가 사실이 되며, 존재해야할 당위의 것이 존재하는 사실이 된다. 이것이 신이 행하는 것이다.","    ","- 권선징악이 바로 드러나지 않는 이유. 내세의 존재 이유","    ","    신은 우리에게는 알려지지 않았지만 의심할 여지 없이 매우 현명하고 더 큰 선에 기초한 이유들로 인해, 이생에서 많은 악인들이 행복하고 많은 선인들이 불행한 것을 허용한다.","    ","    그렇기 때문에 필연적으로 내세가 있는 것이다. 만약 내세에서 처벌과 보상이 제대로 이뤄지지 않는다면 선과 악이 보상받지 못하게 된다.","    ","    현세에서 바로 드러나지 않고 내세에서 이뤄지는 이유는, 만약 현세에서 그렇게 된다면 사람들이 처벌을 받지 않기 위해서 나쁜 짓을 안하게 될텐데, 내세에서 그러한 것이 이뤄져야 이성에 기초한 참된 신앙에서 순수한 덕을 발휘할 수 있게 된다.","    ",""," ","","## 정의의 공통 개념에 관하여","","- 정의의 공통된 개념을 찾는데 어려움과 명목상의 정의","    ","    정의에 대해 모두가 동의하는 공통된 개념을 찾기는 어렵다.","    ","    일단 명목상으로  “아무도 불평할 근거를 갖지 않게 행동하려는 지속적 의지”라는 식으로 정의한다면 ‘정의’의 정의가 될 수 있다. 그러나 어떻게, 어떤 수단으로 그렇게 하는 지 얘기 해야만 완성된다.","    ","    명목상의 근거의 내용을 봤을 때, ‘정의’에 대한 논쟁에서 큰 교착 지점은 불평할 기준에 대해서다. 어떤 사람은 타인에 해만 끼치지 않으면 정의롭고, 불평할 이유가 없다고 한다. 그러나 누군가는 타인의 이익을 위해서 해야할 의무 또한 존재한다고 불평한다. ","    ","- 라이프니츠가 생각하는 정의를 위한 설득. 형평의 원리, 역지사지.","    ","    그러면 라이프니츠는 질문한다. 내가 매우 쉽게, 거의 수고를 들이지 않고 타인이 죽을 위험을 구해줄 수 있다면, 구해줘야 하는가? 만약 구해줄 필요가 없다 생각한다면, 반대로 내가 그런 위험에 처했는데 타인이 손 하나 까딱하면 구해줄 수 있는 상황에서 날 구해주지 않는다면, 나는 그에게 불평, 정확히는 그를 원망할 것인가?","    ","    이러한 역지사지의 입장에서 생각해보면 결국 확실한 기준은 모호할지언정 내 불편함이 없는 한도 내에서 타인의 악을 덜어주어야 한다는데 동의할 것이다.","    ","    사람들이 한 요구에 대해 내가 그 요구를 거절하면, 사람들은 그 거절에 대해 불평할 근거를 갖게 된다. 그러나 그 근거를 갖기 위해선 나도 그러한 동일한 상황에서 동일한 요구를 할 수 있을 때 그러하다. 그리고 이것이 형평(Equité)의 원리이며, 평등(Egalité)의 원리 혹은 동일한 이성(이유)의 원리와 같은 것이다.","    ","    - “타인에게 해를 끼치지 말라” - 엄격법(jus strictum)","    - 형평 혹은 평등의 규칙, 즉 “너에게 행해지기를 원치 않는 것을 타인에게 하지 말고, 너에게 행해지기를 원하는 것을 타인에게 거절하지 말라”","- 반론에 대한 재반박","    ","    이러한 형평의 원리에 대해 좁은 시야를 가진 사람들은 다음과 같이 비판할 수 있다. 예를 들어 범죄자가 판사한테 “너도 재판장에 선다면 용서를 바랄테니 나한테도 용서를 해줘라.” 라고 해야 하냐는 반론이 그 예다. 이런 경우 범죄와 이해관계에 있는 다른 사람의 위치에도 서보며 어떤 것이 가장 기하학적 정의에 부합하는 지 살펴보아라.","    ","- 형평의 원리와 엄격법을 지탱해주는 최종적인 ‘경건함’","    ","    우리는 또한 신에 대한 경건함(Pieté)을 고려해야 한다. 만약 우리가 신을 사랑한다면, 우리는 신이 원하는 걸 원할 것이고, 신은 최선의 것을 행하므로 우리는 현재 일어나는 일에 불평이 없을 것이다. 따라서 우리가 앞서 얘기한 엄격법과 형평의 원리에 따라 살아가는 데 있어 외적인 보상을 바라지 않게 된다. 만약 처벌을 당할까봐 정의롭게 산다면 처벌받지 않을 상황에선 정의를 저버리게 될 것이다. 이러한 경건함은 이성에 기초한 참된 신앙에서 얻을 수 있다."]
+};
+
+
+/* ==== SECTION: DATA-CHAPTER-CONTENT ==== */
+/* 사용자 검토·확정 완료 (chapter3_content_draft.json 확정본, 3.1) */
+const SOURCE_VERSION = "justice_law.v1";
+const CHAPTER_CONTENT = {
+  "schemaVersion": 1,
+  "sourceVersion": "justice_law.v1",
+  "sourceHash": "47073df19edf4a76ac4cba0f08cf39d52a794522997e86a7525b070b658840b1",
+  "chapterId": "ch3",
+  "title": "규범 논리학 — 대당 사각형",
+  "openingQuestion": "좋은 사람(Vir Bonus)에게 가능한 것과 해야만 하는 것은 같은가?",
+
+  "readingCards": [
+    {
+      "id": "rc1",
+      "body": "라이프니츠에 따르면 자연법 이론은 경험이 아니라 정의(定義)에 의존하며, 감각적 증명이 아닌 이성적 증명에 의존하는 학문이다. 정의 개념은 신조차 바꿀 수 없는 필연적 진리며, 정의(正義)에 대한 정의(定義)와 논리학 규칙으로 증명 가능하다.",
+      "claimType": "source",
+      "src": { "from": 103, "to": 103 }
+    },
+    {
+      "id": "rc2",
+      "body": "라이프니츠는 정의와 자연법에 관련된 주요 개념들을 정의하고 그 정의로부터 연역적으로 도출될 수 있는 정리들을 기술했다. 이 작업으로 인해 라이프니츠는 규범 논리학이라는 새로운 분야를 발견한 것으로 알려지게 된다.",
+      "claimType": "source",
+      "src": { "from": 105, "to": 107 }
+    },
+    {
+      "id": "rc3",
+      "body": "[자연적] 권리 및 의무는 좋은 사람의 자질 같은 것임. 정의 = 모든 사람을 사랑하는 태도. 좋은 사람 = 모든 사람을 사랑하는 사람. (자연적)권리 = 좋은 사람에게 잠재력(적)인 것(허용된 것). (자연적)의무 = 좋은 사람에게 필연적인 것.",
+      "claimType": "source",
+      "src": { "from": 109, "to": 119 }
+    },
+    {
+      "id": "rc4",
+      "body": "vir Bonus(좋은 사람)이라는 가상의 주체를 설정하여, 좋은 사람에게 일어날 수 있는 것(존재론적 사실)과 해야만 하는 것(규범적 당위)이 동일하거나 함축관계로 연결될 수 있다는 것을 양상 논리를 통해 보여주고자 함. 라이프니츠는 법적/도덕적 개념들을 양상 논리 위에 재정의함.",
+      "claimType": "source",
+      "src": { "from": 121, "to": 125 }
+    },
+    {
+      "id": "rc5",
+      "body": "(논리학에서)가능한 것 = (법학에서)정의로운 것. (논리학에서)불가능한 것 = (법학에서)부정의한 것. (논리학에서)필연적인 것 = (법학에서)의무. (논리학에서)우연적인 것 = (법학에서)의무가 아닌 것. 정의롭고 의무인 것의 기준은 '좋은 사람'에게 적용되는 기준이다.",
+      "tokens": [
+        { "text": "가능한 것", "conceptId": "concept_I" },
+        { "text": "불가능한 것", "conceptId": "concept_E" },
+        { "text": "필연적인 것", "conceptId": "concept_A" },
+        { "text": "우연적인 것", "conceptId": "concept_O" }
+      ],
+      "claimType": "source",
+      "src": { "from": 127, "to": 135 }
+    },
+    {
+      "id": "rc6",
+      "body": "라이프니츠는 양상논리로 번역한 정의 개념들을 대당 사각형이라는 도식으로 그 관계를 보여준다. 정의로운 것이 가능성에 있다는 것은 정의로운 것이 가변적이라는 뜻이 아니라, 좋은 사람의 이성의 범위(가능한 행위 집합 or 도덕적 자유)를 의미하는 것이며, 그 중에서도 필연적인 의무는 그 집합 중 하나를 해야만 하는 상태를 가리킴.",
+      "tokens": [
+        { "text": "도덕적 자유", "conceptId": "concept_liberty" }
+      ],
+      "claimType": "source",
+      "src": { "from": 137, "to": 143 }
+    },
+    {
+      "id": "rc7",
+      "body": "의무(A: 필연성)는 '모순율'에 근거한다 — 좋은 사람이 그 행위를 하지 않는다고 가정했을 때 우주의 조화와 이성에 모순이 발생한다면, 그 행위는 의무가 된다. 정의로운 것/허용(I: 가능성)은 '충족이유율'에 근거한다 — 그 행위를 하는 것이 이성적으로 가능하고 조화롭지만 하지 않는다고 곧바로 모순에 빠지지 않는다면 그것은 허용의 영역이다. 체스 게임의 규칙과 같다: '퀸은 대각선으로 갈 수 있다'는 허용(가능성)이고, '왕이 체크메이트를 당하면 게임이 끝난다'는 필연(의무)이다. 이 두 규칙은 체스가 성립하기 위해 둘 다 똑같이 필연적인 규칙이지만, 게이머에게 퀸을 대각선으로 옮기는 것은 선택 사항인 반면 체크메이트를 피하는 것은 반드시 해야만 하는 일(당위)이다. 당위성의 원천은 '최선(Optimum)'이다 — 그 행위가 최선의 질서를 위해 필수불가결하기 때문에 당위성을 갖는다.",
+      "claimType": "source",
+      "src": { "from": 145, "to": 149 }
+    },
+    {
+      "id": "rc8",
+      "body": "내 의문점: 그런데 가능성과 우연성은 사실상 논리적 동치 아닌가? 일어날 수 있는 것이란 말은 일어나지 않을 수 있는 것이란 의미를 함축하며, 일어나지 않을 수 있는 것은 일어날 수 있는 것이란 의미 또한 함축하니까. 물론 필연성, 가능성, 우연성 그 단어명만 놓고 봤을 땐 직관적으로 필연적이라는건 가능하다는거고, 필연적인데 우연적인건 불가능하다고 생각되지만, 일어나지 않을 수 없는 것, 일어날 수 있는 것, 일어나지 않을 수 있는 것이란 해석으로 치환해서 생각해보면 오류가 생기는 것 같다. 따라서 나는 필연성, 가능성, 우연성에 대한 도식의 해석이 틀린 것 같다.",
+      "claimType": "source",
+      "src": { "from": 151, "to": 151 }
+    },
+    {
+      "id": "rc9",
+      "body": "라이프니츠에겐 모든 진리가 동일한 '이유'에서 근거하는가? 아니다. 모순율은 그 반대가 논리적으로 불가능한 필연적 진리를 지배한다. 충족이유율은 반대가 논리적으로 가능하지만(모순은 아니지만) '왜 하필 다른 것이 아니고 이것인가'에 대한 충분한 근거가 필요한 우연적/사실적 진리를 지배한다. 허용된 행위(가능성)는 그것을 하지 않아도 우주에 논리적 모순이 생기지는 않지만, 하는 것이 하지 않는 것보다 더 적합하거나 조화로운 이유가 있기 때문에 존재하게 된다.",
+      "claimType": "source",
+      "src": { "from": 153, "to": 161 }
+    },
+    {
+      "id": "rc10",
+      "body": "자연법의 규범 논리학적인 구조 증명이 개인의 도덕적 자질 증진에 기여하는가? 그런 것은 아니다. '타인에 피해를 주지 말라'는 규범 명제가 의무라 해서, 어떤 사람이 그 의무를 인정하지만 타인에게 피해를 줄 수도 있다. 왜냐하면 개인의 행동은 개인의 자유에 달려있기 때문이다.",
+      "claimType": "source",
+      "src": { "from": 162, "to": 164 }
+    },
+    {
+      "id": "rc11",
+      "body": "결론: '모든 사람을 사랑하는 사람'이 자연법 명제를 의무로 여기고, 그 명제대로 행하는 것은 도덕적으로 필연적이다. 또한 그런 행위를 의무로 그가 여기는 이유는 '모든 사람을 사랑하는 사람이' 그렇게 행동하는 것이 가능하기 때문이다. 내 의문점: 논리적 문제와 도덕적 문제 총 세 가지가 있다. 첫째, 가능성은 의무의 필요조건 중 하나일 뿐인데 어떻게 가능성 때문에 의무가 발생한다고 하는 것인가? 둘째, 트롤리 딜레마처럼 모두를 살릴 가능성이 없다고 여겨지는 상황에서 내가 이들의 목숨을 선택할 사람이라면 모두를 살리는게 의무가 아닌가? 불가능하다 해서 의무가 아니게 되는가? 셋째, '좋은 사람'은 단지 모든 사람을 사랑하는 사람일 뿐인데, 어떤 두 사람이 둘 다 '좋은 사람'이라 할 때, 이 둘의 가능성의 영역은 동일한가?",
+      "claimType": "source",
+      "src": { "from": 166, "to": 170 }
+    }
+  ],
+
+  "concepts": [
+    {
+      "id": "concept_A",
+      "termKo": "필연 · 의무",
+      "termLa": "Necessarium / Debitum",
+      "definition": "논리학에서 필연적인 것은 법학에서 의무에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 120, "y": 80 },
+      "claimType": "source",
+      "src": { "from": 131, "to": 131 }
+    },
+    {
+      "id": "concept_E",
+      "termKo": "불가능 · 부정의한 것",
+      "termLa": "Impossibile / Iniustum",
+      "definition": "논리학에서 불가능한 것은 법학에서 부정의한 것에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 360, "y": 80 },
+      "claimType": "source",
+      "src": { "from": 129, "to": 129 }
+    },
+    {
+      "id": "concept_I",
+      "termKo": "가능 · 정의로운 것(허용)",
+      "termLa": "Possibile / Iustum",
+      "definition": "논리학에서 가능한 것은 법학에서 정의로운 것(허용)에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 120, "y": 280 },
+      "claimType": "source",
+      "src": { "from": 127, "to": 127 }
+    },
+    {
+      "id": "concept_O",
+      "termKo": "우연 · 의무 아닌 것",
+      "termLa": "Contingens",
+      "definition": "논리학에서 우연적인 것은 법학에서 의무가 아닌 것에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 360, "y": 280 },
+      "claimType": "source",
+      "src": { "from": 133, "to": 133 }
+    },
+    {
+      "id": "concept_liberty",
+      "termKo": "자유(허용이면서 의무 아님)",
+      "termLa": "Libertas",
+      "definition": "허용되면서 동시에 의무는 아닌 상태. 가능(I)과 우연(O)이 함께 성립하는 행위 영역을 가리킨다.",
+      "derivedFrom": ["concept_I", "concept_O"],
+      "pos": { "x": 240, "y": 400 },
+      "claimType": "model",
+      "src": { "from": 127, "to": 143 }
+    }
+  ],
+
+  "stages": [
+    {
+      "stage": 1,
+      "activeRelations": ["contradictory_AO", "contradictory_EI"],
+      "itemIds": ["item_duty_love", "item_forbidden_harm"],
+      "goal": "네 항의 대응 확인. 필연↔우연, 불가능↔가능이 서로를 배제한다는 관계 파악"
+    },
+    {
+      "stage": 2,
+      "activeRelations": ["contradictory_AO", "contradictory_EI", "contrary_AE", "subcontrary_IO"],
+      "itemIds": ["item_duty_love", "item_forbidden_harm"],
+      "goal": "상단 두 항은 함께 참일 수 없고 하단 두 항은 함께 거짓일 수 없다는 비대칭 파악"
+    },
+    {
+      "stage": 3,
+      "activeRelations": ["contradictory_AO", "contradictory_EI", "contrary_AE", "subcontrary_IO", "subalternation_AI", "subalternation_EO"],
+      "itemIds": ["item_duty_checkmate", "item_liberty_queen"],
+      "goal": "의무가 허용을 함축한다는 상하 관계 파악"
+    }
+  ],
+
+  "boardItems": [
+    {
+      "id": "item_duty_love",
+      "label": "모든 사람을 사랑하는 사람이 자연법 명제대로 행하는 것",
+      "truth": { "A": true, "E": false, "I": true, "O": false },
+      "rationale": "'모든 사람을 사랑하는 사람'이 자연법 명제를 의무로 여기고 그대로 행하는 것은 도덕적으로 필연적이라고 서술된다. 필연(A)이므로 불가능(E)일 수 없고, 가능(I)하며 우연(O)은 아니다.",
+      "claimType": "interpretation",
+      "src": { "from": 167, "to": 168 }
+    },
+    {
+      "id": "item_forbidden_harm",
+      "label": "타인에게 피해를 주는 것",
+      "truth": { "A": false, "E": true, "I": false, "O": true },
+      "rationale": "'타인에 피해를 주지 말라'는 명제가 의무라는 서술은, 그 반대 행위인 '타인에게 피해를 주는 것'이 불가능(부정의)의 영역에 있음을 함축한다.",
+      "claimType": "interpretation",
+      "src": { "from": 164, "to": 164 }
+    },
+    {
+      "id": "item_duty_checkmate",
+      "label": "체크메이트를 피하는 것",
+      "truth": { "A": true, "E": false, "I": true, "O": false },
+      "rationale": "'왕이 체크메이트를 당하면 게임이 끝난다'는 규칙은 체스가 성립하기 위해 반드시 지켜야 하는 필연적 규칙이며, 게이머에게 반드시 해야만 하는 일(당위)로 서술된다. 의무에 해당한다.",
+      "claimType": "interpretation",
+      "src": { "from": 147, "to": 148 }
+    },
+    {
+      "id": "item_liberty_queen",
+      "label": "퀸을 대각선으로 옮기는 것",
+      "truth": { "A": false, "E": false, "I": true, "O": true },
+      "rationale": "'퀸은 대각선으로 갈 수 있다'는 규칙은 허용(가능성)이며, 게이머에게 선택 사항이라고 서술된다. 허용되면서도 반드시 해야 하는 일은 아니므로 자유(I∧O)에 해당한다.",
+      "claimType": "interpretation",
+      "src": { "from": 147, "to": 148 }
+    }
+  ],
+
+  "propositions": [
+    {
+      "id": "prop_leibniz",
+      "claim": "모든 사람을 사랑하는 사람이 그 행위를 의무로 여기고 행하는 것은, 그 행위가 가능하기 때문이다.",
+      "premiseIds": ["premise_possibility_sufficient", "premise_impossibility_negates_duty"],
+      "claimType": "interpretation",
+      "src": { "from": 166, "to": 168 }
+    }
+  ],
+
+  "premises": [
+    {
+      "id": "premise_possibility_sufficient",
+      "text": "그 행위가 가능하다는 것만으로 그것은 의무가 된다.",
+      "claimType": "interpretation",
+      "src": { "from": 168, "to": 168 }
+    },
+    {
+      "id": "premise_impossibility_negates_duty",
+      "text": "그 행위가 불가능하다면 그것은 의무가 아니다.",
+      "claimType": "interpretation",
+      "src": { "from": 168, "to": 168 }
+    }
+  ],
+
+  "counterexamples": [
+    {
+      "id": "cx_necessity_sufficiency",
+      "label": "필요조건과 충분조건의 혼동",
+      "defeats": "premise_possibility_sufficient",
+      "explain": "가능성은 의무가 성립하기 위한 필요조건 중 하나일 뿐이다. 가능하다는 사실만으로 의무가 발생한다고 결론 내리는 것은 필요조건을 충분조건으로 오인한 것이다.",
+      "acquiredAt": "reading_complete",
+      "claimType": "interpretation",
+      "src": { "from": 170, "to": 170 }
+    },
+    {
+      "id": "cx_trolley",
+      "label": "트롤리 딜레마",
+      "defeats": "premise_impossibility_negates_duty",
+      "explain": "트롤리 딜레마처럼 모두를 살릴 가능성이 없다고 여겨지는 상황에서도, 모두를 살리는 것은 여전히 의무처럼 느껴진다. 불가능성이 곧바로 그 행위를 의무의 영역에서 제외하지 않는다면, '불가능하면 의무가 아니다'라는 전제는 성립하지 않는다.",
+      "acquiredAt": "board_stage_3",
+      "claimType": "interpretation",
+      "src": { "from": 170, "to": 170 }
+    }
+  ],
+
+  "arguments": [
+    {
+      "id": "arg_defense_equivalence",
+      "side": "defense",
+      "text": "'일어날 수 있음'은 '일어나지 않을 수 있음'을 함축하고 그 역도 성립한다. 따라서 가능성과 우연성은 논리적으로 동치다.",
+      "claimType": "interpretation",
+      "src": { "from": 151, "to": 151 }
+    },
+    {
+      "id": "arg_objection_duty_vector",
+      "side": "objection",
+      "text": "채택된 형식 모델에서 의무에 해당하는 행위는 가능(I)=참이면서 우연(O)=거짓이다. 가능성과 우연성이 항상 함께 참이거나 함께 거짓인 것은 아니므로, 둘은 동치가 아니다.",
+      "claimType": "model",
+      "src": { "from": 127, "to": 135 }
+    },
+    {
+      "id": "arg_objection_liberty_overlap",
+      "side": "objection",
+      "text": "다만 '자유'(허용이면서 의무 아님)에 해당하는 행위에서는 가능(I)과 우연(O)이 함께 참이다. 이 영역에 한정해서는 가능성과 우연성이 동치처럼 보이지만, 이는 전체 동치가 아니라 특정 영역에서의 일치일 뿐이다.",
+      "claimType": "model",
+      "src": { "from": 127, "to": 135 }
+    }
+  ],
+
+  "inquiries": [
+    {
+      "id": "inq_possibility_contingency",
+      "quote": "가능성과 우연성은 사실상 논리적 동치 아닌가? 일어날 수 있는 것이란 말은 일어나지 않을 수 있는 것이란 의미를 함축하며, 일어나지 않을 수 있는 것은 일어날 수 있는 것이란 의미 또한 함축하니까.",
+      "argumentIds": ["arg_defense_equivalence", "arg_objection_duty_vector", "arg_objection_liberty_overlap"],
+      "claimType": "source",
+      "src": { "from": 151, "to": 151 }
+    }
+  ]
+};
+
+/* ==== SECTION: ENGINE-RULES ==== */
+/* BR-04 관계 규칙 테이블. 판정은 하나의 진리값 벡터에 대해서만 이뤄지는 순수 함수다 (BR-08 7항). */
+const RELATION_IDS = [
+  "contrary_AE", "subcontrary_IO", "contradictory_AO",
+  "contradictory_EI", "subalternation_AI", "subalternation_EO"
+];
+const RELATION_META = {
+  contrary_AE:      { label: "반대",   pairLabel: "A–E", lineStyle: "solid",  condition: "¬(A ∧ E)", check: (v) => !(v.A && v.E) },
+  subcontrary_IO:   { label: "소반대", pairLabel: "I–O", lineStyle: "dashed", condition: "I ∨ O",    check: (v) => v.I || v.O },
+  contradictory_AO: { label: "모순",   pairLabel: "A–O", lineStyle: "dotted", condition: "A ≠ O",    check: (v) => v.A !== v.O },
+  contradictory_EI: { label: "모순",   pairLabel: "E–I", lineStyle: "dotted", condition: "E ≠ I",    check: (v) => v.E !== v.I },
+  subalternation_AI:{ label: "함축",   pairLabel: "A→I", lineStyle: "arrow",  condition: "¬A ∨ I",   check: (v) => !v.A || v.I },
+  subalternation_EO:{ label: "함축",   pairLabel: "E→O", lineStyle: "arrow",  condition: "¬E ∨ O",   check: (v) => !v.E || v.O },
+};
+/** evaluate(truthVector, activeRelationIds) -> { [relationId]: boolean }
+ *  보드 판정, Sandbox, 전수 검사가 공유하는 유일한 판정 함수다 (BR-08 7항). */
+function evaluate(truthVector, activeRelationIds) {
+  const result = {};
+  for (const id of activeRelationIds) result[id] = RELATION_META[id].check(truthVector);
+  return result;
+}
+
+/* ==== SECTION: ENGINE-STATE ==== */
+function createInitialChapterProgress(content) {
+  const stageStatus = {};
+  for (const s of content.stages) stageStatus[s.stage] = "inactive";
+  return {
+    status: "locked",
+    flowSteps: { 1: "inactive", 2: "inactive", 3: "inactive", 4: "inactive", 5: "inactive", 6: "inactive" },
+    readingConsumed: [],
+    acquiredConcepts: [],
+    acquiredCounterexamples: [],
+    placements: {},
+    stageStatus,
+    defeatedPremises: [],
+    inquiries: {},
+    sandboxLast: undefined,
+  };
+}
+
+const GameState = {
+  schemaVersion: 1,
+  sourceVersion: SOURCE_VERSION,
+  savedAt: new Date().toISOString(),
+  chapters: {},
+};
+
+function getChapterProgress(chapterId) {
+  if (!GameState.chapters[chapterId]) {
+    GameState.chapters[chapterId] = createInitialChapterProgress(CHAPTER_CONTENT);
+  }
+  return GameState.chapters[chapterId];
+}
+
+// ---- FR-01: 리딩 카드 소비 ----
+function consumeReadingCard(progress, cardId) {
+  if (!progress.readingConsumed.includes(cardId)) progress.readingConsumed.push(cardId);
+}
+function isReadingComplete(progress, content) {
+  return content.readingCards.every((rc) => progress.readingConsumed.includes(rc.id));
+}
+// 리딩 완료 시 4종 기본 개념 + reading_complete 반례를 지급한다. 이미 보유한 것은 건드리지 않으므로 여러 번 호출해도 안전하다.
+function grantReadingCompletionRewards(progress, content) {
+  const baseConceptIds = content.concepts.filter((c) => c.derivedFrom.length === 0).map((c) => c.id);
+  for (const id of baseConceptIds) {
+    if (!progress.acquiredConcepts.includes(id)) progress.acquiredConcepts.push(id);
+  }
+  const rewardCx = content.counterexamples.filter((cx) => cx.acquiredAt === "reading_complete");
+  for (const cx of rewardCx) {
+    if (!progress.acquiredCounterexamples.includes(cx.id)) progress.acquiredCounterexamples.push(cx.id);
+  }
+  return { conceptIds: baseConceptIds, counterexampleIds: rewardCx.map((c) => c.id) };
+}
+
+// ---- FR-02: 개념 합성 ----
+// 대상 개념의 derivedFrom 보유 여부만으로 판정한다(별도 레시피 테이블 없음). selectedConceptIds는
+// 사용자가 이번 시도에서 선택한 카드(트리거 조건: 2장 이상)이며, 판정 자체는 보유 여부로 이뤄진다.
+function attemptSynthesis(progress, content, selectedConceptIds) {
+  if (!selectedConceptIds || selectedConceptIds.length < 2) {
+    return { success: false, reason: "need_at_least_two_cards" };
+  }
+  const candidates = content.concepts.filter(
+    (c) => c.derivedFrom.length > 0 && !progress.acquiredConcepts.includes(c.id)
+  );
+  if (candidates.length === 0) {
+    return { success: false, reason: "no_derivable_concepts_remaining" };
+  }
+  const acquired = [];
+  const perTargetMissing = {};
+  const selected = new Set(selectedConceptIds.filter((id) => progress.acquiredConcepts.includes(id)));
+  for (const c of candidates) {
+    const missing = c.derivedFrom.filter((dep) => !progress.acquiredConcepts.includes(dep) || !selected.has(dep));
+    if (missing.length === 0) {
+      progress.acquiredConcepts.push(c.id);
+      acquired.push(c.id);
+    } else {
+      perTargetMissing[c.id] = missing;
+    }
+  }
+  if (acquired.length > 0) return { success: true, acquired };
+  return { success: false, reason: "missing_components", perTargetMissing };
+}
+
+// ---- FR-03 / BR-08: 보드 배치 판정 ----
+function getStageDef(content, stageNum) {
+  return content.stages.find((s) => s.stage === stageNum);
+}
+function placeCard(progress, itemId, quadrant) {
+  if (!itemId || !["A", "E", "I", "O"].includes(quadrant)) return false;
+  progress.placements[itemId] = quadrant;
+  return true;
+}
+// BR-08 5항: truth[X]가 참이면 정합, 거짓이면 X만 참으로 바꾼 가상 벡터로 위반 관계를 열거한다.
+function checkItemPlacement(item, quadrant, activeRelationIds) {
+  const consistent = item.truth[quadrant] === true;
+  if (consistent) return { consistent: true };
+  const hypothetical = Object.assign({}, item.truth, { [quadrant]: true });
+  const res = evaluate(hypothetical, activeRelationIds);
+  const violated = activeRelationIds.filter((id) => !res[id]);
+  return { consistent: false, violated };
+}
+function trueQuadrantsOf(item) {
+  return ["A", "E", "I", "O"].filter((q) => item.truth[q]);
+}
+function evaluateStageCompletion(progress, content, stageNum) {
+  const stage = getStageDef(content, stageNum);
+  const allPlaced = stage.itemIds.every((id) => progress.placements[id] !== undefined);
+  if (!allPlaced) return false;
+  return stage.itemIds.every((id) => {
+    const item = content.boardItems.find((b) => b.id === id);
+    return item.truth[progress.placements[id]] === true;
+  });
+}
+// stageNum 클리어 조건 충족 시 상태를 전이시키고 board_stage_N 반례를 지급한다. 이미 clear된 단계에는
+// 아무 효과가 없으므로(멱등) 매 렌더마다 안전하게 호출할 수 있다.
+function tryClearStage(progress, content, stageNum) {
+  if (progress.stageStatus[stageNum] === "cleared") return false;
+  if (!evaluateStageCompletion(progress, content, stageNum)) return false;
+  progress.stageStatus[stageNum] = "cleared";
+  const rewardCx = content.counterexamples.filter((cx) => cx.acquiredAt === `board_stage_${stageNum}`);
+  for (const cx of rewardCx) {
+    if (!progress.acquiredCounterexamples.includes(cx.id)) progress.acquiredCounterexamples.push(cx.id);
+  }
+  const isLastStage = stageNum === content.stages[content.stages.length - 1].stage;
+  if (isLastStage) {
+    progress.flowSteps[3] = "done";
+    if (progress.flowSteps[4] === "inactive") progress.flowSteps[4] = "active";
+  }
+  return true;
+}
+
+// ---- FR-05: 반례 배틀 ----
+function canEnterBattle(progress, content) {
+  return content.stages.every((stage) => progress.stageStatus[stage.stage] === "cleared");
+}
+function getPropositionStatus(progress, proposition) {
+  const defeated = proposition.premiseIds.filter((id) => progress.defeatedPremises.includes(id));
+  return {
+    defeatedPremiseIds: defeated,
+    collapsed: defeated.length === proposition.premiseIds.length,
+  };
+}
+function tryCompleteBattle(progress, content) {
+  if (!content.propositions.every((proposition) => getPropositionStatus(progress, proposition).collapsed)) return false;
+  if (progress.flowSteps[4] !== "done") progress.flowSteps[4] = "done";
+  if (progress.flowSteps[5] === "inactive") progress.flowSteps[5] = "active";
+  return true;
+}
+function useCounterexample(progress, content, counterexampleId) {
+  const cx = content.counterexamples.find((candidate) => candidate.id === counterexampleId);
+  if (!cx) return { success: false, reason: "unknown_counterexample" };
+  if (!progress.acquiredCounterexamples.includes(cx.id)) return { success: false, reason: "not_acquired" };
+  if (progress.defeatedPremises.includes(cx.defeats)) return { success: false, reason: "premise_already_defeated", premiseId: cx.defeats };
+  const premise = content.premises.find((candidate) => candidate.id === cx.defeats);
+  if (!premise) return { success: false, reason: "unknown_premise" };
+  progress.defeatedPremises.push(premise.id);
+  const collapsed = tryCompleteBattle(progress, content);
+  return { success: true, premiseId: premise.id, explanation: cx.explain, collapsed };
+}
+
+// ---- FR-04: Sandbox ----
+function cloneTruthVector(vector) {
+  return { A: Boolean(vector.A), E: Boolean(vector.E), I: Boolean(vector.I), O: Boolean(vector.O) };
+}
+function getSandboxResult(vector) {
+  const truth = cloneTruthVector(vector);
+  const relationResults = evaluate(truth, RELATION_IDS);
+  const consistent = RELATION_IDS.every((id) => relationResults[id]);
+  let interpretation = null;
+  if (consistent && truth.A && truth.I && !truth.E && !truth.O) {
+    interpretation = { id: "duty", label: "의무", detail: "A=T·E=F·I=T·O=F — 가능하면서 반드시 해야 하는 상태" };
+  } else if (consistent && truth.E && truth.O && !truth.A && !truth.I) {
+    interpretation = { id: "prohibited", label: "금지(부정의한 것)", detail: "A=F·E=T·I=F·O=T — 불가능하므로 허용되지 않는 상태" };
+  } else if (consistent && truth.I && truth.O && !truth.A && !truth.E) {
+    interpretation = { id: "liberty", label: "자유(허용이면서 의무 아님)", detail: "A=F·E=F·I=T·O=T — 가능하지만 반드시 해야 하지는 않는 상태" };
+  }
+  return {
+    truth,
+    relationResults,
+    consistent,
+    interpretation,
+    violatedRelations: RELATION_IDS.filter((id) => !relationResults[id]),
+    ioTable: [
+      { I: true, O: false, label: "의무", vector: { A: true, E: false, I: true, O: false }, valid: true },
+      { I: false, O: true, label: "금지(부정의한 것)", vector: { A: false, E: true, I: false, O: true }, valid: true },
+      { I: true, O: true, label: "자유", vector: { A: false, E: false, I: true, O: true }, valid: true },
+      { I: false, O: false, label: "성립 불가 — 소반대 관계 위반", vector: null, valid: false },
+    ],
+  };
+}
+
+// ---- FR-06: 미결 사건 ----
+function getInquiryDefinition(content, inquiryId) {
+  return content.inquiries.find((inquiry) => inquiry.id === inquiryId);
+}
+function getInquiryProgress(progress, inquiry) {
+  if (!progress.inquiries[inquiry.id]) {
+    progress.inquiries[inquiry.id] = { selectedArgumentIds: [], note: "", status: "open" };
+  }
+  return progress.inquiries[inquiry.id];
+}
+function toggleInquiryArgument(progress, content, inquiryId, argumentId) {
+  const inquiry = getInquiryDefinition(content, inquiryId);
+  if (!inquiry) return { success: false, reason: "unknown_inquiry" };
+  const state = getInquiryProgress(progress, inquiry);
+  if (state.status === "resolved") return { success: false, reason: "already_resolved" };
+  if (!inquiry.argumentIds.includes(argumentId)) return { success: false, reason: "argument_not_available" };
+  const index = state.selectedArgumentIds.indexOf(argumentId);
+  if (index >= 0) state.selectedArgumentIds.splice(index, 1);
+  else state.selectedArgumentIds.push(argumentId);
+  return { success: true, selectedArgumentIds: state.selectedArgumentIds };
+}
+function updateInquiryNote(progress, content, inquiryId, note) {
+  const inquiry = getInquiryDefinition(content, inquiryId);
+  if (!inquiry) return { success: false, reason: "unknown_inquiry" };
+  const state = getInquiryProgress(progress, inquiry);
+  if (state.status === "resolved") return { success: false, reason: "already_resolved" };
+  state.note = String(note);
+  return { success: true, length: state.note.trim().length };
+}
+function canResolveInquiry(progress, content, inquiryId) {
+  const inquiry = getInquiryDefinition(content, inquiryId);
+  if (!inquiry) return false;
+  const state = getInquiryProgress(progress, inquiry);
+  return state.selectedArgumentIds.length >= 1 && state.note.trim().length >= 20;
+}
+function resolveInquiry(progress, content, inquiryId) {
+  const inquiry = getInquiryDefinition(content, inquiryId);
+  if (!inquiry) return { success: false, reason: "unknown_inquiry" };
+  const state = getInquiryProgress(progress, inquiry);
+  if (state.status === "resolved") return { success: true, alreadyResolved: true };
+  if (state.selectedArgumentIds.length < 1) return { success: false, reason: "need_argument" };
+  if (state.note.trim().length < 20) return { success: false, reason: "note_too_short" };
+  state.status = "resolved";
+  progress.flowSteps[5] = "done";
+  if (progress.flowSteps[6] === "inactive") progress.flowSteps[6] = "active";
+  return { success: true };
+}
+
+// ---- FR-08: 개념 지도 ----
+function buildAtlasModel(content, acquiredConceptIds) {
+  const acquired = new Set(acquiredConceptIds || []);
+  const nodes = content.concepts.filter((concept) => acquired.has(concept.id));
+  const edges = [];
+  for (const concept of nodes) {
+    for (const dependencyId of concept.derivedFrom || []) {
+      if (acquired.has(dependencyId)) edges.push({ from: dependencyId, to: concept.id });
+    }
+  }
+  return { nodes, edges };
+}
+
+// ---- FR-09 / FR-10: 결산 산출물과 진행 상태 파일 ----
+function formatSourceRange(src) {
+  return `${src.from}${src.to !== src.from ? "–" + src.to : ""}행`;
+}
+function markdownQuote(text) {
+  return String(text).split(/\r?\n/).map((line) => `> ${line}`).join("\n");
+}
+function buildDoctrineMarkdown(progress, content, generatedAt) {
+  const inquiry = content.inquiries[0];
+  const inquiryState = getInquiryProgress(progress, inquiry);
+  const selectedArguments = content.arguments.filter((argument) => inquiryState.selectedArgumentIds.includes(argument.id));
+  const acquiredConcepts = content.concepts.filter((concept) => progress.acquiredConcepts.includes(concept.id));
+  const lines = [
+    `# 나의 정의론 — ${content.title}`,
+    "",
+    "## 다룬 의문",
+    markdownQuote(inquiry.quote),
+    `원문: ${formatSourceRange(inquiry.src)}`,
+    "",
+    "## 나의 결론",
+    inquiryState.note || "(작성된 결론이 없습니다.)",
+    "",
+    "## 참조한 논거",
+    "### 변호",
+  ];
+  const defenses = selectedArguments.filter((argument) => argument.side === "defense");
+  const objections = selectedArguments.filter((argument) => argument.side === "objection");
+  lines.push(...(defenses.length > 0 ? defenses.map((argument) => `- ${argument.text} — ${claimTypeLabel(argument.claimType)}, 원문 ${formatSourceRange(argument.src)}`) : ["- 선택하지 않음"]));
+  lines.push("### 반박");
+  lines.push(...(objections.length > 0 ? objections.map((argument) => `- ${argument.text} — ${claimTypeLabel(argument.claimType)}, 원문 ${formatSourceRange(argument.src)}`) : ["- 선택하지 않음"]));
+
+  if (progress.sandboxLast) {
+    const sandbox = getSandboxResult(progress.sandboxLast);
+    const vector = `⟨A=${sandbox.truth.A ? "T" : "F"}, E=${sandbox.truth.E ? "T" : "F"}, I=${sandbox.truth.I ? "T" : "F"}, O=${sandbox.truth.O ? "T" : "F"}⟩`;
+    lines.push("", "## 조작 기록", `- Sandbox 최종 설정: ${vector}`);
+    lines.push(`- 정합 여부: ${sandbox.consistent ? "정합" : "위반"}`);
+    lines.push(`- 대응 상태: ${sandbox.interpretation ? sandbox.interpretation.label : "성립 불가"}`);
+    lines.push(`- 관계 결과: ${RELATION_IDS.map((id) => `${RELATION_META[id].pairLabel} ${sandbox.relationResults[id] ? "성립" : "위반"}`).join(", ")}`);
+  }
+
+  lines.push("", "## 획득한 개념");
+  lines.push(...(acquiredConcepts.length > 0
+    ? acquiredConcepts.map((concept) => `- **${concept.termKo}${concept.termLa ? ` (${concept.termLa})` : ""}** — ${concept.definition} (원문 ${formatSourceRange(concept.src)})`)
+    : ["- 없음"]));
+  lines.push("", "---", `생성 시각: ${generatedAt}`, `원문 버전: ${content.sourceVersion}`);
+  return lines.join("\n");
+}
+
+function serializeGameState() {
+  GameState.savedAt = new Date().toISOString();
+  return JSON.stringify(GameState, null, 2);
+}
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function validateImportedGameState(data) {
+  if (!isRecord(data)) return { valid: false, reason: "상태 파일이 JSON 객체가 아닙니다." };
+  if (!Number.isInteger(data.schemaVersion) || data.schemaVersion !== GameState.schemaVersion) return { valid: false, reason: "schemaVersion이 현재 버전과 다릅니다." };
+  if (data.sourceVersion !== SOURCE_VERSION) return { valid: false, reason: "sourceVersion이 현재 원문 버전과 다릅니다." };
+  if (typeof data.savedAt !== "string" || !isRecord(data.chapters)) return { valid: false, reason: "상태 파일의 필수 필드가 없습니다." };
+  for (const [chapterId, progress] of Object.entries(data.chapters)) {
+    if (!isRecord(progress)) return { valid: false, reason: `${chapterId} 진행 상태가 객체가 아닙니다.` };
+    for (const key of ["readingConsumed", "acquiredConcepts", "acquiredCounterexamples", "defeatedPremises"]) {
+      if (!Array.isArray(progress[key])) return { valid: false, reason: `${chapterId}.${key}가 배열이 아닙니다.` };
+    }
+    if (!isRecord(progress.flowSteps) || !isRecord(progress.placements) || !isRecord(progress.stageStatus) || !isRecord(progress.inquiries)) {
+      return { valid: false, reason: `${chapterId} 진행 상태 구조가 올바르지 않습니다.` };
+    }
+    if (!["locked", "in_progress", "completed"].includes(progress.status)) return { valid: false, reason: `${chapterId}.status 값이 올바르지 않습니다.` };
+    for (const value of Object.values(progress.flowSteps)) if (!["inactive", "active", "done"].includes(value)) return { valid: false, reason: `${chapterId}.flowSteps 값이 올바르지 않습니다.` };
+    for (const value of Object.values(progress.stageStatus)) if (!["inactive", "active", "cleared"].includes(value)) return { valid: false, reason: `${chapterId}.stageStatus 값이 올바르지 않습니다.` };
+    for (const inquiryState of Object.values(progress.inquiries)) {
+      if (!isRecord(inquiryState) || !Array.isArray(inquiryState.selectedArgumentIds) || typeof inquiryState.note !== "string" || !["open", "resolved"].includes(inquiryState.status)) {
+        return { valid: false, reason: `${chapterId}.inquiries 구조가 올바르지 않습니다.` };
+      }
+    }
+    if (chapterId === CHAPTER_CONTENT.chapterId) {
+      const known = {
+        reading: new Set(CHAPTER_CONTENT.readingCards.map((card) => card.id)),
+        concepts: new Set(CHAPTER_CONTENT.concepts.map((concept) => concept.id)),
+        counterexamples: new Set(CHAPTER_CONTENT.counterexamples.map((cx) => cx.id)),
+        premises: new Set(CHAPTER_CONTENT.premises.map((premise) => premise.id)),
+        arguments: new Set(CHAPTER_CONTENT.arguments.map((argument) => argument.id)),
+        inquiries: new Set(CHAPTER_CONTENT.inquiries.map((inquiry) => inquiry.id)),
+        boardItems: new Set(CHAPTER_CONTENT.boardItems.map((item) => item.id)),
+        stages: new Set(CHAPTER_CONTENT.stages.map((stage) => String(stage.stage))),
+      };
+      for (const id of progress.readingConsumed) if (!known.reading.has(id)) return { valid: false, reason: `${chapterId}.readingConsumed에 알 수 없는 카드가 있습니다.` };
+      for (const id of progress.acquiredConcepts) if (!known.concepts.has(id)) return { valid: false, reason: `${chapterId}.acquiredConcepts에 알 수 없는 개념이 있습니다.` };
+      for (const id of progress.acquiredCounterexamples) if (!known.counterexamples.has(id)) return { valid: false, reason: `${chapterId}.acquiredCounterexamples에 알 수 없는 반례가 있습니다.` };
+      for (const id of progress.defeatedPremises) if (!known.premises.has(id)) return { valid: false, reason: `${chapterId}.defeatedPremises에 알 수 없는 전제가 있습니다.` };
+      for (const [id, quadrant] of Object.entries(progress.placements)) {
+        if (!known.boardItems.has(id) || !["A", "E", "I", "O"].includes(quadrant)) return { valid: false, reason: `${chapterId}.placements에 알 수 없는 카드/사분면이 있습니다.` };
+      }
+      for (const stage of CHAPTER_CONTENT.stages) {
+        if (!Object.prototype.hasOwnProperty.call(progress.stageStatus, String(stage.stage))) return { valid: false, reason: `${chapterId}.stageStatus에 단계가 누락되었습니다.` };
+      }
+      for (const [id, inquiryState] of Object.entries(progress.inquiries)) {
+        if (!known.inquiries.has(id) || inquiryState.selectedArgumentIds.some((argumentId) => !known.arguments.has(argumentId))) return { valid: false, reason: `${chapterId}.inquiries에 알 수 없는 사건/논거가 있습니다.` };
+      }
+      if (progress.sandboxLast !== undefined && (!isRecord(progress.sandboxLast) || !["A", "E", "I", "O"].every((q) => typeof progress.sandboxLast[q] === "boolean"))) {
+        return { valid: false, reason: `${chapterId}.sandboxLast가 진리값 벡터가 아닙니다.` };
+      }
+    }
+  }
+  return { valid: true };
+}
+function importGameStateData(data) {
+  const validation = validateImportedGameState(data);
+  if (!validation.valid) return validation;
+  GameState.savedAt = data.savedAt;
+  GameState.chapters = data.chapters;
+  return { valid: true };
+}
+
+/* ==== SECTION: ENGINE-VALIDATION ==== */
+// 의존성 없는 동기식 SHA-256 (BR-06: 실행 경로에서 외부 리소스·API를 사용하지 않기 위함).
+function sha256Hex(str) {
+  function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  let H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const bytes = [];
+  for (let i = 0; i < str.length; i++) {
+    let c = str.codePointAt(i);
+    if (c > 0xFFFF) i++;
+    if (c < 0x80) bytes.push(c);
+    else if (c < 0x800) bytes.push(0xC0 | (c >> 6), 0x80 | (c & 0x3F));
+    else if (c < 0x10000) bytes.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 0x3F), 0x80 | (c & 0x3F));
+    else bytes.push(0xF0 | (c >> 18), 0x80 | ((c >> 12) & 0x3F), 0x80 | ((c >> 6) & 0x3F), 0x80 | (c & 0x3F));
+  }
+  const bitLen = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  const hi = Math.floor(bitLen / 0x100000000);
+  const lo = bitLen >>> 0;
+  for (const b of [(hi>>>24)&0xFF,(hi>>>16)&0xFF,(hi>>>8)&0xFF,hi&0xFF]) bytes.push(b);
+  for (const b of [(lo>>>24)&0xFF,(lo>>>16)&0xFF,(lo>>>8)&0xFF,lo&0xFF]) bytes.push(b);
+  const w = new Array(64);
+  for (let chunkStart = 0; chunkStart < bytes.length; chunkStart += 64) {
+    for (let i = 0; i < 16; i++) {
+      const o = chunkStart + i * 4;
+      w[i] = ((bytes[o] << 24) | (bytes[o+1] << 16) | (bytes[o+2] << 8) | (bytes[o+3])) >>> 0;
+    }
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i-15], 7) ^ rotr(w[i-15], 18) ^ (w[i-15] >>> 3);
+      const s1 = rotr(w[i-2], 17) ^ rotr(w[i-2], 19) ^ (w[i-2] >>> 10);
+      w[i] = (w[i-16] + s0 + w[i-7] + s1) >>> 0;
+    }
+    let [a,b,c,d,e,f,g,h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+      const ch = (e & f) ^ ((~e) & g);
+      const temp1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+      const S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    H[0]=(H[0]+a)>>>0; H[1]=(H[1]+b)>>>0; H[2]=(H[2]+c)>>>0; H[3]=(H[3]+d)>>>0;
+    H[4]=(H[4]+e)>>>0; H[5]=(H[5]+f)>>>0; H[6]=(H[6]+g)>>>0; H[7]=(H[7]+h)>>>0;
+  }
+  return H.map((x) => x.toString(16).padStart(8, "0")).join("");
+}
+
+// BR-10 자기 검사. C-1,C-2,C-4,C-5,C-6/BR-07,C-7,C-8을 이 챕터 데이터에 대해 수행한다.
+function runContentSelfCheck(content, sourceText) {
+  const failures = [];
+  const fail = (code, message) => failures.push({ code, message });
+
+  const requiredArrays = ["readingCards", "concepts", "stages", "boardItems", "propositions", "premises", "counterexamples", "arguments", "inquiries"];
+  for (const key of requiredArrays) {
+    if (!Array.isArray(content[key])) fail("SCHEMA", `ChapterContent.${key}: 배열 필드 누락/형식 오류`);
+  }
+  for (const key of ["schemaVersion", "sourceVersion", "sourceHash", "chapterId", "title", "openingQuestion"]) {
+    if (content[key] === undefined || content[key] === null || content[key] === "") fail("SCHEMA", `ChapterContent.${key}: 필수 필드 누락`);
+  }
+
+  const collections = ["readingCards","concepts","boardItems","propositions","premises","counterexamples","arguments","inquiries"];
+  const ids = {};
+  for (const key of collections) ids[key] = new Set();
+
+  function checkSrc(label, id, src) {
+    if (!src || !Number.isInteger(src.from) || !Number.isInteger(src.to)) { fail("C-1", `${label} ${id}: src 누락/형식 오류`); return; }
+    if (src.from > src.to) fail("C-2", `${label} ${id}: src.from > src.to`);
+    if (src.from < 1 || src.to > sourceText.lineCount) fail("C-2", `${label} ${id}: src(${src.from}-${src.to})가 원문 범위(1-${sourceText.lineCount})를 벗어남`);
+  }
+  function checkClaimType(label, id, claimType) {
+    if (!["source", "interpretation", "model"].includes(claimType)) fail("C-1", `${label} ${id}: claimType 값 오류(${claimType})`);
+  }
+
+  for (const key of collections) {
+    for (const e of content[key] || []) {
+      if (ids[key].has(e.id)) fail("SCHEMA", `${key}: id 중복 (${e.id})`);
+      ids[key].add(e.id);
+      checkSrc(key, e.id, e.src);
+      checkClaimType(key, e.id, e.claimType);
+    }
+  }
+
+  if (content.sourceVersion !== sourceText.version) fail("C-3", "콘텐츠 sourceVersion과 내장 원문 version이 일치하지 않습니다.");
+
+  for (const item of content.boardItems || []) {
+    for (const key of ["label", "rationale"]) {
+      if (typeof item[key] !== "string" || item[key].length === 0) fail("SCHEMA", `boardItem ${item.id}: ${key} 필수 필드 오류`);
+    }
+    if (!item.truth || !["A", "E", "I", "O"].every((q) => typeof item.truth[q] === "boolean")) {
+      fail("SCHEMA", `boardItem ${item.id}: truth 필수 필드 오류`);
+      continue;
+    }
+    const res = evaluate(item.truth, RELATION_IDS);
+    const violated = RELATION_IDS.filter((id) => !res[id]);
+    if (violated.length > 0) fail("C-4", `boardItem ${item.id}: truth가 관계(${violated.join(", ")})를 위반함`);
+  }
+
+  for (const stage of content.stages || []) {
+    if (!Number.isInteger(stage.stage) || !Array.isArray(stage.activeRelations) || !Array.isArray(stage.itemIds) || typeof stage.goal !== "string" || stage.goal.length === 0) {
+      fail("SCHEMA", `stage ${stage.stage}: stage/activeRelations/itemIds/goal 필수 필드 오류`);
+    }
+    for (const rid of stage.activeRelations || []) {
+      if (!RELATION_IDS.includes(rid)) fail("C-5", `stage ${stage.stage}: 알 수 없는 관계 식별자 ${rid}`);
+    }
+    for (const iid of stage.itemIds || []) {
+      if (!ids.boardItems.has(iid)) fail("C-8", `stage ${stage.stage}: itemIds가 존재하지 않는 boardItem(${iid})을 참조`);
+    }
+  }
+
+  const derivable = (content.concepts || []).filter((c) => c.derivedFrom && c.derivedFrom.length > 0);
+  if (derivable.length < 1) fail("C-7", "derivedFrom이 비어있지 않은 개념이 없음 (FR-02 계약 위반)");
+  for (const c of derivable) {
+    for (const dep of c.derivedFrom) {
+      if (!ids.concepts.has(dep)) fail("C-7", `concept ${c.id}: derivedFrom이 존재하지 않는 개념(${dep})을 참조`);
+    }
+  }
+
+  for (const prop of content.propositions || []) {
+    for (const pid of prop.premiseIds) {
+      if (!ids.premises.has(pid)) fail("C-8", `proposition ${prop.id}: premiseIds가 존재하지 않는 premise(${pid})를 참조`);
+    }
+  }
+  const premiseIdSet = new Set((content.premises || []).map((p) => p.id));
+  for (const cx of content.counterexamples || []) {
+    if (!premiseIdSet.has(cx.defeats)) fail("C-8", `counterexample ${cx.id}: defeats가 존재하지 않는 premise(${cx.defeats})를 참조`);
+    if (!["reading_complete","board_stage_1","board_stage_2","board_stage_3"].includes(cx.acquiredAt)) fail("SCHEMA", `counterexample ${cx.id}: acquiredAt 값 오류`);
+  }
+  for (const inq of content.inquiries || []) {
+    for (const aid of inq.argumentIds) {
+      if (!ids.arguments.has(aid)) fail("C-8", `inquiry ${inq.id}: argumentIds가 존재하지 않는 argument(${aid})를 참조`);
+    }
+  }
+  for (const rc of content.readingCards || []) {
+    for (const tok of rc.tokens || []) {
+      if (!ids.concepts.has(tok.conceptId)) fail("C-8", `readingCard ${rc.id}: token이 존재하지 않는 개념(${tok.conceptId})을 참조`);
+    }
+  }
+
+  for (const prop of content.propositions || []) {
+    for (const pid of prop.premiseIds) {
+      const defenders = (content.counterexamples || []).filter((cx) => cx.defeats === pid);
+      if (defenders.length < 1) fail("C-6", `premise ${pid}: 이를 무너뜨릴 반례가 없음 (BR-07)`);
+    }
+  }
+
+  return failures;
+}
+
+function verifySourceHash(content, sourceText) {
+  const computed = sha256Hex(sourceText.lines.join("\n"));
+  return computed === content.sourceHash;
+}
+
+/* ==== SECTION: UI-HOME ==== */
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;" }[c]));
+}
+function claimTypeLabel(claimType) {
+  return { source: "원문", interpretation: "해석", model: "모델" }[claimType] || claimType;
+}
+function claimTypeExplain(claimType) {
+  return {
+    source: "원문에 문자 그대로 존재하는 진술입니다.",
+    interpretation: "원문을 해석·재구성한 진술입니다.",
+    model: "게임 판정을 위해 채택한 형식화입니다. 원문의 사실이 아니라 게임의 규약입니다.",
+  }[claimType] || "";
+}
+
+function renderHome(selfCheckFailures) {
+  const statusNote = document.getElementById("chapter-status-note");
+  const enterBtn = document.getElementById("btn-enter-chapter-3");
+  const chapterEntry = document.getElementById("chapter-3-entry");
+  const atlasButton = document.getElementById("nav-atlas");
+
+  let diag = document.getElementById("self-check-diagnostics");
+  if (selfCheckFailures.length > 0) {
+    statusNote.textContent = `콘텐츠 자기 검사 실패 (${selfCheckFailures.length}건) — 아래 진단 정보를 확인하세요.`;
+    statusNote.style.color = "var(--color-inconsistent)";
+    enterBtn.disabled = true;
+    enterBtn.textContent = "입장 불가 (검사 실패)";
+    atlasButton.disabled = true;
+    if (!diag) {
+      diag = document.createElement("div");
+      diag.id = "self-check-diagnostics";
+      diag.className = "card";
+      diag.style.marginTop = "12px";
+      chapterEntry.after(diag);
+    }
+    diag.innerHTML = "<h3>진단 정보</h3><ul>" +
+      selfCheckFailures.map((f) => `<li><strong>[${escapeHtml(f.code)}]</strong> ${escapeHtml(f.message)}</li>`).join("") +
+      "</ul>";
+    return;
+  }
+
+  if (diag) diag.remove();
+  statusNote.textContent = "콘텐츠 자기 검사를 통과했습니다.";
+  statusNote.style.color = "";
+  enterBtn.disabled = false;
+  enterBtn.textContent = "입장";
+  enterBtn.onclick = () => enterChapter3();
+  atlasButton.disabled = false;
+  atlasButton.onclick = () => openAtlas();
+}
+
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach((el) => { el.hidden = el.dataset.screen !== name; });
+}
+
+/* ==== SECTION: UI-READING ==== */
+let readingCursor = 0;
+let synthesisSelection = new Set();
+
+function enterChapter3() {
+  const progress = getChapterProgress(CHAPTER_CONTENT.chapterId);
+  progress.status = "in_progress";
+  if (progress.flowSteps[1] !== "done") progress.flowSteps[1] = "done";
+  if (progress.flowSteps[2] === "inactive") progress.flowSteps[2] = "active";
+  readingCursor = 0;
+  showScreen("Reading");
+  renderReadingScreen();
+}
+
+function renderReadingScreen() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+
+  if (isReadingComplete(progress, content)) {
+    grantReadingCompletionRewards(progress, content);
+    progress.flowSteps[2] = "done";
+    if (progress.flowSteps[3] === "inactive") progress.flowSteps[3] = "active";
+  }
+
+  const screen = document.getElementById("screen-reading");
+  const card = content.readingCards[readingCursor];
+  const total = content.readingCards.length;
+  const isLast = readingCursor === total - 1;
+  const consumedCount = progress.readingConsumed.length;
+  const complete = isReadingComplete(progress, content);
+
+  screen.innerHTML = `
+    <button type="button" class="back-link" id="btn-reading-home">◂ 서재</button>
+      <h1>${escapeHtml(content.title)}</h1>
+    <p class="opening-question term-serif">${escapeHtml(content.openingQuestion)}</p>
+    <div class="reading-progress">읽음 ${consumedCount} / ${total}</div>
+    <div class="card reading-card">
+      <div class="reading-meta">
+        <span class="badge-claim" data-claim="${card.claimType}">${claimTypeLabel(card.claimType)}</span>
+        <button type="button" class="btn btn-secondary btn-source" data-src-from="${card.src.from}" data-src-to="${card.src.to}" data-claim="${card.claimType}" data-title="리딩 카드 ${readingCursor + 1}">원문 보기</button>
+      </div>
+      <p class="reading-body">${renderTokenizedBody(card)}</p>
+    </div>
+    <div class="reading-nav">
+      <button type="button" class="btn btn-secondary" id="btn-reading-prev" ${readingCursor === 0 ? "disabled" : ""}>이전</button>
+      <button type="button" class="btn" id="btn-reading-next">${isLast ? "완료" : "다음"}</button>
+    </div>
+    ${complete ? renderCompletionPanel(progress, content) : ""}
+  `;
+
+  document.getElementById("btn-reading-home").addEventListener("click", () => showScreen("Home"));
+  document.getElementById("btn-reading-prev").addEventListener("click", () => {
+    if (readingCursor > 0) { readingCursor--; renderReadingScreen(); }
+  });
+  document.getElementById("btn-reading-next").addEventListener("click", () => {
+    consumeReadingCard(progress, card.id);
+    if (!isLast) readingCursor++;
+    renderReadingScreen();
+  });
+
+  wireReadingScreenEvents(progress, content);
+}
+
+function renderTokenizedBody(card) {
+  const tokens = card.tokens || [];
+  if (tokens.length === 0) return escapeHtml(card.body);
+  let matches = [];
+  for (const tok of tokens) {
+    const idx = card.body.indexOf(tok.text);
+    if (idx !== -1) matches.push({ start: idx, end: idx + tok.text.length, tok });
+  }
+  matches.sort((a, b) => a.start - b.start);
+  const filtered = [];
+  let lastEnd = -1;
+  for (const m of matches) {
+    if (m.start >= lastEnd) { filtered.push(m); lastEnd = m.end; }
+  }
+  let html = "";
+  let cursor = 0;
+  for (const m of filtered) {
+    html += escapeHtml(card.body.slice(cursor, m.start));
+    html += `<button type="button" class="term-token" data-concept-id="${escapeHtml(m.tok.conceptId)}">${escapeHtml(m.tok.text)}</button>`;
+    cursor = m.end;
+  }
+  html += escapeHtml(card.body.slice(cursor));
+  return html;
+}
+
+function renderCompletionPanel(progress, content) {
+  const acquiredConceptCards = content.concepts.filter((c) => progress.acquiredConcepts.includes(c.id));
+  const derivableLocked = content.concepts.filter((c) => c.derivedFrom.length > 0 && !progress.acquiredConcepts.includes(c.id));
+  const acquiredCx = content.counterexamples.filter((cx) => progress.acquiredCounterexamples.includes(cx.id));
+
+  return `
+    <div class="card completion-panel">
+      <h2>리딩 완료 — 획득한 카드</h2>
+      <div class="concept-deck">
+        ${acquiredConceptCards.map(renderConceptCard).join("")}
+      </div>
+      <h3>획득한 반례 카드</h3>
+      <div class="counterexample-deck">
+        ${acquiredCx.map((cx) => `
+          <div class="card cx-card">
+            <strong>${escapeHtml(cx.label)}</strong>
+            <span class="badge-claim" data-claim="${cx.claimType}">${claimTypeLabel(cx.claimType)}</span>
+            <button type="button" class="btn btn-secondary btn-source" data-src-from="${cx.src.from}" data-src-to="${cx.src.to}" data-claim="${cx.claimType}" data-title="${escapeHtml(cx.label)}">원문 보기</button>
+          </div>
+        `).join("")}
+      </div>
+      ${derivableLocked.length > 0 ? renderSynthesisPanel(progress, content) : ""}
+      <button type="button" class="btn" id="btn-goto-board">대당 사각형 보드 퍼즐로</button>
+    </div>
+  `;
+}
+
+function renderConceptCard(c) {
+  return `
+    <div class="card concept-card">
+      <div class="concept-terms">
+        <span class="term-serif concept-ko">${escapeHtml(c.termKo)}</span>
+        ${c.termLa ? `<span class="term-serif concept-la">${escapeHtml(c.termLa)}</span>` : ""}
+      </div>
+      <p class="concept-def">${escapeHtml(c.definition)}</p>
+      <span class="badge-claim" data-claim="${c.claimType}">${claimTypeLabel(c.claimType)}</span>
+      <button type="button" class="btn btn-secondary btn-source"
+        data-src-from="${c.src.from}" data-src-to="${c.src.to}"
+        data-claim="${c.claimType}" data-title="${escapeHtml(c.termKo)}">원문 보기</button>
+    </div>
+  `;
+}
+
+function renderSynthesisPanel(progress, content) {
+  const ownedConcepts = content.concepts.filter((c) => progress.acquiredConcepts.includes(c.id));
+  return `
+    <div class="card synthesis-panel">
+      <h3>개념 합성</h3>
+      <p>보유한 개념 카드를 2개 이상 선택하고 합성을 시도하세요.</p>
+      <div class="synthesis-select">
+        ${ownedConcepts.map((c) => `
+          <label class="synthesis-option">
+            <input type="checkbox" class="synth-checkbox" value="${c.id}" ${synthesisSelection.has(c.id) ? "checked" : ""}>
+            ${escapeHtml(c.termKo)}
+          </label>
+        `).join("")}
+      </div>
+      <button type="button" class="btn" id="btn-attempt-synthesis">합성 시도</button>
+      <div id="synthesis-feedback"></div>
+    </div>
+  `;
+}
+
+function wireReadingScreenEvents(progress, content) {
+  const gotoBoardBtn = document.getElementById("btn-goto-board");
+  if (gotoBoardBtn) gotoBoardBtn.addEventListener("click", () => enterBoard());
+
+  document.querySelectorAll(".term-token").forEach((el) => {
+    el.addEventListener("click", () => openConceptPopup(el.dataset.conceptId));
+  });
+  document.querySelectorAll(".btn-source").forEach((el) => {
+    el.addEventListener("click", () => openSourceOverlay({
+      title: el.dataset.title,
+      claimType: el.dataset.claim,
+      src: { from: Number(el.dataset.srcFrom), to: Number(el.dataset.srcTo) },
+    }));
+  });
+  document.querySelectorAll(".synth-checkbox").forEach((el) => {
+    el.addEventListener("change", () => {
+      if (el.checked) synthesisSelection.add(el.value); else synthesisSelection.delete(el.value);
+    });
+  });
+  const synthBtn = document.getElementById("btn-attempt-synthesis");
+  if (synthBtn) {
+    synthBtn.addEventListener("click", () => {
+      const result = attemptSynthesis(progress, content, Array.from(synthesisSelection));
+      const feedback = document.getElementById("synthesis-feedback");
+      if (result.success) {
+        const names = result.acquired.map((id) => content.concepts.find((c) => c.id === id).termKo).join(", ");
+        synthesisSelection.clear();
+        renderReadingScreen();
+        const fb2 = document.getElementById("synthesis-feedback");
+        if (fb2) { fb2.textContent = `합성 성공: ${names}`; fb2.style.color = "var(--color-consistent)"; }
+        return;
+      }
+      let msg = "합성 실패: ";
+      if (result.reason === "need_at_least_two_cards") msg += "카드를 2개 이상 선택하세요.";
+      else if (result.reason === "no_derivable_concepts_remaining") msg += "합성 가능한 개념이 더 이상 없습니다.";
+      else if (result.reason === "missing_components") {
+        const parts = Object.entries(result.perTargetMissing).map(([targetId, missing]) => {
+          const targetName = content.concepts.find((c) => c.id === targetId).termKo;
+          const missingNames = missing.map((id) => content.concepts.find((c) => c.id === id).termKo).join(", ");
+          return `${targetName} — 필요한 구성 카드가 없거나 선택되지 않음: ${missingNames}`;
+        });
+        msg += parts.join(" / ");
+      }
+      feedback.textContent = msg;
+      feedback.style.color = "var(--color-inconsistent)";
+    });
+  }
+}
+
+/* ==== SECTION: UI-SOURCE-OVERLAY ==== */
+function openConceptPopup(conceptId) {
+  const c = CHAPTER_CONTENT.concepts.find((x) => x.id === conceptId);
+  if (!c) return;
+  openSourceOverlay({
+    title: c.termKo + (c.termLa ? ` (${c.termLa})` : ""),
+    claimType: c.claimType,
+    src: c.src,
+    definition: c.definition,
+  });
+}
+
+function openSourceOverlay({ title, claimType, src, definition }) {
+  const overlay = document.getElementById("overlay-source");
+  const panel = overlay.querySelector(".overlay-panel");
+  const excerpt = SOURCE_TEXT.lines.slice(src.from - 1, src.to).join("\n");
+  panel.innerHTML = `
+    <div class="overlay-header">
+      <h2 class="term-serif">${escapeHtml(title || "원문 보기")}</h2>
+      <span class="badge-claim" data-claim="${claimType}">${claimTypeLabel(claimType)}</span>
+      <button type="button" class="btn btn-secondary" id="btn-close-source-overlay">닫기</button>
+    </div>
+    ${definition ? `<p class="concept-def">${escapeHtml(definition)}</p>` : ""}
+    <p class="claim-type-note">${claimTypeExplain(claimType)}</p>
+    <pre class="source-excerpt">${escapeHtml(excerpt)}</pre>
+    <p class="src-range">원문 ${src.from}${src.to !== src.from ? "–" + src.to : ""}행</p>
+  `;
+  overlay.hidden = false;
+  document.getElementById("btn-close-source-overlay").addEventListener("click", () => { overlay.hidden = true; });
+}
+
+/* ==== SECTION: UI-ATLAS ==== */
+function openAtlas() {
+  const progress = getChapterProgress(CHAPTER_CONTENT.chapterId);
+  const model = buildAtlasModel(CHAPTER_CONTENT, progress.acquiredConcepts);
+  const overlay = document.getElementById("overlay-atlas");
+  const panel = overlay.querySelector(".overlay-panel");
+  const positions = new Map(model.nodes.map((node) => [node.id, node.pos]));
+  const edges = model.edges.map((edge) => {
+    const from = positions.get(edge.from);
+    const to = positions.get(edge.to);
+    return `<line class="atlas-edge" x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" marker-end="url(#atlas-arrow)"><title>${escapeHtml(edge.from)} → ${escapeHtml(edge.to)}</title></line>`;
+  }).join("");
+  const nodes = model.nodes.map((node) => `
+    <g class="atlas-node" transform="translate(${node.pos.x} ${node.pos.y})">
+      <rect x="-92" y="-30" width="184" height="60" rx="6"></rect>
+      <text x="0" y="-4" text-anchor="middle">${escapeHtml(node.termKo)}</text>
+      <text class="atlas-node-la" x="0" y="16" text-anchor="middle">${escapeHtml(node.termLa || "")}</text>
+      <title>${escapeHtml(node.definition)}</title>
+    </g>
+  `).join("");
+  const cards = model.nodes.map((node) => `
+    <article class="card atlas-card">
+      <div class="concept-terms"><span class="term-serif concept-ko">${escapeHtml(node.termKo)}</span>${node.termLa ? `<span class="concept-la">${escapeHtml(node.termLa)}</span>` : ""}</div>
+      <p>${escapeHtml(node.definition)}</p>
+      <span class="badge-claim" data-claim="${node.claimType}">${claimTypeLabel(node.claimType)}</span>
+      <button type="button" class="btn btn-secondary atlas-source" data-src-from="${node.src.from}" data-src-to="${node.src.to}" data-claim="${node.claimType}" data-title="${escapeHtml(node.termKo)}">원문 보기</button>
+    </article>
+  `).join("");
+
+  panel.innerHTML = `
+    <div class="overlay-header">
+      <h2 class="term-serif">개념 지도 — Atlas</h2>
+      <button type="button" class="btn btn-secondary" id="btn-close-atlas">닫기</button>
+    </div>
+    <p class="claim-type-note">획득한 개념과 <code>derivedFrom</code> 구성 관계를 사전 지정 좌표로 표시합니다.</p>
+    ${model.nodes.length > 0 ? `
+      <svg class="atlas-svg" viewBox="0 0 520 500" role="img" aria-label="획득한 개념과 구성 관계 지도">
+        <defs><marker id="atlas-arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="currentColor"></path></marker></defs>
+        ${edges}${nodes}
+      </svg>
+      <div class="atlas-list">${cards}</div>
+    ` : '<p class="judgement-note">아직 획득한 개념이 없습니다. 리딩을 완료하면 지도가 채워집니다.</p>'}
+  `;
+  overlay.hidden = false;
+  document.getElementById("btn-close-atlas").addEventListener("click", () => { overlay.hidden = true; });
+  document.querySelectorAll(".atlas-source").forEach((el) => {
+    el.addEventListener("click", () => openSourceOverlay({
+      title: el.dataset.title,
+      claimType: el.dataset.claim,
+      src: { from: Number(el.dataset.srcFrom), to: Number(el.dataset.srcTo) },
+    }));
+  });
+}
+
+/* ==== SECTION: UI-SANDBOX ==== */
+let sandboxDraft = { A: false, E: false, I: false, O: false };
+
+function openSandbox() {
+  const progress = getChapterProgress(CHAPTER_CONTENT.chapterId);
+  sandboxDraft = cloneTruthVector(progress.sandboxLast || { A: false, E: false, I: false, O: false });
+  renderSandboxOverlay();
+  document.getElementById("overlay-sandbox").hidden = false;
+}
+
+function closeSandbox() {
+  document.getElementById("overlay-sandbox").hidden = true;
+}
+
+function renderSandboxOverlay() {
+  const overlay = document.getElementById("overlay-sandbox");
+  const panel = overlay.querySelector(".overlay-panel");
+  const result = getSandboxResult(sandboxDraft);
+  const sourceButton = `<button type="button" class="btn btn-secondary" id="btn-sandbox-source">형식화의 원문 보기</button>`;
+  const relationRows = RELATION_IDS.map((id) => {
+    const meta = RELATION_META[id];
+    const valid = result.relationResults[id];
+    return `<li class="sandbox-relation" data-valid="${valid}">
+      <span class="relation-state">${valid ? "성립" : "위반"}</span>
+      <span><strong>${escapeHtml(meta.label)} (${escapeHtml(meta.pairLabel)})</strong> — ${escapeHtml(meta.condition)}</span>
+    </li>`;
+  }).join("");
+  const ioRows = result.ioTable.map((row) => `
+    <tr data-valid="${row.valid}">
+      <td>${row.I ? "T" : "F"}</td><td>${row.O ? "T" : "F"}</td>
+      <td>${escapeHtml(row.label)}</td>
+    </tr>
+  `).join("");
+
+  panel.innerHTML = `
+    <div class="overlay-header">
+      <h2 class="term-serif">Sandbox — 가상 행위 φ*</h2>
+      <span class="badge-claim" data-claim="model">모델</span>
+      <button type="button" class="btn btn-secondary" id="btn-close-sandbox">닫기</button>
+    </div>
+    <p class="claim-type-note">여섯 관계를 모두 적용한 형식 모델의 귀결입니다. 보드의 카드 배치와는 별개의 가상 설정입니다.</p>
+    <div class="sandbox-toggles" role="group" aria-label="가상 행위 진리값 설정">
+      ${[["A", "A = □φ (필연)", "의무"], ["E", "E = □¬φ (불가능)", "금지"], ["I", "I = ◇φ (가능)", "허용"], ["O", "O = ◇¬φ (우연)", "의무 아님"]].map(([q, modal, law]) => `
+        <label class="sandbox-toggle">
+          <input type="checkbox" class="sandbox-check" data-quadrant="${q}" ${sandboxDraft[q] ? "checked" : ""}>
+          <span><strong>${modal}</strong><small>${law}</small></span>
+        </label>
+      `).join("")}
+    </div>
+    <div class="sandbox-result" aria-live="polite">
+      <div class="overlay-header sandbox-result-header">
+        <h3>채택된 형식 모델에서의 귀결</h3>
+        ${sourceButton}
+      </div>
+      <p class="sandbox-vector">설정 벡터: ⟨A=${result.truth.A ? "T" : "F"}, E=${result.truth.E ? "T" : "F"}, I=${result.truth.I ? "T" : "F"}, O=${result.truth.O ? "T" : "F"}⟩</p>
+      ${result.consistent
+        ? `<p class="judgement judgement-ok">정합 — ${escapeHtml(result.interpretation ? result.interpretation.label : "정합 벡터")}</p><p>${escapeHtml(result.interpretation ? result.interpretation.detail : "이 조합은 여섯 관계를 만족합니다.")}</p>`
+        : `<p class="judgement judgement-violation">이 조합을 만족하는 행위는 존재할 수 없음</p><p>위반 관계: ${result.violatedRelations.map((id) => `${RELATION_META[id].label}(${RELATION_META[id].pairLabel})`).join(", ")}</p>`}
+    </div>
+    <div class="sandbox-relations">
+      <h3>관계별 결과</h3>
+      <ul class="sandbox-relation-list">${relationRows}</ul>
+    </div>
+    <div class="sandbox-io">
+      <h3>I·O 독립 대조표</h3>
+      <p class="claim-type-note">I(가능)와 O(우연)는 함께 참일 수도 있지만, 둘 다 거짓일 수는 없습니다.</p>
+      <table><thead><tr><th>I</th><th>O</th><th>귀결</th></tr></thead><tbody>${ioRows}</tbody></table>
+    </div>
+  `;
+
+  document.getElementById("btn-close-sandbox").addEventListener("click", closeSandbox);
+  document.getElementById("btn-sandbox-source").addEventListener("click", () => openSourceOverlay({
+    title: "양상 개념과 법 개념의 대응",
+    claimType: "model",
+    src: { from: 127, to: 135 },
+  }));
+  document.querySelectorAll(".sandbox-check").forEach((el) => {
+    el.addEventListener("change", () => {
+      sandboxDraft[el.dataset.quadrant] = el.checked;
+      const progress = getChapterProgress(CHAPTER_CONTENT.chapterId);
+      progress.sandboxLast = cloneTruthVector(sandboxDraft);
+      renderSandboxOverlay();
+    });
+  });
+}
+
+/* ==== SECTION: UI-INQUIRY ==== */
+function enterInquiry() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  if (progress.flowSteps[4] !== "done" || progress.flowSteps[5] === "inactive") {
+    enterBattle();
+    return;
+  }
+  showScreen("Inquiry");
+  renderInquiryScreen();
+}
+
+function renderInquiryArgument(argument, selected, resolved) {
+  const sideLabel = argument.side === "defense" ? "변호" : "반박";
+  return `
+    <article class="card argument-card" data-side="${argument.side}">
+      <div class="argument-header">
+        <span class="argument-side">${sideLabel}</span>
+        <input type="checkbox" class="argument-check" value="${argument.id}" ${selected ? "checked" : ""} ${resolved ? "disabled" : ""}>
+      </div>
+      <p>${escapeHtml(argument.text)}</p>
+      <div class="badge-row"><span class="badge-claim" data-claim="${argument.claimType}">${claimTypeLabel(argument.claimType)}</span></div>
+      <button type="button" class="btn btn-secondary btn-source inquiry-source" data-src-from="${argument.src.from}" data-src-to="${argument.src.to}" data-claim="${argument.claimType}" data-title="${sideLabel} 논거">원문 보기</button>
+    </article>
+  `;
+}
+
+function renderInquiryScreen() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  const inquiry = content.inquiries[0];
+  const state = getInquiryProgress(progress, inquiry);
+  const resolved = state.status === "resolved";
+  const argumentsById = new Map(content.arguments.map((argument) => [argument.id, argument]));
+  const availableArguments = inquiry.argumentIds.map((id) => argumentsById.get(id)).filter(Boolean);
+  const selectedCount = state.selectedArgumentIds.length;
+  const noteLength = state.note.trim().length;
+  const ready = resolved || (selectedCount >= 1 && noteLength >= 20);
+  const sourceButton = `<button type="button" class="btn btn-secondary inquiry-source" data-src-from="${inquiry.src.from}" data-src-to="${inquiry.src.to}" data-claim="${inquiry.claimType}" data-title="내 의문 원문">원문 보기</button>`;
+
+  document.getElementById("screen-inquiry").innerHTML = `
+    <button type="button" class="back-link" id="btn-inquiry-battle">◂ 반례 배틀로 돌아가기</button>
+    <h1>내 의문 노트 — 미결 사건</h1>
+    <div class="screen-toolbar"><button type="button" class="btn btn-secondary" id="btn-inquiry-sandbox">Sandbox 열기</button></div>
+    <article class="card inquiry-quote">
+      <div class="overlay-header"><h2 class="term-serif">다룬 의문</h2><span class="badge-claim" data-claim="${inquiry.claimType}">${claimTypeLabel(inquiry.claimType)}</span>${sourceButton}</div>
+      <blockquote>${escapeHtml(inquiry.quote)}</blockquote>
+      <p class="src-range">원문 ${inquiry.src.from}–${inquiry.src.to}행</p>
+    </article>
+    <section class="card inquiry-workspace">
+      <h2>논거를 선택하세요</h2>
+      <p class="claim-type-note">변호와 반박 중 최소 한 장을 선택해야 사건을 정리할 수 있습니다.</p>
+      <div class="argument-grid">${availableArguments.map((argument) => renderInquiryArgument(argument, state.selectedArgumentIds.includes(argument.id), resolved)).join("")}</div>
+      <h2>나의 결론</h2>
+      <textarea id="inquiry-note" class="inquiry-note" minlength="20" placeholder="Sandbox 조작 결과와 선택한 논거를 바탕으로 자신의 결론을 적어 보세요. (20자 이상)" ${resolved ? "disabled" : ""}>${escapeHtml(state.note)}</textarea>
+      <div class="inquiry-requirements" aria-live="polite">
+        <span>선택한 논거: ${selectedCount}장</span>
+        <span>서술: ${noteLength}자 / 20자</span>
+      </div>
+      ${resolved ? '<p class="judgement judgement-ok">사건이 정리되었습니다. 다음은 결산 단계입니다.</p>' : `<button type="button" class="btn" id="btn-resolve-inquiry" ${ready ? "" : "disabled"}>사건 정리하기</button>`}
+    </section>
+    <div class="inquiry-nav"><button type="button" class="btn" id="btn-goto-summary" ${resolved ? "" : "disabled"}>결산으로</button></div>
+  `;
+
+  document.getElementById("btn-inquiry-battle").addEventListener("click", () => enterBattle());
+  document.getElementById("btn-inquiry-sandbox").addEventListener("click", openSandbox);
+  const summaryButton = document.getElementById("btn-goto-summary");
+  if (summaryButton) summaryButton.addEventListener("click", () => enterSummary());
+  document.querySelectorAll(".inquiry-source").forEach((el) => {
+    el.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openSourceOverlay({
+        title: el.dataset.title,
+        claimType: el.dataset.claim,
+        src: { from: Number(el.dataset.srcFrom), to: Number(el.dataset.srcTo) },
+      });
+    });
+  });
+  document.querySelectorAll(".argument-check").forEach((el) => {
+    el.addEventListener("change", () => {
+      toggleInquiryArgument(progress, content, inquiry.id, el.value);
+      renderInquiryScreen();
+    });
+  });
+  const note = document.getElementById("inquiry-note");
+  if (note) {
+    note.addEventListener("input", () => {
+      updateInquiryNote(progress, content, inquiry.id, note.value);
+      const count = document.querySelector(".inquiry-requirements span:last-child");
+      if (count) count.textContent = `서술: ${note.value.trim().length}자 / 20자`;
+      const resolveButton = document.getElementById("btn-resolve-inquiry");
+      if (resolveButton) resolveButton.disabled = !canResolveInquiry(progress, content, inquiry.id);
+    });
+  }
+  const resolveButton = document.getElementById("btn-resolve-inquiry");
+  if (resolveButton) resolveButton.addEventListener("click", () => {
+    resolveInquiry(progress, content, inquiry.id);
+    renderInquiryScreen();
+  });
+}
+
+/* ==== SECTION: UI-SUMMARY ==== */
+function showSaveBanner(message, isError = false) {
+  const banner = document.getElementById("save-banner");
+  banner.textContent = message;
+  banner.dataset.error = isError ? "true" : "false";
+  banner.hidden = false;
+}
+
+function downloadTextFile(filename, text, mimeType) {
+  const blob = new Blob([text], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function exportDoctrineMarkdown() {
+  const progress = getChapterProgress(CHAPTER_CONTENT.chapterId);
+  const generatedAt = new Date().toISOString();
+  const markdown = buildDoctrineMarkdown(progress, CHAPTER_CONTENT, generatedAt);
+  downloadTextFile("나의-정의론-3장.md", markdown, "text/markdown;charset=utf-8");
+  showSaveBanner("「나의 정의론」 Markdown을 저장할 준비가 되었습니다.");
+  return markdown;
+}
+
+function enterSummary() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  const inquiry = content.inquiries[0];
+  const inquiryState = getInquiryProgress(progress, inquiry);
+  if (inquiryState.status !== "resolved") {
+    enterInquiry();
+    return;
+  }
+  progress.status = "completed";
+  progress.flowSteps[6] = "done";
+  showScreen("Summary");
+  renderSummaryScreen();
+}
+
+function renderSummaryScreen() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  const preview = buildDoctrineMarkdown(progress, content, new Date().toISOString());
+  const screen = document.getElementById("screen-summary");
+  screen.innerHTML = `
+    <button type="button" class="back-link" id="btn-summary-home">◂ 서재</button>
+    <h1>결산 — 나의 정의론</h1>
+    <p class="summary-complete">6단계 흐름을 완주했습니다. 아래 문서는 원문 근거와 형식 모델의 지위를 함께 기록합니다.</p>
+    <div class="summary-actions">
+      <button type="button" class="btn" id="btn-download-markdown">Markdown 내보내기</button>
+      <button type="button" class="btn btn-secondary" id="btn-download-state">진행 상태 JSON 저장</button>
+    </div>
+    <pre class="markdown-preview">${escapeHtml(preview)}</pre>
+  `;
+  document.getElementById("btn-summary-home").addEventListener("click", () => { showScreen("Home"); renderHome([]); });
+  document.getElementById("btn-download-markdown").addEventListener("click", exportDoctrineMarkdown);
+  document.getElementById("btn-download-state").addEventListener("click", () => {
+    downloadTextFile("정의와-자연법-진행상태.json", serializeGameState(), "application/json;charset=utf-8");
+    showSaveBanner("진행 상태 JSON을 저장할 준비가 되었습니다.");
+  });
+}
+
+function wirePersistenceControls() {
+  document.getElementById("nav-save-state").addEventListener("click", () => {
+    downloadTextFile("정의와-자연법-진행상태.json", serializeGameState(), "application/json;charset=utf-8");
+    showSaveBanner("진행 상태 JSON을 저장할 준비가 되었습니다.");
+  });
+  const loadButton = document.getElementById("nav-load-state");
+  const fileInput = document.getElementById("file-load-state");
+  loadButton.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    file.text().then((text) => {
+      let data;
+      try { data = JSON.parse(text); }
+      catch (error) { showSaveBanner("상태 파일이 올바른 JSON이 아닙니다.", true); return; }
+      const result = importGameStateData(data);
+      if (!result.valid) { showSaveBanner(`상태 파일을 적용하지 않았습니다: ${result.reason}`, true); return; }
+      showSaveBanner("진행 상태를 불러왔습니다.");
+      showScreen("Home");
+      renderHome([]);
+    }).catch(() => showSaveBanner("상태 파일을 읽을 수 없습니다.", true));
+    fileInput.value = "";
+  });
+}
+
+/* ==== SECTION: UI-BOARD ==== */
+let currentBoardStage = 1;
+let referenceItemId = null;
+let selectedTrayItemId = null;
+
+function firstIncompleteStage(progress, content) {
+  for (const s of content.stages) if (progress.stageStatus[s.stage] !== "cleared") return s.stage;
+  return content.stages[content.stages.length - 1].stage;
+}
+
+function enterBoard() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  if (!isReadingComplete(progress, content)) {
+    showScreen("Reading");
+    renderReadingScreen();
+    return;
+  }
+  if (progress.flowSteps[3] === "inactive") progress.flowSteps[3] = "active";
+  currentBoardStage = firstIncompleteStage(progress, content);
+  if (progress.stageStatus[currentBoardStage] === "inactive") progress.stageStatus[currentBoardStage] = "active";
+  referenceItemId = null;
+  selectedTrayItemId = null;
+  showScreen("Board");
+  renderBoardScreen();
+}
+
+function renderBoardScreen() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  const stage = getStageDef(content, currentBoardStage);
+  const screen = document.getElementById("screen-board");
+
+  tryClearStage(progress, content, currentBoardStage); // 멱등 — 매 렌더마다 안전하게 재확인
+
+  const stageItems = stage.itemIds.map((id) => content.boardItems.find((b) => b.id === id));
+  const trayItems = stageItems.filter((it) => progress.placements[it.id] === undefined);
+  const quadrantContents = { A: [], E: [], I: [], O: [] };
+  for (const it of stageItems) {
+    const q = progress.placements[it.id];
+    if (q) quadrantContents[q].push(it);
+  }
+
+  const referenceItem = stageItems.find((it) => it.id === referenceItemId) || null;
+  const cleared = progress.stageStatus[currentBoardStage] === "cleared";
+  const isLastStage = currentBoardStage === content.stages[content.stages.length - 1].stage;
+
+  screen.innerHTML = `
+    <button type="button" class="back-link" id="btn-board-home">◂ 서재</button>
+    <h1>대당 사각형 보드 퍼즐</h1>
+    <div class="screen-toolbar"><button type="button" class="btn btn-secondary" id="btn-open-sandbox">Sandbox 열기</button></div>
+    <div class="stage-indicator">${currentBoardStage} / ${content.stages.length}단계 — 활성 관계 ${stage.activeRelations.length}개</div>
+    <p class="stage-goal">${escapeHtml(stage.goal)}</p>
+
+    <div class="board-layout">
+      <div class="board-square" id="board-square">
+        ${renderBoardSVG(referenceItem, stage.activeRelations)}
+        ${renderQuadrant("A", "필연(A)", "의무", quadrantContents.A, stage.activeRelations)}
+        ${renderQuadrant("E", "불가능(E)", "부정의·금지", quadrantContents.E, stage.activeRelations)}
+        ${renderQuadrant("I", "가능(I)", "정의로운 것·허용", quadrantContents.I, stage.activeRelations)}
+        ${renderQuadrant("O", "우연(O)", "의무 아닌 것", quadrantContents.O, stage.activeRelations)}
+      </div>
+      <div class="board-legend">
+        <div><span class="legend-line" data-style="solid"></span> 반대(A–E)</div>
+        <div><span class="legend-line" data-style="dashed"></span> 소반대(I–O)</div>
+        <div><span class="legend-line" data-style="dotted"></span> 모순</div>
+        <div><span class="legend-line" data-style="arrow"></span> 함축</div>
+        <div class="legend-note">흐린 선 = 이 단계에서 비활성</div>
+      </div>
+    </div>
+
+    <h3>카드 (탭하여 선택 → 사분면 탭하여 배치, 또는 드래그)</h3>
+    <div class="board-tray">
+      ${trayItems.map((it) => renderTrayCard(it)).join("") || '<p class="tray-empty">모든 카드가 배치되었습니다.</p>'}
+    </div>
+
+    <div id="placement-feedback" aria-live="polite">${referenceItem ? renderPlacementFeedback(referenceItem, progress, stage) : ""}</div>
+
+    <div class="board-nav">
+      <button type="button" class="btn" id="btn-stage-advance" ${cleared ? "" : "disabled"}>
+        ${cleared ? (isLastStage ? "반례 배틀로" : "다음 단계") : "모든 카드를 정합하게 배치하세요"}
+      </button>
+    </div>
+  `;
+
+  wireBoardScreenEvents(progress, content, stage);
+}
+
+function renderBoardSVG(referenceItem, activeRelationIds) {
+  const pos = { A: [100, 50], E: [300, 50], I: [100, 210], O: [300, 210] };
+  const relEndpoints = {
+    contrary_AE: ["A", "E"], subcontrary_IO: ["I", "O"],
+    contradictory_AO: ["A", "O"], contradictory_EI: ["E", "I"],
+    subalternation_AI: ["A", "I"], subalternation_EO: ["E", "O"],
+  };
+  const evalResult = referenceItem ? evaluate(referenceItem.truth, RELATION_IDS) : null;
+
+  const lines = RELATION_IDS.map((rid) => {
+    const meta = RELATION_META[rid];
+    const [p1, p2] = relEndpoints[rid].map((q) => pos[q]);
+    const active = activeRelationIds.includes(rid);
+    let satisfied = "neutral";
+    if (referenceItem && active) satisfied = evalResult[rid] ? "true" : "false";
+    const markerAttr = meta.lineStyle === "arrow" ? 'marker-end="url(#arrowhead)"' : "";
+    return `<line class="rel-line" data-style="${meta.lineStyle}" data-active="${active}" data-satisfied="${satisfied}"
+      x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" ${markerAttr}>
+      <title>${escapeHtml(meta.label)} (${meta.pairLabel}): ${escapeHtml(meta.condition)}</title>
+    </line>`;
+  }).join("");
+
+  return `
+    <svg class="board-lines" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 Z" fill="currentColor" />
+        </marker>
+      </defs>
+      ${lines}
+    </svg>
+  `;
+}
+
+function renderQuadrant(q, modalLabel, lawLabel, items, activeRelationIds) {
+  return `
+    <div class="board-quadrant" data-quadrant="${q}" tabindex="0" role="button" aria-label="${escapeHtml(`${modalLabel} — ${lawLabel} 사분면`)}">
+      <div class="quadrant-label"><span class="term-serif">${modalLabel}</span><br><small>${lawLabel}</small></div>
+      <div class="quadrant-cards">
+        ${items.map((it) => {
+          const status = checkItemPlacement(it, q, activeRelationIds);
+          return renderPlacedCard(it, status);
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderPlacedCard(item, status) {
+  const cls = status.consistent ? "consistent" : "inconsistent";
+  const icon = status.consistent ? "✓" : "✗";
+  return `
+    <div class="card board-card ${cls}" data-item-id="${item.id}" data-placed="true" tabindex="0" role="button" aria-label="${escapeHtml(`${item.label} — ${status.consistent ? "정합" : "위반"} 배치`)}">
+      <span class="board-card-icon">${icon}</span>
+      <span class="board-card-label">${escapeHtml(item.label)}</span>
+    </div>
+  `;
+}
+
+function renderTrayCard(item) {
+  const selected = selectedTrayItemId === item.id;
+  return `<div class="card board-card tray-card ${selected ? "selected" : ""}" data-item-id="${item.id}" data-placed="false" tabindex="0" role="button" aria-pressed="${selected}">${escapeHtml(item.label)}</div>`;
+}
+
+function renderPlacementFeedback(item, progress, stage) {
+  const quadrant = progress.placements[item.id];
+  const trueQuadrants = trueQuadrantsOf(item);
+  let html = `<div class="card feedback-card"><h4>${escapeHtml(item.label)}</h4>`;
+  html += `<span class="badge-claim" data-claim="${item.claimType}">${claimTypeLabel(item.claimType)}</span>`;
+  html += `<button type="button" class="btn btn-secondary btn-source feedback-source" data-src-from="${item.src.from}" data-src-to="${item.src.to}" data-claim="${item.claimType}" data-title="${escapeHtml(item.label)}">원문 보기</button>`;
+  html += `<p class="rationale">${escapeHtml(item.rationale)}</p>`;
+  if (quadrant) {
+    const status = checkItemPlacement(item, quadrant, stage.activeRelations);
+    if (status.consistent) {
+      html += `<p class="judgement judgement-ok">채택된 모델에서의 귀결: ${quadrant} 배치는 정합입니다.</p>`;
+      if (trueQuadrants.length > 1) {
+        html += `<p class="judgement-note">이 행위는 ${trueQuadrants.join(", ")} 중 어느 쪽에 두어도 정합입니다. (복수 정합 — EC-11)</p>`;
+      }
+    } else {
+      const violatedText = status.violated
+        .map((rid) => `${RELATION_META[rid].label}(${RELATION_META[rid].pairLabel}): ${RELATION_META[rid].condition}`)
+        .join(" / ");
+      html += `<p class="judgement judgement-violation">채택된 모델에서의 귀결: ${quadrant} 배치는 위반입니다. 위반 관계 — ${escapeHtml(violatedText)}</p>`;
+    }
+  } else {
+    html += `<p class="judgement-note">아직 배치되지 않았습니다.</p>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function wireBoardScreenEvents(progress, content, stage) {
+  document.getElementById("btn-board-home").addEventListener("click", () => showScreen("Home"));
+  document.getElementById("btn-open-sandbox").addEventListener("click", openSandbox);
+
+  document.querySelectorAll(".feedback-source").forEach((el) => {
+    el.addEventListener("click", () => openSourceOverlay({
+      title: el.dataset.title,
+      claimType: el.dataset.claim,
+      src: { from: Number(el.dataset.srcFrom), to: Number(el.dataset.srcTo) },
+    }));
+  });
+
+  const advanceBtn = document.getElementById("btn-stage-advance");
+  advanceBtn.addEventListener("click", () => {
+    const isLastStage = currentBoardStage === content.stages[content.stages.length - 1].stage;
+    if (isLastStage) { enterBattle(); return; }
+    currentBoardStage += 1;
+    if (progress.stageStatus[currentBoardStage] === "inactive") progress.stageStatus[currentBoardStage] = "active";
+    referenceItemId = null;
+    selectedTrayItemId = null;
+    renderBoardScreen();
+  });
+
+  function selectCard(itemId) {
+    selectedTrayItemId = itemId;
+    referenceItemId = itemId;
+    renderBoardScreen();
+  }
+  function attemptPlaceAt(quadrant) {
+    if (!selectedTrayItemId) return;
+    placeCard(progress, selectedTrayItemId, quadrant);
+    referenceItemId = selectedTrayItemId;
+    selectedTrayItemId = null;
+    renderBoardScreen();
+  }
+
+  document.querySelectorAll(".board-card").forEach((el) => {
+    let dragging = false;
+    let moved = false;
+    let startX = 0, startY = 0;
+
+    el.addEventListener("click", () => selectCard(el.dataset.itemId));
+    el.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      selectCard(el.dataset.itemId);
+    });
+
+    el.addEventListener("pointerdown", (e) => {
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      if (Math.abs(e.clientX - startX) > 6 || Math.abs(e.clientY - startY) > 6) {
+        moved = true;
+        el.classList.add("dragging");
+      }
+    });
+    el.addEventListener("pointerup", (e) => {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove("dragging");
+      if (!moved) return; // 단순 클릭은 click 리스너가 처리
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const quadrantEl = target && target.closest && target.closest(".board-quadrant");
+      if (quadrantEl) {
+        placeCard(progress, el.dataset.itemId, quadrantEl.dataset.quadrant);
+        referenceItemId = el.dataset.itemId;
+        selectedTrayItemId = null;
+        renderBoardScreen();
+      }
+    });
+  });
+
+  document.querySelectorAll(".board-quadrant").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      if (e.target.closest(".board-card")) return;
+      attemptPlaceAt(el.dataset.quadrant);
+    });
+    el.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      attemptPlaceAt(el.dataset.quadrant);
+    });
+  });
+}
+
+/* ==== SECTION: UI-BATTLE ==== */
+let battleFeedback = null;
+function enterBattle() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  if (!canEnterBattle(progress, content)) {
+    showScreen("Board");
+    renderBoardScreen();
+    return;
+  }
+  if (progress.flowSteps[4] === "inactive") progress.flowSteps[4] = "active";
+  battleFeedback = null;
+  showScreen("Battle");
+  renderBattleScreen();
+}
+
+function renderBattleSourceButton(entity, title) {
+  return `<button type="button" class="btn btn-secondary btn-source battle-source"
+    data-src-from="${entity.src.from}" data-src-to="${entity.src.to}"
+    data-claim="${entity.claimType}" data-title="${escapeHtml(title)}">원문 보기</button>`;
+}
+
+function renderPremiseBattleCard(premise, progress, content) {
+  const defeated = progress.defeatedPremises.includes(premise.id);
+  const cards = content.counterexamples.filter((cx) =>
+    cx.defeats === premise.id && progress.acquiredCounterexamples.includes(cx.id)
+  );
+  return `
+    <article class="card premise-card" data-defeated="${defeated}">
+      <div class="premise-header">
+        <p class="premise-text">${escapeHtml(premise.text)}</p>
+        <span class="premise-state" data-state="${defeated ? "defeated" : "standing"}">${defeated ? "붕괴" : "유지 중"}</span>
+      </div>
+      <div class="badge-row">
+        <span class="badge-claim" data-claim="${premise.claimType}">${claimTypeLabel(premise.claimType)}</span>
+        ${renderBattleSourceButton(premise, "전제")}
+      </div>
+      ${defeated ? "" : `
+        <div class="counterexample-actions">
+          ${cards.length > 0 ? cards.map((cx) => `
+            <span class="counterexample-action-group">
+              <button type="button" class="btn counterexample-button" data-counterexample-id="${cx.id}">
+                반례 사용: ${escapeHtml(cx.label)}
+              </button>
+              <button type="button" class="btn btn-secondary btn-source battle-source" data-src-from="${cx.src.from}" data-src-to="${cx.src.to}" data-claim="${cx.claimType}" data-title="${escapeHtml(cx.label)}">원문</button>
+            </span>
+          `).join("") : '<span class="judgement-note">현재 획득한 이 전제의 반례 카드가 없습니다.</span>'}
+        </div>
+      `}
+      ${defeated ? `<p class="counterexample-explain"><strong>전제를 무너뜨렸습니다.</strong> ${escapeHtml(cards[0] ? cards[0].explain : "적중한 반례의 설명을 확인할 수 없습니다.")}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderBattleScreen() {
+  const content = CHAPTER_CONTENT;
+  const progress = getChapterProgress(content.chapterId);
+  const collapsed = tryCompleteBattle(progress, content);
+  const inquiryAvailable = progress.flowSteps[5] !== "inactive";
+  const screen = document.getElementById("screen-battle");
+  const propositionBlocks = content.propositions.map((proposition) => {
+    const status = getPropositionStatus(progress, proposition);
+    const premiseCards = proposition.premiseIds
+      .map((premiseId) => content.premises.find((premise) => premise.id === premiseId))
+      .filter(Boolean)
+      .map((premise) => renderPremiseBattleCard(premise, progress, content))
+      .join("");
+    return `
+      <article class="card proposition-card">
+        <div class="overlay-header">
+          <h2 class="term-serif">상대 명제</h2>
+          <span class="badge-claim" data-claim="${proposition.claimType}">${claimTypeLabel(proposition.claimType)}</span>
+          ${renderBattleSourceButton(proposition, "상대 명제")}
+        </div>
+        <p class="proposition-claim">${escapeHtml(proposition.claim)}</p>
+        <div class="battle-status" data-state="${status.collapsed ? "collapsed" : "standing"}">
+          ${status.collapsed ? "✓ 명제 붕괴" : `전제 ${status.defeatedPremiseIds.length} / ${proposition.premiseIds.length}개 붕괴`}
+        </div>
+        <div class="premise-list">${premiseCards}</div>
+      </article>
+    `;
+  }).join("");
+
+  screen.innerHTML = `
+    <button type="button" class="back-link" id="btn-battle-board">◂ 보드로 돌아가기</button>
+    <h1>반례 배틀</h1>
+    <p class="battle-intro">획득한 반례 카드를 전제에 적중시켜, 명제를 지지하는 모든 전제를 검토하세요.</p>
+    <div class="battle-grid">${propositionBlocks}</div>
+    <div id="battle-feedback" class="card battle-feedback" aria-live="polite">
+      ${battleFeedback || (collapsed ? '<p class="judgement judgement-ok">모든 지지 전제가 붕괴했습니다. 명제는 더 이상 유지되지 않습니다.</p>' : '<p class="judgement-note">각 전제 아래의 반례를 선택하면 적중 결과와 설명이 표시됩니다.</p>')}
+    </div>
+    <div class="battle-nav">
+      <button type="button" class="btn btn-secondary" id="btn-battle-board-bottom">보드로</button>
+      <button type="button" class="btn" id="btn-battle-inquiry" ${inquiryAvailable ? "" : "disabled"}>미결 사건으로</button>
+    </div>
+  `;
+
+  document.getElementById("btn-battle-board").addEventListener("click", () => enterBoard());
+  document.getElementById("btn-battle-board-bottom").addEventListener("click", () => enterBoard());
+  const inquiryButton = document.getElementById("btn-battle-inquiry");
+  if (inquiryButton) inquiryButton.addEventListener("click", () => enterInquiry());
+  document.querySelectorAll(".battle-source").forEach((el) => {
+    el.addEventListener("click", () => openSourceOverlay({
+      title: el.dataset.title,
+      claimType: el.dataset.claim,
+      src: { from: Number(el.dataset.srcFrom), to: Number(el.dataset.srcTo) },
+    }));
+  });
+  document.querySelectorAll("[data-counterexample-id]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const result = useCounterexample(progress, content, el.dataset.counterexampleId);
+      const feedback = document.getElementById("battle-feedback");
+      if (!result.success) {
+        feedback.innerHTML = `<p class="judgement judgement-violation">반례를 사용할 수 없습니다: ${escapeHtml(result.reason)}</p>`;
+        return;
+      }
+      const premise = content.premises.find((item) => item.id === result.premiseId);
+      const cx = content.counterexamples.find((item) => item.id === el.dataset.counterexampleId);
+      battleFeedback = `<p class="judgement judgement-ok">${escapeHtml(cx.label)}가 「${escapeHtml(premise.text)}」에 적중했습니다.</p><p>${escapeHtml(result.explanation)}</p>`;
+      renderBattleScreen();
+    });
+  });
+}
+
+/* ==== SECTION: BOOTSTRAP ==== */
+(function bootstrap() {
+  const failures = runContentSelfCheck(CHAPTER_CONTENT, SOURCE_TEXT);
+  if (!verifySourceHash(CHAPTER_CONTENT, SOURCE_TEXT)) {
+    failures.unshift({ code: "C-3", message: "sourceHash가 내장 원문에서 계산한 해시와 일치하지 않습니다." });
+  }
+  wirePersistenceControls();
+  renderHome(failures);
+})();
+</script>
+</body>
+</html>

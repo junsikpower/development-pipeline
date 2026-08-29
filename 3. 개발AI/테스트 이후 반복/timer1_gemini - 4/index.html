@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뽀모도로 타이머</title>
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --focus-color: #ef4444;
+      --focus-hover: #dc2626;
+      --short-break-color: #10b981;
+      --short-break-hover: #059669;
+      --long-break-color: #3b82f6;
+      --long-break-hover: #2563eb;
+      --accent-color: #8b5cf6;
+      --warning-bg: #b45309;
+      --warning-text: #fef3c7;
+      --error-bg: #991b1b;
+      --error-text: #fee2e2;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Banners */
+    .banner-container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+      z-index: 100;
+    }
+
+    .banner {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      align-items: center;
+      justify-content: space-between;
+      animation: fadeIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .banner-warning {
+      background-color: var(--warning-bg);
+      color: var(--warning-text);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .banner-error {
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .banner-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: inherit;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      margin-left: 10px;
+      transition: background 0.2s;
+    }
+
+    .banner-btn:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Main Container */
+    .app-container {
+      width: 100%;
+      max-width: 540px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Navigation Header */
+    .nav-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .nav-tab {
+      flex: 1;
+      text-align: center;
+      padding: 16px 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-tab.active {
+      color: var(--text-main);
+      border-bottom: 3px solid var(--accent-color);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 28px 24px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Timer Tab */
+    .timer-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.3s;
+    }
+
+    .session-badge.focus {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .session-badge.shortBreak {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .session-badge.longBreak {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .cycle-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cycle-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .cycle-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s;
+    }
+
+    .cycle-dot.filled {
+      background: var(--focus-color);
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+
+    .cycle-dot.current {
+      border: 2px solid #f8fafc;
+      transform: scale(1.2);
+    }
+
+    .cycle-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .timer-display-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 20px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 28px;
+      position: relative;
+    }
+
+    .timer-time {
+      font-size: 80px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -2px;
+      line-height: 1;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .timer-status-text {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Timer Controls */
+    .timer-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      outline: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--focus-color);
+      color: #fff;
+      padding: 14px 36px;
+      font-size: 17px;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--focus-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary.pause {
+      background: #f59e0b;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-primary.pause:hover:not(:disabled) {
+      background: #d97706;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Memo Pending Card / Modal */
+    .memo-card {
+      display: none;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      animation: fadeIn 0.3s ease;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .memo-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f87171;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .memo-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .memo-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      color: var(--text-main);
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border 0.2s;
+    }
+
+    .memo-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .memo-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Log Tab */
+    .log-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .date-picker-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      outline: none;
+      color-scheme: dark;
+    }
+
+    .stats-summary {
+      background: rgba(15, 23, 42, 0.4);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .stats-label {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .stats-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--focus-color);
+    }
+
+    .log-list-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .log-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .log-item {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .log-time {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-color);
+      min-width: 55px;
+    }
+
+    .log-memo {
+      font-size: 14px;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .log-memo.empty {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .log-empty-msg {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Settings Tab */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent-color);
+    }
+
+    .form-error {
+      color: #f87171;
+      font-size: 13px;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .settings-notice {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #93c5fd;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .settings-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .save-success-msg {
+      color: #34d399;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .save-success-msg.show {
+      opacity: 1;
+    }
+
+    /* Modal for Clock Error */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 440px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fbbf24;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-content {
+      font-size: 14px;
+      color: var(--text-main);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* SVG Icon sizes */
+    .icon {
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+      fill: currentColor;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Banners for System Warnings & Storage Failure -->
+  <div class="banner-container">
+    <div id="storageErrorBanner" class="banner banner-error">
+      <span>⚠️ 데이터가 저장되지 않고 있습니다 — 새로고침 시 최근 변경사항이 유실될 수 있습니다</span>
+    </div>
+    <div id="clockWarningBanner" class="banner banner-warning">
+      <span>⚠️ 시스템 시간 변경이 감지되어 타이머가 일시정지되었습니다.</span>
+      <button id="bannerResumeBtn" class="banner-btn">재개</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="timerTab">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/></svg>
+        타이머
+      </button>
+      <button class="nav-tab" data-tab="logTab">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        기록
+      </button>
+      <button class="nav-tab" data-tab="settingsTab">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        설정
+      </button>
+    </div>
+
+    <!-- Timer Tab Content -->
+    <div id="timerTab" class="tab-content active">
+      <div class="timer-header">
+        <div id="sessionBadge" class="session-badge focus">집중 세션</div>
+        <div class="cycle-indicator">
+          <div class="cycle-dots" id="cycleDots">
+            <div class="cycle-dot" data-slot="1"></div>
+            <div class="cycle-dot" data-slot="2"></div>
+            <div class="cycle-dot" data-slot="3"></div>
+            <div class="cycle-dot" data-slot="4"></div>
+          </div>
+          <span id="cycleLabel" class="cycle-label">사이클: 0/4 슬롯 완료</span>
+        </div>
+      </div>
+
+      <div class="timer-display-box">
+        <div id="timerTime" class="timer-time">25:00</div>
+        <div id="timerStatusText" class="timer-status-text">대기 중</div>
+      </div>
+
+      <!-- Controls for Idle, Running, Paused (BR-04: Hidden in Memo-Input-Pending) -->
+      <div id="timerControls" class="timer-controls">
+        <button id="toggleBtn" class="btn btn-primary">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <span id="toggleBtnText">시작</span>
+        </button>
+        <button id="resetBtn" class="btn btn-secondary" title="리셋">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          리셋
+        </button>
+        <button id="skipBtn" class="btn btn-secondary" title="스킵">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          스킵
+        </button>
+      </div>
+
+      <!-- Memo Input Card (BR-04: Visible only in Memo-Input-Pending) -->
+      <div id="memoCard" class="memo-card">
+        <div class="memo-title">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          집중 완료! 작업 메모
+        </div>
+        <p class="memo-desc">이번 뽀모도로 세션에서 어떤 작업을 완료하셨나요? (한 줄 메모)</p>
+        <input type="text" id="memoInput" class="memo-input" placeholder="예: 기획서 분석 및 타이머 모듈 구현" maxlength="200" />
+        <div class="memo-actions">
+          <button id="memoSkipBtn" class="btn btn-secondary">건너뛰기</button>
+          <button id="memoSubmitBtn" class="btn btn-primary" style="padding: 10px 20px; font-size: 15px;">완료 및 다음 세션</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Tab Content -->
+    <div id="logTab" class="tab-content">
+      <div class="log-header">
+        <div class="date-picker-wrap">
+          <label for="logDatePicker" class="form-label" style="margin:0;">날짜 선택:</label>
+          <input type="date" id="logDatePicker" class="date-input" />
+        </div>
+      </div>
+
+      <div class="stats-summary">
+        <span class="stats-label">완료한 뽀모도로</span>
+        <span id="logCompletedCount" class="stats-value">0개</span>
+      </div>
+
+      <div class="log-list-title">완료 세션 및 메모 목록</div>
+      <ul id="logList" class="log-list">
+        <!-- Log items dynamically injected -->
+      </ul>
+      <div id="logEmptyMsg" class="log-empty-msg">기록된 완료 내역이 없습니다.</div>
+    </div>
+
+    <!-- Settings Tab Content -->
+    <div id="settingsTab" class="tab-content">
+      <div class="settings-notice">
+        ℹ️ 시간 변경 시, <strong>대기(Idle) 중인 세션</strong>에는 즉시 반영되며 <strong>진행(Running) 또는 일시정지(Paused) 중인 세션</strong>은 종료된 이후 다음 회차부터 적용됩니다.
+      </div>
+
+      <div class="form-group">
+        <label for="focusDurationInput" class="form-label">집중 시간 (분)</label>
+        <input type="number" id="focusDurationInput" class="form-input" min="1" max="180" step="1" value="25" />
+        <div class="form-hint">기본값: 25분 (1 ~ 180분 정수)</div>
+        <div id="focusError" class="form-error">1 이상 180 이하의 정수를 입력하세요.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="shortBreakDurationInput" class="form-label">짧은 휴식 시간 (분)</label>
+        <input type="number" id="shortBreakDurationInput" class="form-input" min="1" max="180" step="1" value="5" />
+        <div class="form-hint">기본값: 5분 (1 ~ 180분 정수)</div>
+        <div id="shortBreakError" class="form-error">1 이상 180 이하의 정수를 입력하세요.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="longBreakDurationInput" class="form-label">긴 휴식 시간 (분)</label>
+        <input type="number" id="longBreakDurationInput" class="form-input" min="1" max="180" step="1" value="15" />
+        <div class="form-hint">기본값: 15분 (1 ~ 180분 정수)</div>
+        <div id="longBreakError" class="form-error">1 이상 180 이하의 정수를 입력하세요.</div>
+      </div>
+
+      <div class="settings-footer">
+        <span id="saveSuccessMsg" class="save-success-msg">✓ 설정이 저장되었습니다.</span>
+        <button id="saveSettingsBtn" class="btn btn-primary" style="padding: 12px 24px;">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clock Drift Alert Modal (EC-04) -->
+  <div id="clockModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-title">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        시스템 시간 변경 감지
+      </div>
+      <div class="modal-content">
+        시스템 시계 변경이 감지되어 타이머가 일시정지되었습니다.<br>
+        시간이 임의로 왜곡되는 것을 방지하기 위해 현재 시각을 기준으로 재개하시겠습니까?
+      </div>
+      <div class="modal-actions">
+        <button id="modalResumeBtn" class="btn btn-primary" style="padding: 10px 20px;">타이머 재개</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 뽀모도로 타이머 겸 작업 기록 웹앱 — PRD v4 준수 코어 로직
+     */
+    (function () {
+      'use strict';
+
+      // ==========================================
+      // Constants & Storage Keys
+      // ==========================================
+      const STORAGE_KEYS = {
+        SETTINGS: 'pomodoro_settings',
+        LOGS: 'pomodoro_logs',
+        TIMER_STATE: 'pomodoro_timer_state'
+      };
+
+      const SESSION_TYPE = {
+        FOCUS: 'focus',
+        SHORT_BREAK: 'shortBreak',
+        LONG_BREAK: 'longBreak'
+      };
+
+      const SESSION_STATE = {
+        IDLE: 'idle',
+        RUNNING: 'running',
+        PAUSED: 'paused',
+        MEMO_PENDING: 'memoPending'
+      };
+
+      const DEFAULT_SETTINGS = {
+        focusDuration: 25,       // 분
+        shortBreakDuration: 5,   // 분
+        longBreakDuration: 15    // 분
+      };
+
+      // ==========================================
+      // State Variables
+      // ==========================================
+      let settings = { ...DEFAULT_SETTINGS };
+      let logs = {}; // { 'YYYY-MM-DD': { completedCount: 0, memos: [ { time: 'HH:MM:SS', memo: '' } ] } }
+      
+      let timerState = {
+        sessionType: SESSION_TYPE.FOCUS,
+        sessionState: SESSION_STATE.IDLE,
+        endTimestamp: null,       // Running 시 유효 (ms)
+        remainingSeconds: 25 * 60,// Paused / Idle 시 유효 (초)
+        focusSlotsConsumed: 0,    // 0 ~ 4
+        dateAnchor: null,         // Date.now()
+        perfAnchor: null,         // performance.now()
+        pendingMemoSession: null  // { dateStr: 'YYYY-MM-DD', completedAtTime: 'HH:MM', endTimestamp: number }
+      };
+
+      let storageState = 'Synced'; // 'Synced' | 'Write-Failed'
+      let timerIntervalId = null;
+      let audioCtx = null;
+      let originalDocumentTitle = document.title;
+      let titleFlasherIntervalId = null;
+
+      // ==========================================
+      // DOM Elements
+      // ==========================================
+      const storageErrorBanner = document.getElementById('storageErrorBanner');
+      const clockWarningBanner = document.getElementById('clockWarningBanner');
+      const bannerResumeBtn = document.getElementById('bannerResumeBtn');
+      const clockModal = document.getElementById('clockModal');
+      const modalResumeBtn = document.getElementById('modalResumeBtn');
+
+      const navTabs = document.querySelectorAll('.nav-tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      const sessionBadge = document.getElementById('sessionBadge');
+      const cycleDots = document.getElementById('cycleDots').querySelectorAll('.cycle-dot');
+      const cycleLabel = document.getElementById('cycleLabel');
+      const timerTime = document.getElementById('timerTime');
+      const timerStatusText = document.getElementById('timerStatusText');
+
+      const timerControls = document.getElementById('timerControls');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const toggleBtnText = document.getElementById('toggleBtnText');
+      const resetBtn = document.getElementById('resetBtn');
+      const skipBtn = document.getElementById('skipBtn');
+
+      const memoCard = document.getElementById('memoCard');
+      const memoInput = document.getElementById('memoInput');
+      const memoSubmitBtn = document.getElementById('memoSubmitBtn');
+      const memoSkipBtn = document.getElementById('memoSkipBtn');
+
+      const logDatePicker = document.getElementById('logDatePicker');
+      const logCompletedCount = document.getElementById('logCompletedCount');
+      const logList = document.getElementById('logList');
+      const logEmptyMsg = document.getElementById('logEmptyMsg');
+
+      const focusDurationInput = document.getElementById('focusDurationInput');
+      const shortBreakDurationInput = document.getElementById('shortBreakDurationInput');
+      const longBreakDurationInput = document.getElementById('longBreakDurationInput');
+      const focusError = document.getElementById('focusError');
+      const shortBreakError = document.getElementById('shortBreakError');
+      const longBreakError = document.getElementById('longBreakError');
+      const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+      const saveSuccessMsg = document.getElementById('saveSuccessMsg');
+
+      // ==========================================
+      // Storage Helper Functions (EC-05)
+      // ==========================================
+      function updateStorageBanner() {
+        if (storageState === 'Write-Failed') {
+          storageErrorBanner.style.display = 'flex';
+        } else {
+          storageErrorBanner.style.display = 'none';
+        }
+      }
+
+      function safeSaveToStorage(key, data) {
+        try {
+          localStorage.setItem(key, JSON.stringify(data));
+          if (storageState === 'Write-Failed') {
+            storageState = 'Synced';
+            updateStorageBanner();
+          }
+          return true;
+        } catch (e) {
+          storageState = 'Write-Failed';
+          updateStorageBanner();
+          return false;
+        }
+      }
+
+      function safeLoadFromStorage(key, defaultVal) {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : defaultVal;
+        } catch (e) {
+          return defaultVal;
+        }
+      }
+
+      function saveAllState() {
+        safeSaveToStorage(STORAGE_KEYS.SETTINGS, settings);
+        safeSaveToStorage(STORAGE_KEYS.LOGS, logs);
+        safeSaveToStorage(STORAGE_KEYS.TIMER_STATE, timerState);
+      }
+
+      // ==========================================
+      // Date and Format Utilities
+      // ==========================================
+      function getLocalDateString(dateObj = new Date()) {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function getLocalTimeString(dateObj = new Date()) {
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+
+      function formatSecondsToMMSS(totalSeconds) {
+        const s = Math.max(0, Math.floor(totalSeconds));
+        const mins = Math.floor(s / 60);
+        const secs = s % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+
+      function getDurationInSeconds(sessionType) {
+        switch (sessionType) {
+          case SESSION_TYPE.FOCUS:
+            return settings.focusDuration * 60;
+          case SESSION_TYPE.SHORT_BREAK:
+            return settings.shortBreakDuration * 60;
+          case SESSION_TYPE.LONG_BREAK:
+            return settings.longBreakDuration * 60;
+          default:
+            return 25 * 60;
+        }
+      }
+
+      // ==========================================
+      // Audio & Notification Manager (FR-02, EC-01)
+      // ==========================================
+      function initAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+
+      function requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+      }
+
+      function playSound() {
+        return new Promise((resolve, reject) => {
+          try {
+            initAudioContext();
+            if (!audioCtx) {
+              return reject(new Error('AudioContext not supported'));
+            }
+
+            const now = audioCtx.currentTime;
+            // 3음 차임벨 합성 (C5 -> E5 -> G5)
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, index) => {
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(freq, now + index * 0.15);
+              
+              gain.gain.setValueAtTime(0, now + index * 0.15);
+              gain.gain.linearRampToValueAtTime(0.25, now + index * 0.15 + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.15 + 0.4);
+
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+
+              osc.start(now + index * 0.15);
+              osc.stop(now + index * 0.15 + 0.45);
+            });
+
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        });
+      }
+
+      function flashTitleNotification(message) {
+        if (titleFlasherIntervalId) clearInterval(titleFlasherIntervalId);
+        let count = 0;
+        titleFlasherIntervalId = setInterval(() => {
+          document.title = (count % 2 === 0) ? `🔔 ${message}` : `⏰ ${originalDocumentTitle}`;
+          count++;
+          if (count > 20) {
+            clearInterval(titleFlasherIntervalId);
+            titleFlasherIntervalId = null;
+            document.title = originalDocumentTitle;
+          }
+        }, 800);
+      }
+
+      function notifySessionEnd(sessionType) {
+        const titleMap = {
+          [SESSION_TYPE.FOCUS]: '집중 세션 종료!',
+          [SESSION_TYPE.SHORT_BREAK]: '짧은 휴식 종료!',
+          [SESSION_TYPE.LONG_BREAK]: '긴 휴식 종료!'
+        };
+        const bodyMap = {
+          [SESSION_TYPE.FOCUS]: '집중 시간이 끝났습니다. 휴식을 취하고 메모를 남겨보세요.',
+          [SESSION_TYPE.SHORT_BREAK]: '휴식이 끝났습니다. 다음 집중을 시작하세요.',
+          [SESSION_TYPE.LONG_BREAK]: '긴 휴식이 끝났습니다. 새로운 사이클을 시작하세요.'
+        };
+
+        const msgTitle = titleMap[sessionType] || '세션 종료';
+        const msgBody = bodyMap[sessionType] || '세션이 종료되었습니다.';
+
+        // 1. 소리 알림 시도
+        playSound().catch(() => {
+          // 오디오 재생 실패 시 탭 제목 변경 폴백 (FR-02)
+          flashTitleNotification(msgTitle);
+        });
+
+        // 2. Notification API 권한 확인 및 동시 발송 (FR-02, EC-01)
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(msgTitle, {
+              body: msgBody,
+              requireInteraction: false
+            });
+          } catch (e) {
+            // 브라우저 내부 에러 무시
+          }
+        } else {
+          // 권한 거부 또는 미지원 시 탭 제목 변경 폴백 (EC-01)
+          flashTitleNotification(msgTitle);
+        }
+      }
+
+      // ==========================================
+      // System Clock Drift Detection (EC-04, NFR-01)
+      // ==========================================
+      function updateAnchors() {
+        timerState.dateAnchor = Date.now();
+        timerState.perfAnchor = performance.now();
+      }
+
+      function checkClockIntegrity() {
+        if (timerState.sessionState !== SESSION_STATE.RUNNING) return false;
+        if (timerState.dateAnchor == null || timerState.perfAnchor == null) {
+          updateAnchors();
+          return false;
+        }
+
+        const dateDelta = Date.now() - timerState.dateAnchor;
+        const perfDelta = performance.now() - timerState.perfAnchor;
+        const diff = Math.abs(dateDelta - perfDelta);
+
+        // 임계값 5000ms (5초)
+        if (diff >= 5000) {
+          handleClockAnomaly();
+          return true;
+        }
+        return false;
+      }
+
+      function handleClockAnomaly() {
+        // 즉시 Paused 전환 (남은 시간은 직전 유효값 유지)
+        if (timerState.sessionState === SESSION_STATE.RUNNING) {
+          // 앵커 기준 경과한 시간만큼만 안전하게 차감
+          const safeElapsedSec = Math.floor((performance.now() - timerState.perfAnchor) / 1000);
+          timerState.remainingSeconds = Math.max(1, timerState.remainingSeconds - safeElapsedSec);
+          timerState.sessionState = SESSION_STATE.PAUSED;
+          timerState.endTimestamp = null;
+          timerState.dateAnchor = null;
+          timerState.perfAnchor = null;
+
+          stopTimerLoop();
+          saveAllState();
+          renderTimerUI();
+
+          // 모달 및 배너 표시
+          clockModal.style.display = 'flex';
+          clockWarningBanner.style.display = 'flex';
+        }
+      }
+
+      function resumeFromClockAnomaly() {
+        clockModal.style.display = 'none';
+        clockWarningBanner.style.display = 'none';
+        startTimer();
+      }
+
+      // ==========================================
+      // Pomodoro State Machine & Flow
+      // ==========================================
+      function startTimer() {
+        initAudioContext();
+        requestNotificationPermission();
+
+        if (timerState.sessionState === SESSION_STATE.IDLE || timerState.sessionState === SESSION_STATE.PAUSED) {
+          timerState.sessionState = SESSION_STATE.RUNNING;
+          timerState.endTimestamp = Date.now() + timerState.remainingSeconds * 1000;
+          updateAnchors();
+          saveAllState();
+          startTimerLoop();
+          renderTimerUI();
+        }
+      }
+
+      function pauseTimer() {
+        if (timerState.sessionState === SESSION_STATE.RUNNING) {
+          // 남은 시간 스냅샷 계산
+          const remainingMs = timerState.endTimestamp - Date.now();
+          timerState.remainingSeconds = Math.max(1, Math.round(remainingMs / 1000));
+          timerState.sessionState = SESSION_STATE.PAUSED;
+          timerState.endTimestamp = null;
+          timerState.dateAnchor = null;
+          timerState.perfAnchor = null;
+
+          stopTimerLoop();
+          saveAllState();
+          renderTimerUI();
+        }
+      }
+
+      function resetTimer() {
+        if (timerState.sessionState === SESSION_STATE.MEMO_PENDING) return;
+
+        // FR-01, BR-03: 현재 세션 타이머만 초기화, 사이클 슬롯 수는 유지
+        timerState.sessionState = SESSION_STATE.IDLE;
+        timerState.remainingSeconds = getDurationInSeconds(timerState.sessionType);
+        timerState.endTimestamp = null;
+        timerState.dateAnchor = null;
+        timerState.perfAnchor = null;
+
+        stopTimerLoop();
+        saveAllState();
+        renderTimerUI();
+      }
+
+      function skipTimer() {
+        if (timerState.sessionState === SESSION_STATE.MEMO_PENDING) return;
+
+        // FR-04: 현재 세션 미완료 종료 -> 다음 세션으로 자동 전환 및 자동 시작
+        stopTimerLoop();
+
+        if (timerState.sessionType === SESSION_TYPE.FOCUS) {
+          // Focus 스킵 시: 완료 카운트 증가 X, 슬롯 소모 O
+          timerState.focusSlotsConsumed = (timerState.focusSlotsConsumed || 0) + 1;
+          
+          if (timerState.focusSlotsConsumed >= 4) {
+            timerState.sessionType = SESSION_TYPE.LONG_BREAK;
+          } else {
+            timerState.sessionType = SESSION_TYPE.SHORT_BREAK;
+          }
+        } else if (timerState.sessionType === SESSION_TYPE.SHORT_BREAK) {
+          timerState.sessionType = SESSION_TYPE.FOCUS;
+        } else if (timerState.sessionType === SESSION_TYPE.LONG_BREAK) {
+          // Long Break 스킵 시 사이클 리셋 후 Focus 진입
+          timerState.focusSlotsConsumed = 0;
+          timerState.sessionType = SESSION_TYPE.FOCUS;
+        }
+
+        timerState.sessionState = SESSION_STATE.IDLE;
+        timerState.remainingSeconds = getDurationInSeconds(timerState.sessionType);
+        timerState.endTimestamp = null;
+        
+        saveAllState();
+        renderTimerUI();
+
+        // 자동 시작 (실시간 사용자 조작)
+        startTimer();
+      }
+
+      function handleSessionCompletion() {
+        stopTimerLoop();
+        const completedType = timerState.sessionType;
+        const targetEndTime = timerState.endTimestamp || Date.now();
+        const endDateObj = new Date(targetEndTime);
+
+        // 알림 발송
+        notifySessionEnd(completedType);
+
+        if (completedType === SESSION_TYPE.FOCUS) {
+          // 1. 완료 카운트 및 슬롯 처리 (FR-03, FR-05, BR-01)
+          timerState.focusSlotsConsumed = (timerState.focusSlotsConsumed || 0) + 1;
+          
+          const dateStr = getLocalDateString(endDateObj);
+          const timeStr = getLocalTimeString(endDateObj);
+
+          if (!logs[dateStr]) {
+            logs[dateStr] = { completedCount: 0, memos: [] };
+          }
+          logs[dateStr].completedCount += 1;
+
+          // 2. Memo-Input-Pending 상태 진입 (BR-04)
+          timerState.sessionState = SESSION_STATE.MEMO_PENDING;
+          timerState.endTimestamp = null;
+          timerState.remainingSeconds = 0;
+          timerState.pendingMemoSession = {
+            dateStr: dateStr,
+            completedAtTime: timeStr,
+            endTimestamp: targetEndTime
+          };
+
+          saveAllState();
+          renderTimerUI();
+          renderLogUI();
+        } else {
+          // Short Break 또는 Long Break 완료 (FR-03)
+          if (completedType === SESSION_TYPE.LONG_BREAK) {
+            timerState.focusSlotsConsumed = 0; // 사이클 초기화
+          }
+
+          timerState.sessionType = SESSION_TYPE.FOCUS;
+          timerState.sessionState = SESSION_STATE.IDLE;
+          timerState.remainingSeconds = getDurationInSeconds(SESSION_TYPE.FOCUS);
+          timerState.endTimestamp = null;
+          timerState.pendingMemoSession = null;
+
+          saveAllState();
+          renderTimerUI();
+
+          // 휴식 후 다음 Focus 실시간 자동 시작 (FR-03, BR-02)
+          startTimer();
+        }
+      }
+
+      function submitMemo(memoText) {
+        if (timerState.sessionState !== SESSION_STATE.MEMO_PENDING) return;
+
+        const pending = timerState.pendingMemoSession;
+        if (pending && pending.dateStr) {
+          if (!logs[pending.dateStr]) {
+            logs[pending.dateStr] = { completedCount: 1, memos: [] };
+          }
+          logs[pending.dateStr].memos.push({
+            time: pending.completedAtTime,
+            memo: (memoText || '').trim()
+          });
+        }
+
+        // 다음 세션 결정 (4번째 슬롯 소모 후 Long Break, 아니면 Short Break)
+        if (timerState.focusSlotsConsumed >= 4) {
+          timerState.sessionType = SESSION_TYPE.LONG_BREAK;
+        } else {
+          timerState.sessionType = SESSION_TYPE.SHORT_BREAK;
+        }
+
+        timerState.sessionState = SESSION_STATE.IDLE;
+        timerState.remainingSeconds = getDurationInSeconds(timerState.sessionType);
+        timerState.endTimestamp = null;
+        timerState.pendingMemoSession = null;
+
+        memoInput.value = '';
+        saveAllState();
+        renderTimerUI();
+        renderLogUI();
+
+        // 실시간 다음 세션 자동 시작 (FR-03, BR-02)
+        startTimer();
+      }
+
+      // ==========================================
+      // Timer Loop & Tick
+      // ==========================================
+      function startTimerLoop() {
+        if (timerIntervalId) clearInterval(timerIntervalId);
+        timerIntervalId = setInterval(onTimerTick, 250);
+      }
+
+      function stopTimerLoop() {
+        if (timerIntervalId) {
+          clearInterval(timerIntervalId);
+          timerIntervalId = null;
+        }
+      }
+
+      function onTimerTick() {
+        if (timerState.sessionState !== SESSION_STATE.RUNNING) {
+          stopTimerLoop();
+          return;
+        }
+
+        // 1. 시스템 시계 변경 체크 (EC-04)
+        if (checkClockIntegrity()) {
+          return;
+        }
+
+        // 2. 남은 시간 계산 (Date.now() 기반 절대 시각)
+        const now = Date.now();
+        const diffMs = timerState.endTimestamp - now;
+        const remainingSec = Math.max(0, Math.ceil(diffMs / 1000));
+
+        timerState.remainingSeconds = remainingSec;
+
+        if (diffMs <= 0) {
+          handleSessionCompletion();
+        } else {
+          updateTimerDisplay(remainingSec);
+        }
+      }
+
+      // ==========================================
+      // Page Visibility & Offline Sync (EC-02, EC-03, FR-08)
+      // ==========================================
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          // 탭 복귀 시 시계 변경 여부 체크 전 앵커 검사
+          if (timerState.sessionState === SESSION_STATE.RUNNING) {
+            const dateDelta = Date.now() - (timerState.dateAnchor || Date.now());
+            const perfDelta = performance.now() - (timerState.perfAnchor || performance.now());
+            if (Math.abs(dateDelta - perfDelta) >= 5000) {
+              handleClockAnomaly();
+              return;
+            }
+
+            // 정상 복귀 시 앵커 재설정 및 만료 여부 즉시 재계산 (EC-02)
+            updateAnchors();
+
+            if (Date.now() >= timerState.endTimestamp) {
+              handleSessionCompletion();
+            } else {
+              const diffMs = timerState.endTimestamp - Date.now();
+              timerState.remainingSeconds = Math.max(1, Math.ceil(diffMs / 1000));
+              renderTimerUI();
+            }
+          }
+        }
+      });
+
+      // ==========================================
+      // State Recovery (FR-08, EC-03, BR-02)
+      // ==========================================
+      function restoreApp() {
+        // 1. 설정 복원
+        const loadedSettings = safeLoadFromStorage(STORAGE_KEYS.SETTINGS, null);
+        if (loadedSettings && typeof loadedSettings === 'object') {
+          settings.focusDuration = Number(loadedSettings.focusDuration) || DEFAULT_SETTINGS.focusDuration;
+          settings.shortBreakDuration = Number(loadedSettings.shortBreakDuration) || DEFAULT_SETTINGS.shortBreakDuration;
+          settings.longBreakDuration = Number(loadedSettings.longBreakDuration) || DEFAULT_SETTINGS.longBreakDuration;
+        }
+
+        // 2. 로그 복원
+        const loadedLogs = safeLoadFromStorage(STORAGE_KEYS.LOGS, null);
+        if (loadedLogs && typeof loadedLogs === 'object') {
+          logs = loadedLogs;
+        }
+
+        // 3. 타이머 상태 복원
+        const loadedState = safeLoadFromStorage(STORAGE_KEYS.TIMER_STATE, null);
+        if (loadedState && typeof loadedState === 'object') {
+          timerState.sessionType = loadedState.sessionType || SESSION_TYPE.FOCUS;
+          timerState.sessionState = loadedState.sessionState || SESSION_STATE.IDLE;
+          timerState.focusSlotsConsumed = Number(loadedState.focusSlotsConsumed) || 0;
+          timerState.remainingSeconds = Number(loadedState.remainingSeconds) || getDurationInSeconds(timerState.sessionType);
+          timerState.pendingMemoSession = loadedState.pendingMemoSession || null;
+
+          if (loadedState.sessionState === SESSION_STATE.RUNNING) {
+            const endTs = Number(loadedState.endTimestamp);
+            const now = Date.now();
+
+            if (endTs && endTs > now) {
+              // 아직 진행 중 -> 남은 시간 복원 후 Running 유지
+              timerState.endTimestamp = endTs;
+              timerState.remainingSeconds = Math.max(1, Math.ceil((endTs - now) / 1000));
+              updateAnchors();
+              startTimerLoop();
+            } else if (endTs && endTs <= now) {
+              // 오프라인 기간 중 만료됨: 중단 시점의 세션 1회만 종료 처리 (EC-03, BR-02)
+              const completedType = timerState.sessionType;
+              const endDateObj = new Date(endTs);
+              const dateStr = getLocalDateString(endDateObj);
+              const timeStr = getLocalTimeString(endDateObj);
+
+              if (completedType === SESSION_TYPE.FOCUS) {
+                // Focus 세션 만료: 완료 기록 1회, 슬롯 소모 +1, 빈 메모 저장 (재접속이므로 자동 다음 시작 대신 Idle 대기)
+                timerState.focusSlotsConsumed = (timerState.focusSlotsConsumed || 0) + 1;
+                if (!logs[dateStr]) {
+                  logs[dateStr] = { completedCount: 0, memos: [] };
+                }
+                logs[dateStr].completedCount += 1;
+                logs[dateStr].memos.push({
+                  time: timeStr,
+                  memo: '' // 오프라인 만료 시 빈 메모
+                });
+
+                // 다음 세션 결정
+                if (timerState.focusSlotsConsumed >= 4) {
+                  timerState.sessionType = SESSION_TYPE.LONG_BREAK;
+                } else {
+                  timerState.sessionType = SESSION_TYPE.SHORT_BREAK;
+                }
+              } else if (completedType === SESSION_TYPE.LONG_BREAK) {
+                timerState.focusSlotsConsumed = 0;
+                timerState.sessionType = SESSION_TYPE.FOCUS;
+              } else {
+                timerState.sessionType = SESSION_TYPE.FOCUS;
+              }
+
+              // BR-02: 재접속 복원 시 다음 세션은 자동 시작하지 않고 Idle 상태로 대기
+              timerState.sessionState = SESSION_STATE.IDLE;
+              timerState.remainingSeconds = getDurationInSeconds(timerState.sessionType);
+              timerState.endTimestamp = null;
+              timerState.pendingMemoSession = null;
+            }
+          } else if (loadedState.sessionState === SESSION_STATE.PAUSED) {
+            // Paused 상태: endTimestamp 무관하게 저장된 remainingSeconds 스냅샷 그대로 복원 (FR-08, EC-03)
+            timerState.sessionState = SESSION_STATE.PAUSED;
+            timerState.endTimestamp = null;
+          } else if (loadedState.sessionState === SESSION_STATE.MEMO_PENDING) {
+            timerState.sessionState = SESSION_STATE.MEMO_PENDING;
+          }
+        }
+
+        saveAllState();
+      }
+
+      // ==========================================
+      // UI Rendering
+      // ==========================================
+      function updateTimerDisplay(seconds) {
+        timerTime.textContent = formatSecondsToMMSS(seconds);
+      }
+
+      function renderTimerUI() {
+        // 1. Session Badge & Cycle Indicator
+        sessionBadge.className = `session-badge ${timerState.sessionType}`;
+        const typeNames = {
+          [SESSION_TYPE.FOCUS]: '집중 세션',
+          [SESSION_TYPE.SHORT_BREAK]: '짧은 휴식',
+          [SESSION_TYPE.LONG_BREAK]: '긴 휴식'
+        };
+        sessionBadge.textContent = typeNames[timerState.sessionType] || '뽀모도로';
+
+        const consumed = timerState.focusSlotsConsumed || 0;
+        const currentSlot = Math.min(4, consumed + (timerState.sessionType === SESSION_TYPE.FOCUS ? 1 : 0));
+        cycleLabel.textContent = `사이클: ${consumed}/4 슬롯 완료`;
+
+        cycleDots.forEach((dot, idx) => {
+          const slotNum = idx + 1;
+          dot.classList.remove('filled', 'current');
+          if (slotNum <= consumed) {
+            dot.classList.add('filled');
+          } else if (slotNum === currentSlot && timerState.sessionType === SESSION_TYPE.FOCUS) {
+            dot.classList.add('current');
+          }
+        });
+
+        // 2. Timer Display
+        updateTimerDisplay(timerState.remainingSeconds);
+
+        const statusTexts = {
+          [SESSION_STATE.IDLE]: '대기 중',
+          [SESSION_STATE.RUNNING]: '진행 중',
+          [SESSION_STATE.PAUSED]: '일시 정지됨',
+          [SESSION_STATE.MEMO_PENDING]: '작업 메모 입력 대기 중'
+        };
+        timerStatusText.textContent = statusTexts[timerState.sessionState] || '';
+
+        // 3. BR-04: Memo-Input-Pending vs Timer Controls
+        if (timerState.sessionState === SESSION_STATE.MEMO_PENDING) {
+          timerControls.style.display = 'none';
+          memoCard.style.display = 'block';
+          memoInput.focus();
+        } else {
+          timerControls.style.display = 'flex';
+          memoCard.style.display = 'none';
+
+          // Toggle Button Style
+          if (timerState.sessionState === SESSION_STATE.RUNNING) {
+            toggleBtn.className = 'btn btn-primary pause';
+            toggleBtnText.textContent = '일시정지';
+          } else {
+            toggleBtn.className = 'btn btn-primary';
+            toggleBtnText.textContent = (timerState.sessionState === SESSION_STATE.PAUSED) ? '계속하기' : '시작';
+          }
+        }
+      }
+
+      function renderLogUI() {
+        const selectedDate = logDatePicker.value || getLocalDateString();
+        const dateLog = logs[selectedDate] || { completedCount: 0, memos: [] };
+
+        logCompletedCount.textContent = `${dateLog.completedCount}개`;
+        logList.innerHTML = '';
+
+        if (!dateLog.memos || dateLog.memos.length === 0) {
+          logEmptyMsg.style.display = 'block';
+        } else {
+          logEmptyMsg.style.display = 'none';
+          // 오래된 순(오름차순) 정렬 보장
+          dateLog.memos.forEach((item) => {
+            const li = document.createElement('li');
+            li.className = 'log-item';
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'log-time';
+            timeSpan.textContent = item.time || '--:--';
+
+            const memoSpan = document.createElement('span');
+            if (item.memo && item.memo.trim().length > 0) {
+              memoSpan.className = 'log-memo';
+              memoSpan.textContent = item.memo;
+            } else {
+              memoSpan.className = 'log-memo empty';
+              memoSpan.textContent = '메모 없음';
+            }
+
+            li.appendChild(timeSpan);
+            li.appendChild(memoSpan);
+            logList.appendChild(li);
+          });
+        }
+      }
+
+      function renderSettingsUI() {
+        focusDurationInput.value = settings.focusDuration;
+        shortBreakDurationInput.value = settings.shortBreakDuration;
+        longBreakDurationInput.value = settings.longBreakDuration;
+        focusError.style.display = 'none';
+        shortBreakError.style.display = 'none';
+        longBreakError.style.display = 'none';
+      }
+
+      // ==========================================
+      // Settings Save & Validation (FR-07)
+      // ==========================================
+      function validateDurationInput(val) {
+        const num = Number(val);
+        return Number.isInteger(num) && num >= 1 && num <= 180;
+      }
+
+      function handleSaveSettings() {
+        let valid = true;
+
+        const fVal = focusDurationInput.value.trim();
+        const sVal = shortBreakDurationInput.value.trim();
+        const lVal = longBreakDurationInput.value.trim();
+
+        if (!validateDurationInput(fVal)) {
+          focusError.style.display = 'block';
+          valid = false;
+        } else {
+          focusError.style.display = 'none';
+        }
+
+        if (!validateDurationInput(sVal)) {
+          shortBreakError.style.display = 'block';
+          valid = false;
+        } else {
+          shortBreakError.style.display = 'none';
+        }
+
+        if (!validateDurationInput(lVal)) {
+          longBreakError.style.display = 'block';
+          valid = false;
+        } else {
+          longBreakError.style.display = 'none';
+        }
+
+        if (!valid) return;
+
+        settings.focusDuration = parseInt(fVal, 10);
+        settings.shortBreakDuration = parseInt(sVal, 10);
+        settings.longBreakDuration = parseInt(lVal, 10);
+
+        saveAllState();
+
+        // FR-07: Idle 상태인 경우 화면 및 남은시간 즉시 새 값으로 갱신
+        if (timerState.sessionState === SESSION_STATE.IDLE) {
+          timerState.remainingSeconds = getDurationInSeconds(timerState.sessionType);
+          renderTimerUI();
+        }
+
+        saveSuccessMsg.classList.add('show');
+        setTimeout(() => {
+          saveSuccessMsg.classList.remove('show');
+        }, 2500);
+      }
+
+      // ==========================================
+      // Event Listeners & Initialization
+      // ==========================================
+      function setupEventListeners() {
+        // Navigation
+        navTabs.forEach(tab => {
+          tab.addEventListener('click', () => {
+            navTabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            tab.classList.add('active');
+            const targetId = tab.getAttribute('data-tab');
+            document.getElementById(targetId).classList.add('active');
+
+            if (targetId === 'logTab') renderLogUI();
+            if (targetId === 'settingsTab') renderSettingsUI();
+          });
+        });
+
+        // Timer Controls
+        toggleBtn.addEventListener('click', () => {
+          if (timerState.sessionState === SESSION_STATE.RUNNING) {
+            pauseTimer();
+          } else {
+            startTimer();
+          }
+        });
+
+        resetBtn.addEventListener('click', resetTimer);
+        skipBtn.addEventListener('click', skipTimer);
+
+        // Memo Controls
+        memoSubmitBtn.addEventListener('click', () => submitMemo(memoInput.value));
+        memoSkipBtn.addEventListener('click', () => submitMemo(''));
+        memoInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            submitMemo(memoInput.value);
+          }
+        });
+
+        // Log Date Picker
+        logDatePicker.addEventListener('change', renderLogUI);
+
+        // Settings Save
+        saveSettingsBtn.addEventListener('click', handleSaveSettings);
+
+        // Clock Drift Resolution
+        modalResumeBtn.addEventListener('click', resumeFromClockAnomaly);
+        bannerResumeBtn.addEventListener('click', resumeFromClockAnomaly);
+
+        // Global User Interaction for Audio Unlock (FR-02)
+        window.addEventListener('click', initAudioContext, { once: true });
+        window.addEventListener('keydown', initAudioContext, { once: true });
+      }
+
+      function init() {
+        logDatePicker.value = getLocalDateString();
+        restoreApp();
+        setupEventListeners();
+        renderTimerUI();
+        renderLogUI();
+        renderSettingsUI();
+        updateStorageBanner();
+      }
+
+      // Boot application
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // Export for headless testability (if needed in automated tests)
+      if (typeof window !== 'undefined') {
+        window.__POMODORO_INTERNAL__ = {
+          getSettings: () => settings,
+          getLogs: () => logs,
+          getTimerState: () => timerState,
+          startTimer,
+          pauseTimer,
+          resetTimer,
+          skipTimer,
+          submitMemo,
+          handleSessionCompletion,
+          handleClockAnomaly,
+          resumeFromClockAnomaly,
+          saveAllState,
+          restoreApp,
+          validateDurationInput
+        };
+      }
+    })();
+  </script>
+</body>
+</html>

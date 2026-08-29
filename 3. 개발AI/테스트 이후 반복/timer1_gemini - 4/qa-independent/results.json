@@ -1,0 +1,810 @@
+[
+  {
+    "id": "FR01-01",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 Processing",
+    "name": "시작 시 endTimestamp = 현재시각 + 남은시간 으로 Running 전환",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-02",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC1",
+    "name": "시작 후 임의 시점의 표시 남은시간이 실제 경과시간과 일치",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-03",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC2",
+    "name": "일시정지 시 표시된 남은시간이 변하지 않는다",
+    "status": "FAIL",
+    "error": "일시정지 전후 표시 남은시간 (전 20:00 / 후 19:59) — expected \"20:00\", got \"19:59\""
+  },
+  {
+    "id": "FR01-04",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC2",
+    "name": "일시정지 중에는 시간이 흐르지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-05",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC2",
+    "name": "일시정지 후 재개하면 남은시간부터 이어서 진행",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-06",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC3",
+    "name": "리셋 시 설정된 세션 길이의 Idle 상태로 정확히 복귀",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-07",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC4 / BR-03",
+    "name": "3슬롯 소모 상태에서 4번째 Focus를 리셋해도 슬롯 수는 3 유지",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR01-08",
+    "suite": "FR-01 타이머 시작/일시정지/리셋",
+    "prdRef": "FR-01 AC5 / BR-04",
+    "name": "Memo-Input-Pending 상태에서 시작/일시정지/리셋 버튼 미노출",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-01",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 AC1",
+    "name": "세션 종료 시점에 지체 없이 알림 발생",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-02",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 AC2",
+    "name": "권한 허용 시 소리 재생과 브라우저 알림이 함께 발생",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-03",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "EC-01",
+    "name": "권한 거부 시 소리 + 탭 제목 변경으로 대체 (브라우저 알림 없음)",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-04",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "EC-01",
+    "name": "Notification API 미지원 시 소리 + 탭 제목 변경으로 대체",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-05",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 AC3",
+    "name": "오디오 재생 실패(컨텍스트 생성 불가)가 감지되면 탭 제목 변경으로 대체",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-06",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 AC3 / FR-02 Processing",
+    "name": "오디오 컨텍스트 resume 거부(자동재생 차단)도 재생 실패로 감지되어 탭 제목으로 대체",
+    "status": "FAIL",
+    "error": "오디오가 실제로 재생되지 않았고(resume Promise 거부로 감지 가능) 폴백이 필요하나 탭 제목이 변경되지 않음 (title=뽀모도로 타이머)"
+  },
+  {
+    "id": "FR02-07",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 Trigger",
+    "name": "휴식 세션 종료 시에도 알림이 발생",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR02-08",
+    "suite": "FR-02 세션 종료 알림 / EC-01",
+    "prdRef": "FR-02 Processing",
+    "name": "최초 사용자 상호작용(시작 클릭) 시점에 오디오 컨텍스트가 활성화된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-01",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "FR-03 Processing",
+    "name": "Focus 정상 종료 → 완료 카운트 +1 및 Memo-Input-Pending 전환",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-02",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "FR-03 Processing",
+    "name": "Memo-Input-Pending 동안 다음 세션 타이머가 시작되지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-03",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "FR-03 AC2",
+    "name": "1번째 Focus 종료 + 메모 제출 → Short Break 자동 시작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-04",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "FR-03 AC1",
+    "name": "4번째 Focus 슬롯 소모 직후에는 반드시 Long Break로 전환",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-05",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "FR-03 AC3",
+    "name": "Break 종료 후에는 메모 입력 없이 곧바로 다음 Focus가 시작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR03-06",
+    "suite": "FR-03 뽀모도로 사이클 자동 전환",
+    "prdRef": "BR-01",
+    "name": "Long Break 정상 종료 → 사이클 초기화 후 Focus부터 재시작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-01",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "FR-04 AC1",
+    "name": "Focus 스킵 시 완료 개수가 변하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-02",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "FR-04 Processing",
+    "name": "Focus 스킵 시 메모 입력을 요구하지 않고 슬롯은 소모된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-03",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "FR-04 AC2",
+    "name": "Focus 2회 스킵 + 2회 정상완료 → 슬롯 4 소모로 Long Break, 완료 카운트는 2",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-04",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "FR-04 AC3 / BR-04",
+    "name": "Memo-Input-Pending 상태에서 스킵 버튼 미노출",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-05",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "BR-01",
+    "name": "Long Break 스킵 시에도 사이클이 초기화되어 Focus부터 재시작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR04-06",
+    "suite": "FR-04 세션 건너뛰기 (Skip)",
+    "prdRef": "BR-01",
+    "name": "Short Break 스킵은 Focus 슬롯을 소모하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-01",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 AC1",
+    "name": "Focus 정상 종료 시마다 메모 입력 창이 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-02",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 AC2",
+    "name": "빈 값 제출 시에도 완료 카운트는 정상 증가하고 메모는 빈 값으로 저장",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-03",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 AC2",
+    "name": "건너뛰기 시에도 완료 카운트는 정상 증가하고 메모는 빈 값으로 저장",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-04",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 Processing",
+    "name": "입력한 메모가 완료 시각과 함께 해당 날짜 로그에 저장된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-05",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 Processing",
+    "name": "공백만 입력한 메모는 빈 값으로 저장된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR05-06",
+    "suite": "FR-05 작업 메모 기록",
+    "prdRef": "FR-05 Processing / BR-04",
+    "name": "메모 대기 상태는 제출 또는 건너뛰기로만 벗어난다(취소 동작 없음)",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-01",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 AC1",
+    "name": "표시 완료 개수 = 해당 날짜 정상 종료 Focus 세션 수 (스킵 제외)",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-02",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 AC2",
+    "name": "메모가 오래된 순(오름차순)으로 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-03",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 Output / FR-05 Output",
+    "name": "빈 메모는 \"메모 없음\"으로 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-04",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 Processing",
+    "name": "기본 선택 날짜는 오늘(로컬 타임존)이다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-05",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 Processing",
+    "name": "다른 날짜 선택 시 해당 날짜의 데이터가 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR06-06",
+    "suite": "FR-06 일별 로그 화면",
+    "prdRef": "FR-06 Expected State",
+    "name": "기록이 없는 날짜는 0개 + 빈 목록 안내가 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-01",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 Processing",
+    "name": "기본값은 집중 25 / 짧은휴식 5 / 긴휴식 15 분",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-02",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC1",
+    "name": "변경한 설정값이 새로고침 후에도 유지된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-03",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC2",
+    "name": "범위를 벗어난 값(0, 181, 소수, 비숫자, 음수)은 저장되지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-04",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 Processing",
+    "name": "경계값 1분과 180분은 정상 저장된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-05",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC2",
+    "name": "일부 항목만 유효하지 않으면 전체 저장이 차단된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-06",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC3",
+    "name": "Idle 상태 Focus에서 설정 변경 시 화면 표시가 즉시 갱신된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-07",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC4",
+    "name": "Running 상태 Focus는 기존 길이로 계속되고 다음 Focus부터 새 값 적용",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-08",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 AC4",
+    "name": "Paused 상태 Focus는 남은시간이 유지되고 다음 Focus부터 새 값 적용",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-09",
+    "suite": "FR-07 설정 (세션 길이 커스터마이징)",
+    "prdRef": "FR-07 Processing",
+    "name": "Idle 상태 휴식 세션에도 새 길이가 즉시 적용된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-01",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC1",
+    "name": "Running 중 새로고침 → 남은시간/세션이 그대로 이어진다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-02",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC1",
+    "name": "새로고침 후에도 설정값과 로그가 유지된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-03",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC2 / EC-03",
+    "name": "오프라인 중 여러 세션이 경과해도 완료 처리는 1회만",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-04",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC3 / BR-02",
+    "name": "복원 후 다음 세션은 자동 시작되지 않고 Idle로 대기",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-05",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC2 / EC-03",
+    "name": "복원 시 완료 처리된 세션의 로그는 원래 종료 목표 시각 기준 날짜에 귀속",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-06",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 AC4 / EC-03",
+    "name": "Paused 상태로 새로고침하면 오프라인 시간과 무관하게 스냅샷 유지",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-07",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 Processing",
+    "name": "사이클 내 소모된 Focus 슬롯 수가 복원된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-08",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "EC-03",
+    "name": "복원 시 만료된 휴식 세션도 1회 종료 처리 후 다음 Focus는 Idle 대기",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR08-09",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "EC-03 사용자에게 표시되는 결과",
+    "name": "복원 시 만료된 Focus 세션의 종료 처리에 알림이 포함된다",
+    "status": "FAIL",
+    "error": "EC-03: 만료 세션의 종료 처리에 \"알림\"이 포함되어야 하나 소리/브라우저 알림/탭 제목 어느 것도 발생하지 않음"
+  },
+  {
+    "id": "FR08-10",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "EC-03 사용자에게 표시되는 결과 / FR-05",
+    "name": "복원 시 만료된 Focus 세션의 종료 처리에 메모 입력이 포함된다",
+    "status": "FAIL",
+    "error": "EC-03: 만료 세션 종료 처리는 \"알림/메모 입력 포함\" 이어야 하나 메모 입력 UI가 노출되지 않음 (state=idle)"
+  },
+  {
+    "id": "FR08-11",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "FR-08 Processing",
+    "name": "Idle 상태로 새로고침하면 세션 타입과 길이가 그대로 유지된다",
+    "status": "FAIL",
+    "error": "표시 길이 — expected \"33:00\", got \"25:00\""
+  },
+  {
+    "id": "FR08-12",
+    "suite": "FR-08 / EC-03 데이터 영속성 및 상태 복원",
+    "prdRef": "7.2 / 12.2",
+    "name": "설정 / 로그 / 진행 중 타이머 상태가 각각 별도 키로 저장된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC02-01",
+    "suite": "EC-02 탭 비활성화 중 세션 종료",
+    "prdRef": "EC-02",
+    "name": "백그라운드에서 세션이 만료되면 탭 복귀 즉시 종료 처리된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC02-02",
+    "suite": "EC-02 탭 비활성화 중 세션 종료",
+    "prdRef": "EC-02",
+    "name": "백그라운드 복귀 시 알림/메모 흐름이 진행된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC02-03",
+    "suite": "EC-02 탭 비활성화 중 세션 종료",
+    "prdRef": "EC-02 데이터 처리",
+    "name": "만료 전 백그라운드 복귀 시 절대시각 기준으로 남은시간이 정확히 보정된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-01",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 시스템 상태",
+    "name": "시계 델타 차이가 5초 이상이면 세션을 즉시 Paused로 전환",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-02",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 사용자에게 표시되는 결과",
+    "name": "시계 변경 감지 시 확인 알림과 재개 버튼이 제공된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-03",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 데이터 처리",
+    "name": "시계 변경 시 남은시간은 직전 유효값으로 고정되고 임의로 연장·단축되지 않는다",
+    "status": "FAIL",
+    "error": "남은시간이 임의로 변경됨 (직전 유효값 900초 → 고정값 300초) — expected 900 +/-1, got 300"
+  },
+  {
+    "id": "EC04-04",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 재시도/복구 정책",
+    "name": "사용자가 재개하면 현재 시각 기준으로 새 종료 목표 시각을 계산하고 Running 전환",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-05",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 발생 조건",
+    "name": "재개하지 않으면 Paused 상태로 유지된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-06",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 발생 조건 (임계값)",
+    "name": "임계값 미만(4초)의 오차로는 시계 변경으로 오판정하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-07",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 발생 조건",
+    "name": "시계를 과거로 되돌린 경우에도 감지된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-08",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 / 12.2 (앵커 델타 비교)",
+    "name": "원시값 비교가 아닌 앵커 대비 델타 비교를 사용한다 (정상 구동 중 오탐지 없음)",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC04-09",
+    "suite": "EC-04 시스템 시계 변경",
+    "prdRef": "EC-04 발생 조건",
+    "name": "탭 복귀 시 앵커가 재설정되어 백그라운드 경과가 오탐지되지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC05-01",
+    "suite": "EC-05 localStorage 쓰기 실패",
+    "prdRef": "EC-05 사용자에게 표시되는 결과",
+    "name": "쓰기 실패 시 경고 배너가 표시된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC05-02",
+    "suite": "EC-05 localStorage 쓰기 실패",
+    "prdRef": "EC-05 시스템 상태",
+    "name": "쓰기 실패 중에도 타이머와 세션 진행이 중단되지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC05-03",
+    "suite": "EC-05 localStorage 쓰기 실패",
+    "prdRef": "EC-05 데이터 처리",
+    "name": "재시도가 성공하면 Synced로 복귀하고 경고가 해제된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "EC05-04",
+    "suite": "EC-05 localStorage 쓰기 실패",
+    "prdRef": "EC-05 최종 상태",
+    "name": "일부 키의 쓰기만 계속 실패하는 동안에는 경고가 유지되어야 한다",
+    "status": "FAIL",
+    "error": "로그 키 쓰기가 계속 실패 중인데도 저장 실패 경고가 표시되지 않음 (다른 키의 쓰기 성공으로 경고가 해제됨)"
+  },
+  {
+    "id": "EC05-05",
+    "suite": "EC-05 localStorage 쓰기 실패",
+    "prdRef": "EC-05 재시도 정책",
+    "name": "수동 재시도 UI 없이 사용자 조작이 차단되지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "FR07-10",
+    "suite": "FR-07 + FR-08 연동 (설정 영속성 회귀)",
+    "prdRef": "FR-07 AC1 / AC3 + FR-08",
+    "name": "Idle 상태에서 설정 변경 후 새로고침하면 타이머 표시가 새 값으로 유지된다",
+    "status": "FAIL",
+    "error": "새로고침 후 타이머 표시 — expected \"33:00\", got \"25:00\""
+  },
+  {
+    "id": "FR07-11",
+    "suite": "FR-07 + FR-08 연동 (설정 영속성 회귀)",
+    "prdRef": "FR-07 Processing (다음 시작 시 사용할 길이)",
+    "name": "Idle 상태 설정 변경 후 새로고침하고 시작하면 실제 세션 길이가 새 값이다",
+    "status": "FAIL",
+    "error": "새로고침 후 시작한 Focus 세션의 실제 길이(분)가 설정값과 다름 — expected 33, got 25"
+  },
+  {
+    "id": "NFR01-01",
+    "suite": "NFR-01 타이머 정확도",
+    "prdRef": "NFR-01 / 2.3",
+    "name": "3시간 연속 구동 시 표시 시간과 실제 경과 시간 간 드리프트가 없다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "NFR01-02",
+    "suite": "NFR-01 타이머 정확도",
+    "prdRef": "NFR-01 / 12.2",
+    "name": "tick이 누락되어도(스로틀링) 절대시각 기준으로 정확히 보정된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "NFR01-03",
+    "suite": "NFR-01 타이머 정확도",
+    "prdRef": "NFR-01 / 12.2",
+    "name": "카운트다운이 tick 횟수가 아닌 절대 종료 시각으로 계산된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "NFR01-04",
+    "suite": "NFR-01 타이머 정확도",
+    "prdRef": "NFR-01 / 13.3",
+    "name": "4시간 연속(세션 전환 포함) 구동 후에도 누적 오차가 없다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-01",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "12.1 / NFR-02",
+    "name": "외부 네트워크 리소스(CDN·웹폰트·외부 API·외부 음원) 참조가 없다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-02",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "12.1 / NFR-02",
+    "name": "네트워크 통신 API(fetch/XHR/WebSocket 등)를 사용하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-03",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "12.1",
+    "name": "프레임워크(React/Vue/Angular 등)를 사용하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-04",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "12.1",
+    "name": "아이콘 등 그래픽 요소가 인라인 SVG로 구현되어 있다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-05",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "NFR-03 / 12.1",
+    "name": "단일 HTML 파일만으로 부팅된다 (외부 파일 로드 없음)",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-06",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "NFR-03 / 1.3",
+    "name": "file:// 프로토콜 컨텍스트에서도 정상 부팅·동작한다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-07",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "12.2",
+    "name": "승인된 기술 결정(Web Audio 합성음 / Notification API / Page Visibility / localStorage)을 사용한다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-08",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "7.5 / 3.2",
+    "name": "앱 내 데이터 삭제 기능이 존재하지 않는다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "CON-09",
+    "suite": "NFR-02 / NFR-03 / 12.1 기술 제약",
+    "prdRef": "3.2 Out of Scope",
+    "name": "OS/브라우저 설정에 의한 알림 미표시를 감지·보정하려는 로직이 없다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "SYS-01",
+    "suite": "13.2 System Acceptance — 정상 실행 중 시나리오",
+    "prdRef": "13.2 정상 실행 중 시나리오",
+    "name": "포그라운드 연속 사용: 한 사이클(F×4 + SB×3 + LB) 전체가 끊김 없이 동작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "SYS-02",
+    "suite": "13.2 System Acceptance — 정상 실행 중 시나리오",
+    "prdRef": "13.2 정상 실행 중 시나리오",
+    "name": "타이머·스킵·메모·로그·설정이 연동된 혼합 흐름",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "SYS-03",
+    "suite": "13.2 System Acceptance — 재접속 복원 시나리오",
+    "prdRef": "13.2 재접속 복원 (Running)",
+    "name": "Running 상태로 종료 후 만료된 채 재접속 → 1회 종료 처리 + 수동 시작",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "SYS-04",
+    "suite": "13.2 System Acceptance — 재접속 복원 시나리오",
+    "prdRef": "13.2 재접속 복원 (Paused)",
+    "name": "Paused 상태로 종료 후 재접속 → 스냅샷 복원 + 재개 시 정상 진행",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "USR-01",
+    "suite": "13.3 User Acceptance",
+    "prdRef": "13.3",
+    "name": "하루 사용 후 로그의 완료 개수·메모가 실제 작업 내역과 일치한다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "USR-02",
+    "suite": "13.3 User Acceptance",
+    "prdRef": "13.3",
+    "name": "임의 시점 새로고침 후에도 진행 중 세션·설정·로그가 그대로 유지된다",
+    "status": "PASS",
+    "error": null
+  },
+  {
+    "id": "USR-03",
+    "suite": "13.3 User Acceptance",
+    "prdRef": "13.3",
+    "name": "시스템 시계 변경 시 타이머가 임의로 늘거나 줄지 않고 일시정지 + 확인 요청",
+    "status": "FAIL",
+    "error": "남은시간이 임의로 변경됨 — expected 1020 +/-1, got 540"
+  },
+  {
+    "id": "USR-04",
+    "suite": "13.3 User Acceptance",
+    "prdRef": "13.3 / EC-05",
+    "name": "저장이 되지 않는 상황에서도 사용자는 경고로 이를 인지할 수 있다",
+    "status": "PASS",
+    "error": null
+  }
+]

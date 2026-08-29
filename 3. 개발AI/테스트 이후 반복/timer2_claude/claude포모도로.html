@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>뽀모도로 타이머</title>
+<style>
+  :root {
+    --bg: #1c1f26;
+    --card-bg: #262b35;
+    --text: #eef1f6;
+    --text-dim: #9aa3b2;
+    --accent: #e2574c;
+    --danger-bg: #4a2f1d;
+    --danger-text: #ffd8a8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, "Malgun Gothic", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background 0.4s ease;
+  }
+  body.theme-shortBreak { --accent: #3fa66a; }
+  body.theme-longBreak { --accent: #3f6fe2; }
+
+  header {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 16px 0;
+  }
+  header h1 { font-size: 20px; margin: 0; }
+  header nav { display: flex; gap: 8px; }
+  .icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    display: inline-flex;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+  .icon-btn svg { width: 22px; height: 22px; }
+
+  main { width: 100%; max-width: 480px; padding: 16px; }
+  .hidden { display: none !important; }
+
+  #timerView { text-align: center; padding: 24px 16px; background: var(--card-bg); border-radius: 16px; margin-top: 16px; }
+  .dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+  .dot.filled { background: var(--accent); }
+  .session-label { font-size: 15px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .time-display { font-size: 64px; font-variant-numeric: tabular-nums; font-weight: 700; margin: 8px 0 16px; }
+  .today-count { color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+  .controls { display: flex; justify-content: center; align-items: center; gap: 20px; }
+  .controls button { border: none; cursor: pointer; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+  #startPauseBtn { width: 68px; height: 68px; background: var(--accent); color: #fff; }
+  #startPauseBtn svg { width: 28px; height: 28px; }
+  #resetBtn, #skipBtn { width: 48px; height: 48px; background: rgba(255,255,255,0.08); color: var(--text); }
+  #resetBtn svg, #skipBtn svg { width: 20px; height: 20px; }
+
+  .banner { width: 100%; box-sizing: border-box; background: var(--danger-bg); color: var(--danger-text); text-align: center; padding: 10px 16px; font-size: 13px; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(10,12,16,0.88); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .overlay .panel { background: var(--card-bg); border-radius: 16px; padding: 28px 24px; max-width: 360px; width: 100%; text-align: center; }
+  .overlay p { margin: 0 0 16px; line-height: 1.5; }
+  .overlay input[type=text] { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #1a1d24; color: var(--text); font-size: 14px; margin-bottom: 14px; }
+  .overlay .actions { display: flex; gap: 10px; justify-content: center; }
+  .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  section h2 { margin-top: 8px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 14px; color: var(--text-dim); }
+  .field input { padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: var(--card-bg); color: var(--text); font-size: 14px; }
+  .error-text { color: #ff8080; font-size: 13px; margin: 4px 0 12px; }
+
+  #logView input[type=date] { padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: var(--card-bg); color: var(--text); margin-bottom: 14px; }
+  #logMemoList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  #logMemoList li { background: var(--card-bg); padding: 10px 12px; border-radius: 8px; font-size: 14px; }
+  .log-empty { color: var(--text-dim); }
+
+  .settings-actions, .log-actions { display: flex; gap: 10px; margin-top: 8px; }
+</style>
+</head>
+<body>
+  <div id="storageWarning" class="banner hidden">⚠ 데이터가 저장되지 않고 있습니다 — 새로고침 시 최근 변경사항이 유실될 수 있습니다</div>
+
+  <header>
+    <h1>🍅 뽀모도로</h1>
+    <nav>
+      <button id="navLogBtn" class="icon-btn" aria-label="로그">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+      </button>
+      <button id="navSettingsBtn" class="icon-btn" aria-label="설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="timerView">
+      <div class="dots" id="cycleDots"></div>
+      <div class="session-label" id="sessionLabel">집중</div>
+      <div class="time-display" id="timeDisplay">25:00</div>
+      <div class="today-count">오늘 완료: <span id="todayCount">0</span>개</div>
+      <div class="controls" id="controls">
+        <button id="resetBtn" aria-label="리셋">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 8 8 8"/></svg>
+        </button>
+        <button id="startPauseBtn" aria-label="시작"></button>
+        <button id="skipBtn" aria-label="건너뛰기">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 5v14l10-7z"/><rect x="17" y="5" width="2.5" height="14"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <section id="settingsView" class="hidden">
+      <h2>설정</h2>
+      <div class="field">
+        <label for="focusInput">집중 시간(분)</label>
+        <input type="text" inputmode="numeric" id="focusInput">
+      </div>
+      <div class="field">
+        <label for="shortInput">짧은 휴식(분)</label>
+        <input type="text" inputmode="numeric" id="shortInput">
+      </div>
+      <div class="field">
+        <label for="longInput">긴 휴식(분)</label>
+        <input type="text" inputmode="numeric" id="longInput">
+      </div>
+      <p class="error-text hidden" id="settingsError">1~180 사이의 정수만 입력할 수 있습니다.</p>
+      <div class="settings-actions">
+        <button id="settingsSaveBtn" class="btn btn-primary">저장</button>
+        <button id="settingsBackBtn" class="btn btn-secondary">뒤로</button>
+      </div>
+    </section>
+
+    <section id="logView" class="hidden">
+      <h2>로그</h2>
+      <input type="date" id="logDateInput">
+      <p>완료: <span id="logCount">0</span>개</p>
+      <ul id="logMemoList"></ul>
+      <div class="log-actions">
+        <button id="logBackBtn" class="btn btn-secondary">뒤로</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="overlay hidden" id="memoOverlay">
+    <div class="panel">
+      <p>집중 세션 완료! 방금 한 일을 한 줄로 남겨보세요.</p>
+      <input type="text" id="memoInput" maxlength="200" placeholder="예: 보고서 초안 작성">
+      <div class="actions">
+        <button id="memoSubmitBtn" class="btn btn-primary">제출</button>
+        <button id="memoSkipBtn" class="btn btn-secondary">건너뛰기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="clockModal">
+    <div class="panel">
+      <p>시스템 시간 변경이 감지되어 타이머가 일시정지되었습니다</p>
+      <div class="actions">
+        <button id="clockResumeBtn" class="btn btn-primary">재개</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(root){
+  'use strict';
+
+  var ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+  var ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>';
+
+  var SESSION_LABELS = { focus: '집중', shortBreak: '짧은 휴식', longBreak: '긴 휴식' };
+  var CLOCK_DRIFT_THRESHOLD_MS = 5000;
+  var KEYS = {
+    settings: 'pomodoro.settings.v1',
+    logs: 'pomodoro.logs.v1',
+    timer: 'pomodoro.timerState.v1'
+  };
+
+  // ============================================================
+  // Pure logic (no DOM / storage / audio access) — kept side-effect
+  // free so it can be unit tested directly via module.exports below.
+  // ============================================================
+
+  function formatMMSS(ms) {
+    var totalSec = Math.max(0, Math.ceil(ms / 1000));
+    var m = Math.floor(totalSec / 60);
+    var s = totalSec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function getLocalDateKey(ts) {
+    var d = new Date(ts);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function validateMinutes(raw) {
+    if (typeof raw === 'number') {
+      if (!Number.isInteger(raw) || raw < 1 || raw > 180) return { valid: false };
+      return { valid: true, value: raw };
+    }
+    if (typeof raw !== 'string') return { valid: false };
+    var trimmed = raw.trim();
+    if (!/^\d+$/.test(trimmed)) return { valid: false };
+    var num = Number(trimmed);
+    if (num < 1 || num > 180) return { valid: false };
+    return { valid: true, value: num };
+  }
+
+  function createDefaultSettings() {
+    return { focusMin: 25, shortBreakMin: 5, longBreakMin: 15 };
+  }
+
+  function sanitizeSettings(obj) {
+    if (!obj || typeof obj !== 'object') return null;
+    var f = validateMinutes(obj.focusMin);
+    var s = validateMinutes(obj.shortBreakMin);
+    var l = validateMinutes(obj.longBreakMin);
+    if (!f.valid || !s.valid || !l.valid) return null;
+    return { focusMin: f.value, shortBreakMin: s.value, longBreakMin: l.value };
+  }
+
+  function getDurationMs(type, settings) {
+    var minutes = type === 'focus' ? settings.focusMin : type === 'shortBreak' ? settings.shortBreakMin : settings.longBreakMin;
+    return minutes * 60 * 1000;
+  }
+
+  function getNextSessionType(endedType, slotsConsumed) {
+    if (endedType === 'focus') return slotsConsumed >= 4 ? 'longBreak' : 'shortBreak';
+    return 'focus';
+  }
+
+  function detectClockDrift(dateAnchor, perfAnchor, nowDate, nowPerf, thresholdMs) {
+    var dateDelta = nowDate - dateAnchor;
+    var perfDelta = nowPerf - perfAnchor;
+    return Math.abs(dateDelta - perfDelta) >= thresholdMs;
+  }
+
+  function createDefaultTimer() {
+    return {
+      sessionType: 'focus',
+      sessionStatus: 'idle',
+      endTimestamp: null,
+      remainingMs: null,
+      slotsConsumed: 0,
+      awaitingMemo: false,
+      pendingMemoTimestamp: null,
+      restoreNoAutoStart: false
+    };
+  }
+
+  function ensureLog(logs, key) {
+    if (!logs[key]) logs[key] = { date: key, completedCount: 0, memos: [] };
+    return logs[key];
+  }
+
+  // FR-08 / EC-03 / BR-02: restore-on-load. Running sessions are checked
+  // against endTimestamp; if already expired, exactly one completion is
+  // processed and the result always lands in Idle (never auto-started),
+  // regardless of how many sessions would have elapsed while away.
+  // Paused sessions are restored verbatim (no expiry concept applies).
+  function applyRestoreLogic(timer, logs, nowMs) {
+    var t = Object.assign({}, timer);
+    var newLogs = JSON.parse(JSON.stringify(logs || {}));
+
+    if (t.sessionStatus !== 'running') {
+      return { timer: t, logs: newLogs };
+    }
+
+    var remaining = t.endTimestamp - nowMs;
+    if (remaining > 0) {
+      return { timer: t, logs: newLogs };
+    }
+
+    var endedType = t.sessionType;
+    var endedAt = t.endTimestamp;
+
+    if (endedType === 'focus') {
+      var key = getLocalDateKey(endedAt);
+      ensureLog(newLogs, key).completedCount += 1;
+      t.slotsConsumed = t.slotsConsumed + 1;
+      t.sessionStatus = 'idle';
+      t.endTimestamp = null;
+      t.remainingMs = null;
+      t.awaitingMemo = true;
+      t.pendingMemoTimestamp = endedAt;
+      t.restoreNoAutoStart = true;
+    } else {
+      if (endedType === 'longBreak') t.slotsConsumed = 0;
+      t.sessionType = getNextSessionType(endedType, t.slotsConsumed);
+      t.sessionStatus = 'idle';
+      t.endTimestamp = null;
+      t.remainingMs = null;
+      t.awaitingMemo = false;
+      t.pendingMemoTimestamp = null;
+      t.restoreNoAutoStart = false;
+    }
+    return { timer: t, logs: newLogs };
+  }
+
+  var PomodoroLogic = {
+    formatMMSS: formatMMSS,
+    getLocalDateKey: getLocalDateKey,
+    validateMinutes: validateMinutes,
+    sanitizeSettings: sanitizeSettings,
+    createDefaultSettings: createDefaultSettings,
+    getDurationMs: getDurationMs,
+    getNextSessionType: getNextSessionType,
+    detectClockDrift: detectClockDrift,
+    createDefaultTimer: createDefaultTimer,
+    ensureLog: ensureLog,
+    applyRestoreLogic: applyRestoreLogic,
+    CLOCK_DRIFT_THRESHOLD_MS: CLOCK_DRIFT_THRESHOLD_MS
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = PomodoroLogic;
+  }
+
+  // ============================================================
+  // DOM-dependent application (browser only)
+  // ============================================================
+  if (typeof document !== 'undefined') {
+
+    var state = {
+      settings: createDefaultSettings(),
+      logs: {},
+      timer: createDefaultTimer(),
+      runtime: {
+        dateAnchor: 0,
+        perfAnchor: 0,
+        lastGoodRemainingMs: 0,
+        storageStatus: 'synced',
+        clockWarningVisible: false,
+        currentScreen: 'timer',
+        audioCtx: null,
+        firstInteractionDone: false,
+        titleFlashInterval: null
+      }
+    };
+
+    var el = {};
+
+    function cacheDom() {
+      el.storageWarning = document.getElementById('storageWarning');
+      el.navLogBtn = document.getElementById('navLogBtn');
+      el.navSettingsBtn = document.getElementById('navSettingsBtn');
+      el.timerView = document.getElementById('timerView');
+      el.cycleDots = document.getElementById('cycleDots');
+      el.sessionLabel = document.getElementById('sessionLabel');
+      el.timeDisplay = document.getElementById('timeDisplay');
+      el.todayCount = document.getElementById('todayCount');
+      el.resetBtn = document.getElementById('resetBtn');
+      el.startPauseBtn = document.getElementById('startPauseBtn');
+      el.skipBtn = document.getElementById('skipBtn');
+      el.memoOverlay = document.getElementById('memoOverlay');
+      el.memoInput = document.getElementById('memoInput');
+      el.memoSubmitBtn = document.getElementById('memoSubmitBtn');
+      el.memoSkipBtn = document.getElementById('memoSkipBtn');
+      el.settingsView = document.getElementById('settingsView');
+      el.focusInput = document.getElementById('focusInput');
+      el.shortInput = document.getElementById('shortInput');
+      el.longInput = document.getElementById('longInput');
+      el.settingsError = document.getElementById('settingsError');
+      el.settingsSaveBtn = document.getElementById('settingsSaveBtn');
+      el.settingsBackBtn = document.getElementById('settingsBackBtn');
+      el.logView = document.getElementById('logView');
+      el.logDateInput = document.getElementById('logDateInput');
+      el.logCount = document.getElementById('logCount');
+      el.logMemoList = document.getElementById('logMemoList');
+      el.logBackBtn = document.getElementById('logBackBtn');
+      el.clockModal = document.getElementById('clockModal');
+      el.clockResumeBtn = document.getElementById('clockResumeBtn');
+    }
+
+    // ---------- persistence ----------
+    function safeSetItem(key, valueObj) {
+      try {
+        localStorage.setItem(key, JSON.stringify(valueObj));
+        if (state.runtime.storageStatus !== 'synced') {
+          state.runtime.storageStatus = 'synced';
+          renderStorageBanner();
+        }
+        return true;
+      } catch (e) {
+        state.runtime.storageStatus = 'write-failed';
+        renderStorageBanner();
+        return false;
+      }
+    }
+    function persistSettings() { safeSetItem(KEYS.settings, state.settings); }
+    function persistLogs() { safeSetItem(KEYS.logs, state.logs); }
+    function persistTimer() { safeSetItem(KEYS.timer, state.timer); }
+
+    function loadJSON(key, fallback) {
+      try {
+        var raw = localStorage.getItem(key);
+        if (raw == null) return fallback;
+        return JSON.parse(raw);
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function loadAll() {
+      var settingsRaw = loadJSON(KEYS.settings, null);
+      state.settings = sanitizeSettings(settingsRaw) || createDefaultSettings();
+
+      state.logs = loadJSON(KEYS.logs, {}) || {};
+
+      var timerRaw = loadJSON(KEYS.timer, null);
+      var timer = timerRaw ? Object.assign(createDefaultTimer(), timerRaw) : createDefaultTimer();
+
+      var now = Date.now();
+      var restored = applyRestoreLogic(timer, state.logs, now);
+      state.timer = restored.timer;
+      state.logs = restored.logs;
+
+      if (state.timer.sessionStatus === 'running') {
+        state.runtime.lastGoodRemainingMs = state.timer.endTimestamp - now;
+      }
+      resetAnchors();
+
+      persistLogs();
+      persistTimer();
+    }
+
+    // ---------- clock anchors ----------
+    function resetAnchors() {
+      state.runtime.dateAnchor = Date.now();
+      state.runtime.perfAnchor = performance.now();
+    }
+
+    // ---------- audio / notification ----------
+    function ensureAudioContext() {
+      if (!state.runtime.audioCtx) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        try {
+          state.runtime.audioCtx = new Ctx();
+        } catch (e) {
+          return null;
+        }
+      }
+      return state.runtime.audioCtx;
+    }
+
+    function playCompletionSound() {
+      var ctx = ensureAudioContext();
+      if (!ctx) return Promise.reject(new Error('no-audio-context'));
+      return ctx.resume().then(function () {
+        var now = ctx.currentTime;
+        beep(ctx, 880, now, 0.5);
+        beep(ctx, 1046.5, now + 0.6, 0.5);
+      });
+    }
+
+    function beep(ctx, freq, startAt, duration) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.35, startAt + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+      osc.start(startAt);
+      osc.stop(startAt + duration + 0.05);
+    }
+
+    function flashTabTitle(message) {
+      if (state.runtime.titleFlashInterval) return;
+      var original = document.title;
+      var toggle = false;
+      state.runtime.titleFlashInterval = setInterval(function () {
+        document.title = toggle ? message : original;
+        toggle = !toggle;
+      }, 1000);
+      function stop() {
+        clearInterval(state.runtime.titleFlashInterval);
+        state.runtime.titleFlashInterval = null;
+        document.title = original;
+        window.removeEventListener('focus', stop);
+        document.removeEventListener('visibilitychange', onVis);
+      }
+      function onVis() {
+        if (document.visibilityState === 'visible') stop();
+      }
+      window.addEventListener('focus', stop);
+      document.addEventListener('visibilitychange', onVis);
+    }
+
+    function notifyEndOfSession(title, body) {
+      playCompletionSound().catch(function () { flashTabTitle('⏰ ' + title); });
+      if (typeof Notification === 'undefined') {
+        flashTabTitle('⏰ ' + title);
+        return;
+      }
+      if (Notification.permission === 'granted') {
+        try { new Notification(title, { body: body }); } catch (e) { /* no-op: unsupported in this environment */ }
+      } else {
+        flashTabTitle('⏰ ' + title);
+      }
+    }
+
+    function initFirstInteraction() {
+      if (state.runtime.firstInteractionDone) return;
+      state.runtime.firstInteractionDone = true;
+      ensureAudioContext();
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+        Notification.requestPermission().catch(function () {});
+      }
+    }
+
+    // ---------- state transitions ----------
+    function startSessionRunning(type) {
+      state.timer.sessionType = type;
+      state.timer.sessionStatus = 'running';
+      state.timer.endTimestamp = Date.now() + getDurationMs(type, state.settings);
+      state.timer.remainingMs = null;
+      resetAnchors();
+      state.runtime.lastGoodRemainingMs = getDurationMs(type, state.settings);
+    }
+
+    function handleStart() {
+      if (state.timer.awaitingMemo) return;
+      if (state.timer.sessionStatus === 'idle') {
+        startSessionRunning(state.timer.sessionType);
+      } else if (state.timer.sessionStatus === 'paused') {
+        state.timer.sessionStatus = 'running';
+        state.timer.endTimestamp = Date.now() + state.timer.remainingMs;
+        state.timer.remainingMs = null;
+        resetAnchors();
+        state.runtime.lastGoodRemainingMs = state.timer.endTimestamp - Date.now();
+      } else {
+        return;
+      }
+      persistTimer();
+      renderAll();
+    }
+
+    function handlePause() {
+      if (state.timer.sessionStatus !== 'running') return;
+      var remaining = Math.max(0, state.timer.endTimestamp - Date.now());
+      state.timer.remainingMs = remaining;
+      state.timer.sessionStatus = 'paused';
+      state.timer.endTimestamp = null;
+      persistTimer();
+      renderAll();
+    }
+
+    function handleReset() {
+      if (state.timer.awaitingMemo) return;
+      state.timer.sessionStatus = 'idle';
+      state.timer.endTimestamp = null;
+      state.timer.remainingMs = null;
+      persistTimer();
+      renderAll();
+    }
+
+    function handleSkip() {
+      if (state.timer.awaitingMemo) return;
+      var endedType = state.timer.sessionType;
+      if (endedType === 'focus') state.timer.slotsConsumed += 1;
+      else if (endedType === 'longBreak') state.timer.slotsConsumed = 0;
+      var nextType = getNextSessionType(endedType, state.timer.slotsConsumed);
+      startSessionRunning(nextType);
+      persistTimer();
+      renderAll();
+    }
+
+    function handleSessionCompleteLive() {
+      var endedType = state.timer.sessionType;
+      var endedAt = state.timer.endTimestamp;
+      if (endedType === 'focus') {
+        var key = getLocalDateKey(endedAt);
+        ensureLog(state.logs, key).completedCount += 1;
+        state.timer.slotsConsumed += 1;
+        state.timer.sessionStatus = 'idle';
+        state.timer.endTimestamp = null;
+        state.timer.remainingMs = null;
+        state.timer.awaitingMemo = true;
+        state.timer.pendingMemoTimestamp = endedAt;
+        state.timer.restoreNoAutoStart = false;
+        persistLogs();
+        persistTimer();
+        notifyEndOfSession('집중 세션 종료', '수고하셨습니다! 메모를 남겨보세요.');
+        renderAll();
+      } else {
+        if (endedType === 'longBreak') state.timer.slotsConsumed = 0;
+        var nextType = getNextSessionType(endedType, state.timer.slotsConsumed);
+        startSessionRunning(nextType);
+        persistTimer();
+        notifyEndOfSession('휴식 종료', '다음 집중 세션을 시작합니다.');
+        renderAll();
+      }
+    }
+
+    function resolveMemo(text) {
+      if (!state.timer.awaitingMemo) return;
+      var key = getLocalDateKey(state.timer.pendingMemoTimestamp);
+      ensureLog(state.logs, key).memos.push({ time: state.timer.pendingMemoTimestamp, text: (text || '').trim() });
+      var wasRestoreCase = state.timer.restoreNoAutoStart;
+      var nextType = getNextSessionType('focus', state.timer.slotsConsumed);
+      state.timer.awaitingMemo = false;
+      state.timer.pendingMemoTimestamp = null;
+      state.timer.restoreNoAutoStart = false;
+      if (wasRestoreCase) {
+        state.timer.sessionType = nextType;
+        state.timer.sessionStatus = 'idle';
+        state.timer.endTimestamp = null;
+        state.timer.remainingMs = null;
+      } else {
+        startSessionRunning(nextType);
+      }
+      persistLogs();
+      persistTimer();
+      renderAll();
+    }
+
+    function handleClockChangeDetected(remainingMsSnapshot) {
+      state.timer.sessionStatus = 'paused';
+      state.timer.remainingMs = Math.max(0, remainingMsSnapshot);
+      state.timer.endTimestamp = null;
+      state.runtime.clockWarningVisible = true;
+      persistTimer();
+      renderAll();
+    }
+
+    function resumeFromClockWarning() {
+      state.runtime.clockWarningVisible = false;
+      state.timer.sessionStatus = 'running';
+      state.timer.endTimestamp = Date.now() + state.timer.remainingMs;
+      state.timer.remainingMs = null;
+      resetAnchors();
+      state.runtime.lastGoodRemainingMs = state.timer.endTimestamp - Date.now();
+      persistTimer();
+      renderAll();
+    }
+
+    // ---------- tick loop ----------
+    function tick() {
+      if (state.timer.sessionStatus !== 'running') return;
+      var now = Date.now();
+      var nowPerf = performance.now();
+      if (detectClockDrift(state.runtime.dateAnchor, state.runtime.perfAnchor, now, nowPerf, CLOCK_DRIFT_THRESHOLD_MS)) {
+        handleClockChangeDetected(state.runtime.lastGoodRemainingMs);
+        return;
+      }
+      var remaining = state.timer.endTimestamp - now;
+      if (remaining <= 0) {
+        handleSessionCompleteLive();
+        return;
+      }
+      state.runtime.lastGoodRemainingMs = remaining;
+      renderTimerNow();
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && state.timer.sessionStatus === 'running') {
+        var now = Date.now();
+        if (state.timer.endTimestamp - now <= 0) {
+          handleSessionCompleteLive();
+        }
+        if (state.timer.sessionStatus === 'running') {
+          resetAnchors();
+          state.runtime.lastGoodRemainingMs = state.timer.endTimestamp - Date.now();
+        }
+      }
+    });
+
+    // ---------- rendering ----------
+    function computeCurrentRemaining() {
+      if (state.timer.sessionStatus === 'running') return Math.max(0, state.timer.endTimestamp - Date.now());
+      if (state.timer.sessionStatus === 'paused') return state.timer.remainingMs;
+      return getDurationMs(state.timer.sessionType, state.settings);
+    }
+
+    function renderDots() {
+      el.cycleDots.innerHTML = '';
+      for (var i = 0; i < 4; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'dot' + (i < state.timer.slotsConsumed ? ' filled' : '');
+        el.cycleDots.appendChild(dot);
+      }
+    }
+
+    function renderTimerNow() {
+      var remaining = computeCurrentRemaining();
+      el.timeDisplay.textContent = formatMMSS(remaining);
+      el.sessionLabel.textContent = SESSION_LABELS[state.timer.sessionType];
+      document.body.className = 'theme-' + state.timer.sessionType;
+      var todayKey = getLocalDateKey(Date.now());
+      el.todayCount.textContent = (state.logs[todayKey] || { completedCount: 0 }).completedCount;
+      renderDots();
+      el.startPauseBtn.innerHTML = state.timer.sessionStatus === 'running' ? ICON_PAUSE : ICON_PLAY;
+      el.startPauseBtn.setAttribute('aria-label', state.timer.sessionStatus === 'running' ? '일시정지' : '시작');
+    }
+
+    function renderMemoOverlay() {
+      el.memoOverlay.classList.toggle('hidden', !state.timer.awaitingMemo);
+    }
+
+    function renderClockModal() {
+      el.clockModal.classList.toggle('hidden', !state.runtime.clockWarningVisible);
+    }
+
+    function renderStorageBanner() {
+      el.storageWarning.classList.toggle('hidden', state.runtime.storageStatus !== 'write-failed');
+    }
+
+    function renderLogScreen() {
+      var key = el.logDateInput.value || getLocalDateKey(Date.now());
+      var log = state.logs[key];
+      el.logCount.textContent = log ? log.completedCount : 0;
+      el.logMemoList.innerHTML = '';
+      var memos = log ? log.memos.slice().sort(function (a, b) { return a.time - b.time; }) : [];
+      if (memos.length === 0) {
+        var li = document.createElement('li');
+        li.textContent = '기록된 메모가 없습니다.';
+        li.className = 'log-empty';
+        el.logMemoList.appendChild(li);
+      } else {
+        memos.forEach(function (m) {
+          var item = document.createElement('li');
+          var time = new Date(m.time);
+          var hh = String(time.getHours()).padStart(2, '0');
+          var mm = String(time.getMinutes()).padStart(2, '0');
+          item.textContent = '[' + hh + ':' + mm + '] ' + (m.text && m.text.trim() ? m.text : '메모 없음');
+          el.logMemoList.appendChild(item);
+        });
+      }
+    }
+
+    function renderAll() {
+      el.timerView.classList.toggle('hidden', state.runtime.currentScreen !== 'timer');
+      el.settingsView.classList.toggle('hidden', state.runtime.currentScreen !== 'settings');
+      el.logView.classList.toggle('hidden', state.runtime.currentScreen !== 'log');
+      renderTimerNow();
+      renderMemoOverlay();
+      renderClockModal();
+      renderStorageBanner();
+      if (state.runtime.currentScreen === 'log') renderLogScreen();
+    }
+
+    function navigateTo(screen) {
+      state.runtime.currentScreen = screen;
+      if (screen === 'settings') {
+        el.focusInput.value = state.settings.focusMin;
+        el.shortInput.value = state.settings.shortBreakMin;
+        el.longInput.value = state.settings.longBreakMin;
+        el.settingsError.classList.add('hidden');
+      }
+      if (screen === 'log') {
+        el.logDateInput.value = getLocalDateKey(Date.now());
+      }
+      renderAll();
+    }
+
+    function onSettingsSave() {
+      var vFocus = validateMinutes(el.focusInput.value);
+      var vShort = validateMinutes(el.shortInput.value);
+      var vLong = validateMinutes(el.longInput.value);
+      if (!vFocus.valid || !vShort.valid || !vLong.valid) {
+        el.settingsError.classList.remove('hidden');
+        return;
+      }
+      state.settings = { focusMin: vFocus.value, shortBreakMin: vShort.value, longBreakMin: vLong.value };
+      el.settingsError.classList.add('hidden');
+      persistSettings();
+      renderAll();
+    }
+
+    // ---------- event wiring ----------
+    function wireEvents() {
+      el.startPauseBtn.addEventListener('click', function () {
+        initFirstInteraction();
+        if (state.timer.sessionStatus === 'running') handlePause(); else handleStart();
+      });
+      el.resetBtn.addEventListener('click', handleReset);
+      el.skipBtn.addEventListener('click', handleSkip);
+      el.navLogBtn.addEventListener('click', function () { navigateTo('log'); });
+      el.navSettingsBtn.addEventListener('click', function () { navigateTo('settings'); });
+      el.settingsBackBtn.addEventListener('click', function () { navigateTo('timer'); });
+      el.logBackBtn.addEventListener('click', function () { navigateTo('timer'); });
+      el.settingsSaveBtn.addEventListener('click', onSettingsSave);
+      el.logDateInput.addEventListener('change', renderLogScreen);
+      el.memoSubmitBtn.addEventListener('click', function () { var v = el.memoInput.value; el.memoInput.value = ''; resolveMemo(v); });
+      el.memoSkipBtn.addEventListener('click', function () { el.memoInput.value = ''; resolveMemo(''); });
+      el.memoInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { var v = el.memoInput.value; el.memoInput.value = ''; resolveMemo(v); }
+      });
+      el.clockResumeBtn.addEventListener('click', resumeFromClockWarning);
+      [el.focusInput, el.shortInput, el.longInput].forEach(function (input) {
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') onSettingsSave(); });
+      });
+    }
+
+    function init() {
+      cacheDom();
+      loadAll();
+      wireEvents();
+      navigateTo('timer');
+      setInterval(tick, 250);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    // Internal test hook: inert in normal browser use, lets an external
+    // harness drive the same code paths real UI events trigger (mirrors
+    // the module.exports testability guard used for the pure logic above).
+    root.__pomodoroTestHooks = {
+      state: state,
+      el: el,
+      KEYS: KEYS,
+      init: init,
+      tick: tick,
+      loadAll: loadAll,
+      navigateTo: navigateTo,
+      resolveMemo: resolveMemo,
+      handleStart: handleStart,
+      handlePause: handlePause,
+      handleReset: handleReset,
+      handleSkip: handleSkip,
+      handleSessionCompleteLive: handleSessionCompleteLive,
+      handleClockChangeDetected: handleClockChangeDetected,
+      resumeFromClockWarning: resumeFromClockWarning,
+      onSettingsSave: onSettingsSave,
+      renderAll: renderAll
+    };
+  }
+
+})(typeof window !== 'undefined' ? window : this);
+</script>
+</body>
+</html>

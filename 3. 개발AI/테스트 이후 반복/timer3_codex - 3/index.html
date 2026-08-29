@@ -1,0 +1,1604 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>포커스 리듬 — 뽀모도로 타이머</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-solid: #ffffff;
+      --text: #1d2633;
+      --muted: #6d7787;
+      --line: #e4e8ef;
+      --brand: #4866e9;
+      --brand-dark: #304dcc;
+      --brand-soft: #eef1ff;
+      --focus: #4866e9;
+      --short: #1aa879;
+      --long: #d78336;
+      --danger: #bb493e;
+      --danger-soft: #fff1ef;
+      --shadow: 0 18px 60px rgba(42, 57, 86, .10);
+      --shadow-small: 0 8px 24px rgba(42, 57, 86, .08);
+      --radius-lg: 28px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-width: 320px; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(72, 102, 233, .10), transparent 30rem),
+        radial-gradient(circle at 100% 20%, rgba(26, 168, 121, .07), transparent 26rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: -.01em;
+    }
+
+    button, input { font: inherit; }
+
+    button { cursor: pointer; }
+
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(72, 102, 233, .28);
+      outline-offset: 2px;
+    }
+
+    [hidden] { display: none !important; }
+
+    .app-shell {
+      width: min(1080px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text);
+      border: 0;
+      padding: 0;
+      background: transparent;
+      text-align: left;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      background: linear-gradient(145deg, #6179ef, #304dcc);
+      box-shadow: 0 8px 18px rgba(72, 102, 233, .28);
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.2;
+      letter-spacing: -.03em;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid rgba(228, 232, 239, .92);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .72);
+      box-shadow: 0 4px 16px rgba(42, 57, 86, .04);
+    }
+
+    .nav-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      color: var(--muted);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+      transition: color .18s ease, background .18s ease, transform .18s ease;
+    }
+
+    .nav-button:hover { color: var(--text); background: #fff; }
+
+    .nav-button[aria-current="page"] {
+      color: var(--brand-dark);
+      background: var(--brand-soft);
+    }
+
+    .storage-warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border: 1px solid #f0c6c0;
+      border-radius: var(--radius-sm);
+      color: #853c34;
+      background: var(--danger-soft);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .storage-warning strong { display: block; margin-bottom: 1px; }
+
+    .view { animation: view-in .24s ease both; }
+
+    @keyframes view-in {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .timer-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid rgba(228, 232, 239, .88);
+      border-radius: var(--radius-lg);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .timer-card {
+      min-height: 590px;
+      padding: clamp(26px, 5vw, 54px);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .timer-card::after {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      right: -140px;
+      bottom: -150px;
+      border-radius: 50%;
+      background: rgba(72, 102, 233, .06);
+      pointer-events: none;
+    }
+
+    .session-heading {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 1px;
+    }
+
+    .session-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--focus);
+      background: var(--brand-soft);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .session-pill[data-type="ShortBreak"] { color: var(--short); background: #eaf8f3; }
+    .session-pill[data-type="LongBreak"] { color: var(--long); background: #fff3e7; }
+
+    .status-label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .timer-orb {
+      display: grid;
+      width: min(310px, 72vw);
+      aspect-ratio: 1;
+      place-items: center;
+      margin: 36px 0 28px;
+      border-radius: 50%;
+      background: conic-gradient(var(--focus) 0 42%, #eef1f6 42% 100%);
+      box-shadow: 0 22px 50px rgba(72, 102, 233, .16);
+      transition: background .25s ease;
+    }
+
+    .timer-orb[data-type="ShortBreak"] { background: conic-gradient(var(--short) 0 42%, #eaf3f0 42% 100%); }
+    .timer-orb[data-type="LongBreak"] { background: conic-gradient(var(--long) 0 42%, #f8eee3 42% 100%); }
+
+    .timer-orb-inner {
+      display: grid;
+      width: calc(100% - 18px);
+      height: calc(100% - 18px);
+      place-items: center;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(228, 232, 239, .75);
+    }
+
+    .timer-display {
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      font-size: clamp(54px, 9vw, 88px);
+      font-weight: 800;
+      letter-spacing: -.08em;
+      line-height: 1;
+      transform: translateX(-3px);
+    }
+
+    .timer-caption {
+      margin: -2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .timer-hint {
+      min-height: 20px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .timer-controls {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 0 17px;
+      font-size: 13px;
+      font-weight: 800;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .button:hover { transform: translateY(-1px); }
+
+    .button:active { transform: translateY(0); }
+
+    .button-primary {
+      min-width: 132px;
+      color: #fff;
+      background: var(--brand);
+      box-shadow: 0 9px 18px rgba(72, 102, 233, .22);
+    }
+
+    .button-primary:hover { background: var(--brand-dark); box-shadow: 0 12px 22px rgba(72, 102, 233, .28); }
+
+    .button-secondary { color: var(--text); border-color: var(--line); background: #fff; }
+    .button-secondary:hover { border-color: #cbd3df; background: #fafbfe; }
+    .button-quiet { color: var(--muted); border-color: transparent; background: transparent; }
+    .button-quiet:hover { color: var(--text); background: #f2f4f8; }
+
+    .side-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .side-card { padding: 24px; }
+
+    .side-card h2,
+    .section-title h1,
+    .section-title h2 {
+      margin: 0;
+      letter-spacing: -.04em;
+    }
+
+    .side-card h2 { font-size: 17px; }
+
+    .side-card p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .cycle-track { margin-top: 24px; }
+
+    .cycle-track-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .cycle-track-top span:last-child { color: var(--muted); }
+
+    .cycle-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .cycle-segment {
+      height: 8px;
+      border-radius: 999px;
+      background: #e9edf3;
+      transition: background .2s ease;
+    }
+
+    .cycle-segment[data-filled="true"] { background: var(--brand); }
+
+    .session-list { display: grid; gap: 10px; margin-top: 20px; }
+
+    .session-list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: #f8f9fc;
+      font-size: 13px;
+    }
+
+    .session-list-row span:last-child {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .offline-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .section-card { padding: clamp(22px, 4vw, 36px); }
+
+    .section-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .section-title h1 { font-size: clamp(25px, 4vw, 34px); }
+
+    .section-title p {
+      max-width: 560px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .date-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 0 11px;
+      background: #fff;
+    }
+
+    .date-control input {
+      min-height: 40px;
+      border: 0;
+      color: var(--text);
+      background: transparent;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .log-summary {
+      display: grid;
+      grid-template-columns: minmax(180px, .35fr) 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .stat-card span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .stat-card strong { display: block; margin-top: 10px; font-size: 38px; letter-spacing: -.07em; }
+
+    .log-list {
+      min-height: 250px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .log-empty {
+      display: grid;
+      min-height: 230px;
+      place-items: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .log-entry {
+      display: grid;
+      grid-template-columns: 80px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      padding: 15px 13px;
+      border-bottom: 1px solid #eff1f5;
+    }
+
+    .log-entry:last-child { border-bottom: 0; }
+
+    .log-time {
+      color: var(--brand-dark);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .log-text { min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+
+    .log-text.is-empty { color: var(--muted); font-style: italic; }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .settings-field {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .settings-field label { display: block; font-size: 13px; font-weight: 800; }
+    .settings-field small { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+
+    .settings-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .settings-input-wrap input {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0 12px;
+      color: var(--text);
+      background: #fbfcfe;
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    .settings-input-wrap span { flex-shrink: 0; color: var(--muted); font-size: 13px; }
+
+    .form-error {
+      margin: 0 0 14px;
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .settings-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .settings-footer p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(25, 34, 51, .42);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal {
+      width: min(480px, 100%);
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, .65);
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 24px 80px rgba(25, 34, 51, .25);
+      animation: modal-in .2s ease both;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(9px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      margin-bottom: 16px;
+      border-radius: 13px;
+      color: var(--brand-dark);
+      background: var(--brand-soft);
+    }
+
+    .modal h2 { margin: 0; font-size: 22px; letter-spacing: -.05em; }
+    .modal p { margin: 8px 0 18px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+
+    .modal input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 0 13px;
+      color: var(--text);
+      background: #fbfcfe;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 17px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 30;
+      max-width: min(360px, calc(100% - 44px));
+      padding: 12px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--text);
+      background: #fff;
+      box-shadow: var(--shadow-small);
+      font-size: 13px;
+      font-weight: 700;
+      animation: toast-in .2s ease both;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .app-footer {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .icon { width: 16px; height: 16px; flex: 0 0 auto; }
+    .icon-lg { width: 19px; height: 19px; }
+
+    @media (max-width: 790px) {
+      .topbar { align-items: flex-start; flex-direction: column; gap: 16px; }
+      .main-nav { width: 100%; }
+      .nav-button { flex: 1; justify-content: center; }
+      .timer-layout { grid-template-columns: 1fr; }
+      .timer-card { min-height: 550px; }
+      .side-stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .side-stack .side-card:last-child { grid-column: 1 / -1; }
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 24px, 1080px); padding-top: 16px; }
+      .timer-card { padding: 25px 16px; }
+      .timer-orb { margin-top: 29px; }
+      .side-stack { display: flex; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+      .date-control { width: 100%; justify-content: space-between; }
+      .date-control input { flex: 1; }
+      .log-summary { grid-template-columns: 1fr; }
+      .settings-footer { align-items: flex-start; flex-direction: column; }
+      .settings-footer .button { width: 100%; }
+      .modal { padding: 23px 18px; }
+      .modal-actions { flex-direction: column-reverse; }
+      .modal-actions .button { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" id="brandButton" type="button" aria-label="타이머 화면으로 이동">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="13" r="7"></circle><path d="M12 9v4l2.5 1.5M9 3h6M12 3v3"></path>
+          </svg>
+        </span>
+        <span class="brand-copy"><strong>포커스 리듬</strong><span>오프라인 뽀모도로 기록장</span></span>
+      </button>
+      <nav class="main-nav" id="mainNav" aria-label="주 메뉴">
+        <button class="nav-button" type="button" data-view="timer" aria-current="page">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7"></circle><path d="M12 9v4l2.5 1.5M9 3h6M12 3v3"></path></svg>
+          타이머
+        </button>
+        <button class="nav-button" type="button" data-view="log">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18H6z"></path><path d="M9 7h6M9 11h6M9 15h4"></path></svg>
+          로그
+        </button>
+        <button class="nav-button" type="button" data-view="settings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"></path><path d="m4.9 4.9 1.4 1.4M17.7 17.7l1.4 1.4M4 12H2M22 12h-2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M12 4V2M12 22v-2"></path></svg>
+          설정
+        </button>
+      </nav>
+    </header>
+
+    <div class="storage-warning" id="storageWarning" role="status" hidden>
+      <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 17H3L12 3Z"></path><path d="M12 9v5M12 17h.01"></path></svg>
+      <div><strong>데이터가 저장되지 않고 있습니다</strong><span>새로고침 시 최근 변경사항이 유실될 수 있습니다. 저장을 자동으로 다시 시도합니다.</span></div>
+    </div>
+
+    <main>
+      <section class="view" id="timerView" aria-labelledby="timerViewTitle">
+        <div class="timer-layout">
+          <article class="card timer-card">
+            <div class="session-heading">
+              <span class="session-pill" id="sessionPill" data-type="Focus">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l2.5 1.5"></path></svg>
+                <span id="sessionName">집중</span>
+              </span>
+              <span class="status-label" id="statusLabel">대기 중</span>
+            </div>
+            <h1 id="timerViewTitle" hidden>뽀모도로 타이머</h1>
+
+            <div class="timer-orb" id="timerOrb" data-type="Focus" aria-live="off">
+              <div class="timer-orb-inner"><div class="timer-display" id="timerDisplay">25:00</div></div>
+            </div>
+            <p class="timer-caption" id="timerCaption">다음 집중을 준비하세요</p>
+            <p class="timer-hint" id="timerHint">시작 버튼을 누르면 집중 시간이 시작됩니다.</p>
+
+            <div class="timer-controls" id="timerControls">
+              <button class="button button-primary" id="primaryButton" type="button">
+                <svg class="icon" id="primaryIcon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+                <span id="primaryLabel">시작</span>
+              </button>
+              <button class="button button-secondary" id="resetButton" type="button">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v6h6"></path></svg>
+                리셋
+              </button>
+              <button class="button button-quiet" id="skipButton" type="button">
+                <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5v14l10-7L6 5zm11 0h2v14h-2V5z"></path></svg>
+                건너뛰기
+              </button>
+            </div>
+          </article>
+
+          <div class="side-stack">
+            <article class="card side-card">
+              <h2>이번 사이클</h2>
+              <p>집중 슬롯 4개를 채우면 긴 휴식으로 전환됩니다.</p>
+              <div class="cycle-track">
+                <div class="cycle-track-top"><span id="cycleSlotText">0 / 4 슬롯 소모</span><span id="cycleNextText">다음: 짧은 휴식</span></div>
+                <div class="cycle-bar" id="cycleBar" aria-label="집중 슬롯 진행도">
+                  <span class="cycle-segment"></span><span class="cycle-segment"></span><span class="cycle-segment"></span><span class="cycle-segment"></span>
+                </div>
+              </div>
+              <div class="session-list">
+                <div class="session-list-row"><span>집중</span><span id="focusDurationSummary">25분</span></div>
+                <div class="session-list-row"><span>짧은 휴식</span><span id="shortDurationSummary">5분</span></div>
+                <div class="session-list-row"><span>긴 휴식</span><span id="longDurationSummary">15분</span></div>
+              </div>
+            </article>
+
+            <article class="card side-card">
+              <div class="offline-note">
+                <svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19h.01"></path><path d="m3 3 18 18"></path></svg>
+                <span>모든 설정과 기록은 이 브라우저에만 저장됩니다. 인터넷 연결 없이도 사용할 수 있습니다.</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="logView" aria-labelledby="logTitle" hidden>
+        <article class="card section-card">
+          <div class="section-title">
+            <div><h1 id="logTitle">하루 기록</h1><p>완료한 집중 세션과 작업 메모를 오래된 순서로 확인합니다.</p></div>
+            <label class="date-control" for="logDate"><span aria-hidden="true">📅</span><input id="logDate" type="date"></label>
+          </div>
+          <div class="log-summary">
+            <div class="stat-card"><span>완료한 뽀모도로</span><strong id="logCount">0</strong></div>
+            <div class="stat-card"><span>기록 기준</span><strong id="logDateLabel" style="font-size:20px;letter-spacing:-.04em;">오늘</strong></div>
+          </div>
+          <div class="log-list" id="logList"></div>
+        </article>
+      </section>
+
+      <section class="view" id="settingsView" aria-labelledby="settingsTitle" hidden>
+        <article class="card section-card">
+          <div class="section-title">
+            <div><h1 id="settingsTitle">세션 설정</h1><p>1분에서 180분 사이의 정수로 각 세션 길이를 조정할 수 있습니다.</p></div>
+          </div>
+          <form id="settingsForm" novalidate>
+            <div class="settings-grid">
+              <div class="settings-field">
+                <label for="focusMinutes">집중 시간</label><small>작업에 몰입하는 시간</small>
+                <div class="settings-input-wrap"><input id="focusMinutes" type="text" inputmode="numeric" autocomplete="off"><span>분</span></div>
+              </div>
+              <div class="settings-field">
+                <label for="shortBreakMinutes">짧은 휴식</label><small>집중 사이의 짧은 휴식</small>
+                <div class="settings-input-wrap"><input id="shortBreakMinutes" type="text" inputmode="numeric" autocomplete="off"><span>분</span></div>
+              </div>
+              <div class="settings-field">
+                <label for="longBreakMinutes">긴 휴식</label><small>사이클을 마친 뒤의 휴식</small>
+                <div class="settings-input-wrap"><input id="longBreakMinutes" type="text" inputmode="numeric" autocomplete="off"><span>분</span></div>
+              </div>
+            </div>
+            <p class="form-error" id="settingsError" role="alert" hidden></p>
+            <div class="settings-footer">
+              <p>실행 중이거나 일시정지된 세션은 현재 길이를 유지하고,<br>해당 세션이 끝난 뒤 새 길이를 적용합니다.</p>
+              <button class="button button-primary" type="submit">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+                설정 저장
+              </button>
+            </div>
+          </form>
+        </article>
+      </section>
+    </main>
+
+    <footer class="app-footer">단일 파일 · 로컬 저장 · 오프라인 우선</footer>
+  </div>
+
+  <div class="modal-backdrop" id="memoOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="memoTitle" aria-describedby="memoDescription">
+      <div class="modal-icon" aria-hidden="true"><svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"></path><path d="M8 9h8M8 13h5"></path></svg></div>
+      <h2 id="memoTitle">집중 세션을 완료했어요</h2>
+      <p id="memoDescription">이번 세션에서 한 일을 한 줄로 남겨보세요. 비워두거나 건너뛰어도 완료 기록은 저장됩니다.</p>
+      <form id="memoForm">
+        <input id="memoInput" type="text" autocomplete="off" placeholder="예: 보고서 초안 정리">
+        <div class="modal-actions">
+          <button class="button button-quiet" id="memoSkipButton" type="button">메모 건너뛰기</button>
+          <button class="button button-primary" type="submit">메모 저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="clockOverlay" hidden>
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="clockTitle" aria-describedby="clockDescription">
+      <div class="modal-icon" aria-hidden="true"><svg class="icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="8"></circle><path d="M4 4 2 6M20 4l2 2"></path></svg></div>
+      <h2 id="clockTitle">시스템 시간 변경 감지</h2>
+      <p id="clockDescription">시스템 시간 변경이 감지되어 타이머가 일시정지되었습니다. 확인 후 재개하면 현재 시각을 기준으로 다시 시작합니다.</p>
+      <div class="modal-actions"><button class="button button-primary" id="clockResumeButton" type="button">확인 후 재개</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEYS = Object.freeze({
+        settings: 'focus-rhythm.settings.v4',
+        logs: 'focus-rhythm.logs.v4',
+        timer: 'focus-rhythm.timer.v4'
+      });
+      const DEFAULT_SETTINGS = Object.freeze({ focus: 25, shortBreak: 5, longBreak: 15 });
+      const SESSION_TYPES = Object.freeze(['Focus', 'ShortBreak', 'LongBreak']);
+      const SESSION_LABELS = Object.freeze({ Focus: '집중', ShortBreak: '짧은 휴식', LongBreak: '긴 휴식' });
+      const SESSION_COLORS = Object.freeze({ Focus: '#4866e9', ShortBreak: '#1aa879', LongBreak: '#d78336' });
+      const MAX_FOCUS_SLOTS = 4;
+      const CLOCK_DRIFT_THRESHOLD_MS = 5000;
+      const MIN_REMAINING_MS = 1000;
+      const BASE_TITLE = document.title;
+
+      const el = {
+        brandButton: document.querySelector('#brandButton'),
+        mainNav: document.querySelector('#mainNav'),
+        navButtons: [...document.querySelectorAll('[data-view]')],
+        storageWarning: document.querySelector('#storageWarning'),
+        timerView: document.querySelector('#timerView'),
+        logView: document.querySelector('#logView'),
+        settingsView: document.querySelector('#settingsView'),
+        sessionPill: document.querySelector('#sessionPill'),
+        sessionName: document.querySelector('#sessionName'),
+        statusLabel: document.querySelector('#statusLabel'),
+        timerOrb: document.querySelector('#timerOrb'),
+        timerDisplay: document.querySelector('#timerDisplay'),
+        timerCaption: document.querySelector('#timerCaption'),
+        timerHint: document.querySelector('#timerHint'),
+        timerControls: document.querySelector('#timerControls'),
+        primaryButton: document.querySelector('#primaryButton'),
+        primaryIcon: document.querySelector('#primaryIcon'),
+        primaryLabel: document.querySelector('#primaryLabel'),
+        resetButton: document.querySelector('#resetButton'),
+        skipButton: document.querySelector('#skipButton'),
+        cycleSlotText: document.querySelector('#cycleSlotText'),
+        cycleNextText: document.querySelector('#cycleNextText'),
+        cycleBar: document.querySelector('#cycleBar'),
+        focusDurationSummary: document.querySelector('#focusDurationSummary'),
+        shortDurationSummary: document.querySelector('#shortDurationSummary'),
+        longDurationSummary: document.querySelector('#longDurationSummary'),
+        logDate: document.querySelector('#logDate'),
+        logCount: document.querySelector('#logCount'),
+        logDateLabel: document.querySelector('#logDateLabel'),
+        logList: document.querySelector('#logList'),
+        settingsForm: document.querySelector('#settingsForm'),
+        focusMinutes: document.querySelector('#focusMinutes'),
+        shortBreakMinutes: document.querySelector('#shortBreakMinutes'),
+        longBreakMinutes: document.querySelector('#longBreakMinutes'),
+        settingsError: document.querySelector('#settingsError'),
+        memoOverlay: document.querySelector('#memoOverlay'),
+        memoForm: document.querySelector('#memoForm'),
+        memoInput: document.querySelector('#memoInput'),
+        memoSkipButton: document.querySelector('#memoSkipButton'),
+        clockOverlay: document.querySelector('#clockOverlay'),
+        clockResumeButton: document.querySelector('#clockResumeButton'),
+        toast: document.querySelector('#toast')
+      };
+
+      let storage = null;
+      let storageStatus = 'synced';
+      let settings = { ...DEFAULT_SETTINGS };
+      let logs = {};
+      let state = null;
+      let currentView = 'timer';
+      let timerInterval = null;
+      let audioContext = null;
+      let titleAttention = false;
+      let memoWasVisible = false;
+      let toastTimer = null;
+
+      function isPlainObject(value) {
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+      }
+
+      function clampInteger(value, min, max, fallback) {
+        const number = Number(value);
+        if (!Number.isInteger(number)) return fallback;
+        return Math.min(max, Math.max(min, number));
+      }
+
+      function durationMs(type) {
+        const minutes = type === 'Focus' ? settings.focus : type === 'ShortBreak' ? settings.shortBreak : settings.longBreak;
+        return minutes * 60 * 1000;
+      }
+
+      function localDateKey(dateLike) {
+        const date = dateLike instanceof Date ? dateLike : new Date(dateLike);
+        if (Number.isNaN(date.getTime())) return localDateKey(new Date());
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function localDateLabel(dateKey) {
+        const parts = String(dateKey || '').split('-').map(Number);
+        if (parts.length !== 3 || parts.some(Number.isNaN)) return '선택한 날짜';
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        const today = localDateKey(new Date());
+        if (dateKey === today) return '오늘';
+        return new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }).format(date);
+      }
+
+      function timeLabel(timestamp) {
+        const date = new Date(timestamp);
+        return new Intl.DateTimeFormat('ko-KR', { hour: '2-digit', minute: '2-digit' }).format(date);
+      }
+
+      function formatRemaining(milliseconds) {
+        const safeMs = Math.max(0, Number(milliseconds) || 0);
+        const totalSeconds = Math.max(0, Math.ceil(safeMs / 1000));
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }
+
+      function makeId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+        return `entry-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function readJson(key) {
+        if (!storage) return null;
+        try {
+          const raw = storage.getItem(key);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          storageStatus = 'write-failed';
+          return null;
+        }
+      }
+
+      function normalizeSettings(raw) {
+        const source = isPlainObject(raw) ? raw : {};
+        return {
+          focus: clampInteger(source.focus, 1, 180, DEFAULT_SETTINGS.focus),
+          shortBreak: clampInteger(source.shortBreak, 1, 180, DEFAULT_SETTINGS.shortBreak),
+          longBreak: clampInteger(source.longBreak, 1, 180, DEFAULT_SETTINGS.longBreak)
+        };
+      }
+
+      function normalizeLogs(raw) {
+        if (!isPlainObject(raw)) return {};
+        const normalized = {};
+        Object.entries(raw).forEach(([dateKey, day]) => {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isPlainObject(day)) return;
+          const entries = Array.isArray(day.entries) ? day.entries.map((entry) => {
+            if (!isPlainObject(entry)) return null;
+            const completedAt = Number(entry.completedAt);
+            if (!Number.isFinite(completedAt)) return null;
+            return {
+              id: typeof entry.id === 'string' ? entry.id : makeId(),
+              completedAt,
+              text: typeof entry.text === 'string' ? entry.text : ''
+            };
+          }).filter(Boolean) : [];
+          normalized[dateKey] = { count: entries.length, entries };
+        });
+        return normalized;
+      }
+
+      function normalizePending(raw) {
+        if (!isPlainObject(raw)) return null;
+        const completedAt = Number(raw.completedAt);
+        if (!Number.isFinite(completedAt) || !SESSION_TYPES.includes(raw.nextSessionType)) return null;
+        return {
+          id: typeof raw.id === 'string' ? raw.id : makeId(),
+          completedAt,
+          logDate: typeof raw.logDate === 'string' ? raw.logDate : localDateKey(completedAt),
+          nextSessionType: raw.nextSessionType,
+          autoStart: raw.autoStart === true
+        };
+      }
+
+      function defaultTimerState() {
+        return {
+          version: 4,
+          sessionType: 'Focus',
+          status: 'Idle',
+          endTimestamp: null,
+          remainingMs: durationMs('Focus'),
+          focusSlotsUsed: 0,
+          dateAnchor: null,
+          perfAnchor: null,
+          lastValidRemainingMs: durationMs('Focus'),
+          pendingMemo: null,
+          clockChangePending: false
+        };
+      }
+
+      function normalizeTimer(raw) {
+        const fallback = defaultTimerState();
+        if (!isPlainObject(raw)) return fallback;
+        const sessionType = SESSION_TYPES.includes(raw.sessionType) ? raw.sessionType : fallback.sessionType;
+        const status = ['Idle', 'Running', 'Paused'].includes(raw.status) ? raw.status : 'Idle';
+        const rawRemaining = Number(raw.remainingMs);
+        const fallbackDuration = durationMs(sessionType);
+        let remainingMs = Number.isFinite(rawRemaining) ? rawRemaining : fallbackDuration;
+        if (status === 'Paused') remainingMs = Math.max(MIN_REMAINING_MS, remainingMs);
+        if (status === 'Idle') remainingMs = fallbackDuration;
+        const endTimestamp = Number(raw.endTimestamp);
+        const pendingMemo = normalizePending(raw.pendingMemo);
+        return {
+          version: 4,
+          sessionType,
+          status: pendingMemo ? 'Idle' : status,
+          endTimestamp: status === 'Running' && Number.isFinite(endTimestamp) ? endTimestamp : null,
+          remainingMs,
+          focusSlotsUsed: clampInteger(raw.focusSlotsUsed, 0, MAX_FOCUS_SLOTS, 0),
+          dateAnchor: Number.isFinite(Number(raw.dateAnchor)) ? Number(raw.dateAnchor) : null,
+          perfAnchor: Number.isFinite(Number(raw.perfAnchor)) ? Number(raw.perfAnchor) : null,
+          lastValidRemainingMs: Number.isFinite(Number(raw.lastValidRemainingMs)) ? Math.max(MIN_REMAINING_MS, Number(raw.lastValidRemainingMs)) : Math.max(MIN_REMAINING_MS, remainingMs),
+          pendingMemo,
+          clockChangePending: raw.clockChangePending === true
+        };
+      }
+
+      function saveAll() {
+        if (!storage) {
+          storageStatus = 'write-failed';
+          renderStorageWarning();
+          return false;
+        }
+        const payloads = [
+          [STORAGE_KEYS.settings, settings],
+          [STORAGE_KEYS.logs, logs],
+          [STORAGE_KEYS.timer, state]
+        ];
+        let failed = false;
+        payloads.forEach(([key, value]) => {
+          try {
+            storage.setItem(key, JSON.stringify(value));
+          } catch (error) {
+            failed = true;
+          }
+        });
+        storageStatus = failed ? 'write-failed' : 'synced';
+        renderStorageWarning();
+        return !failed;
+      }
+
+      function renderStorageWarning() {
+        el.storageWarning.hidden = storageStatus !== 'write-failed';
+      }
+
+      function setTimeAnchors(now = Date.now()) {
+        state.dateAnchor = now;
+        state.perfAnchor = typeof performance !== 'undefined' ? performance.now() : 0;
+      }
+
+      function setIdleSession(type) {
+        state.sessionType = type;
+        state.status = 'Idle';
+        state.endTimestamp = null;
+        state.remainingMs = durationMs(type);
+        state.lastValidRemainingMs = state.remainingMs;
+        state.dateAnchor = null;
+        state.perfAnchor = null;
+      }
+
+      function setAttentionTitle(message) {
+        document.title = `⏰ ${message}`;
+        titleAttention = true;
+      }
+
+      function resetAttentionTitle() {
+        if (!titleAttention) return;
+        document.title = BASE_TITLE;
+        titleAttention = false;
+      }
+
+      function showToast(message) {
+        el.toast.textContent = message;
+        el.toast.hidden = false;
+        window.clearTimeout(toastTimer);
+        toastTimer = window.setTimeout(() => { el.toast.hidden = true; }, 2800);
+      }
+
+      function ensureAudioContext() {
+        const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextConstructor) return Promise.reject(new Error('Web Audio API is not supported'));
+        try {
+          if (!audioContext) audioContext = new AudioContextConstructor();
+          return Promise.resolve(audioContext.resume());
+        } catch (error) {
+          return Promise.reject(error);
+        }
+      }
+
+      function activateAudio() {
+        ensureAudioContext().catch(() => {});
+      }
+
+      function playCompletionSound() {
+        return ensureAudioContext().then(() => {
+          const context = audioContext;
+          const now = context.currentTime;
+          const gain = context.createGain();
+          const oscillator = context.createOscillator();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(660, now);
+          oscillator.frequency.setValueAtTime(880, now + .12);
+          gain.gain.setValueAtTime(.0001, now);
+          gain.gain.exponentialRampToValueAtTime(.18, now + .02);
+          gain.gain.exponentialRampToValueAtTime(.0001, now + .48);
+          oscillator.connect(gain);
+          gain.connect(context.destination);
+          oscillator.start(now);
+          oscillator.stop(now + .5);
+        });
+      }
+
+      function requestNotificationPermission() {
+        if (!('Notification' in window)) return;
+        try {
+          if (Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+        } catch (error) { /* Permission APIs may be blocked in file:// contexts. */ }
+      }
+
+      function notifySessionEnd(type) {
+        const label = SESSION_LABELS[type];
+        const message = `${label} 세션이 끝났습니다`;
+        let browserNotificationShown = false;
+        if ('Notification' in window) {
+          try {
+            if (Notification.permission === 'granted') {
+              new Notification('포커스 리듬', { body: message, tag: 'focus-rhythm-session-end' });
+              browserNotificationShown = true;
+            }
+          } catch (error) { browserNotificationShown = false; }
+        }
+        if (!browserNotificationShown) setAttentionTitle(message);
+        playCompletionSound().catch(() => setAttentionTitle(message));
+      }
+
+      function getNextTypeAfterFocus(slotCount) {
+        return slotCount >= MAX_FOCUS_SLOTS ? 'LongBreak' : 'ShortBreak';
+      }
+
+      function ensureLogDay(dateKey) {
+        if (!logs[dateKey] || !Array.isArray(logs[dateKey].entries)) logs[dateKey] = { count: 0, entries: [] };
+        return logs[dateKey];
+      }
+
+      function addCompletedLog(completedAt) {
+        const logDate = localDateKey(completedAt);
+        const day = ensureLogDay(logDate);
+        const entry = { id: makeId(), completedAt, text: '' };
+        day.entries.push(entry);
+        day.entries.sort((a, b) => a.completedAt - b.completedAt);
+        day.count = day.entries.length;
+        return { logDate, id: entry.id };
+      }
+
+      function completeFocusSession(completedAt, autoStart) {
+        const nextSlot = Math.min(MAX_FOCUS_SLOTS, state.focusSlotsUsed + 1);
+        const logRef = addCompletedLog(completedAt);
+        state.focusSlotsUsed = nextSlot;
+        state.status = 'Idle';
+        state.endTimestamp = null;
+        state.remainingMs = durationMs('Focus');
+        state.lastValidRemainingMs = state.remainingMs;
+        state.dateAnchor = null;
+        state.perfAnchor = null;
+        state.pendingMemo = {
+          id: logRef.id,
+          completedAt,
+          logDate: logRef.logDate,
+          nextSessionType: getNextTypeAfterFocus(nextSlot),
+          autoStart: autoStart === true
+        };
+        notifySessionEnd('Focus');
+        stopTimerLoop();
+        saveAll();
+        render();
+      }
+
+      function completeBreakSession(type, autoStart) {
+        notifySessionEnd(type);
+        const nextType = 'Focus';
+        if (type === 'LongBreak') state.focusSlotsUsed = 0;
+        setIdleSession(nextType);
+        if (autoStart) startSession(false);
+        else {
+          stopTimerLoop();
+          saveAll();
+          render();
+        }
+      }
+
+      function handleRunningExpiry(autoStart) {
+        if (state.status !== 'Running') return;
+        const completedAt = Number(state.endTimestamp);
+        const completedType = state.sessionType;
+        if (!Number.isFinite(completedAt)) {
+          setIdleSession(completedType);
+          stopTimerLoop();
+          saveAll();
+          render();
+          return;
+        }
+        if (completedType === 'Focus') completeFocusSession(completedAt, autoStart);
+        else completeBreakSession(completedType, autoStart);
+      }
+
+      function detectClockChange() {
+        if (state.status !== 'Running' || !Number.isFinite(state.dateAnchor) || !Number.isFinite(state.perfAnchor)) return false;
+        const dateDelta = Date.now() - state.dateAnchor;
+        const perfDelta = (typeof performance !== 'undefined' ? performance.now() : dateDelta) - state.perfAnchor;
+        return Math.abs(dateDelta - perfDelta) >= CLOCK_DRIFT_THRESHOLD_MS;
+      }
+
+      function pauseForClockChange() {
+        const fallback = Math.max(MIN_REMAINING_MS, Number(state.lastValidRemainingMs) || Number(state.remainingMs) || MIN_REMAINING_MS);
+        state.status = 'Paused';
+        state.endTimestamp = null;
+        state.remainingMs = fallback;
+        state.lastValidRemainingMs = fallback;
+        state.dateAnchor = null;
+        state.perfAnchor = null;
+        state.clockChangePending = true;
+        stopTimerLoop();
+        saveAll();
+        render();
+      }
+
+      function refreshRunningTimer() {
+        if (state.status !== 'Running') return;
+        if (detectClockChange()) {
+          pauseForClockChange();
+          return;
+        }
+        const remaining = Number(state.endTimestamp) - Date.now();
+        if (remaining <= 0) {
+          state.remainingMs = 0;
+          handleRunningExpiry(true);
+          return;
+        }
+        state.remainingMs = remaining;
+        state.lastValidRemainingMs = remaining;
+      }
+
+      function startTimerLoop() {
+        if (timerInterval !== null) return;
+        timerInterval = window.setInterval(() => {
+          refreshRunningTimer();
+          renderTimer();
+        }, 250);
+      }
+
+      function stopTimerLoop() {
+        if (timerInterval === null) return;
+        window.clearInterval(timerInterval);
+        timerInterval = null;
+      }
+
+      function startSession(requestPermission = true) {
+        if (state.pendingMemo || state.status === 'Running') return;
+        const remaining = state.status === 'Paused' ? Math.max(MIN_REMAINING_MS, state.remainingMs) : durationMs(state.sessionType);
+        const now = Date.now();
+        state.status = 'Running';
+        state.remainingMs = remaining;
+        state.endTimestamp = now + remaining;
+        state.lastValidRemainingMs = remaining;
+        state.clockChangePending = false;
+        setTimeAnchors(now);
+        if (requestPermission) requestNotificationPermission();
+        activateAudio();
+        saveAll();
+        startTimerLoop();
+        render();
+      }
+
+      function pauseSession() {
+        if (state.status !== 'Running') return;
+        refreshRunningTimer();
+        if (state.status !== 'Running') return;
+        const remaining = Math.max(MIN_REMAINING_MS, Number(state.endTimestamp) - Date.now());
+        state.status = 'Paused';
+        state.endTimestamp = null;
+        state.remainingMs = remaining;
+        state.lastValidRemainingMs = remaining;
+        state.dateAnchor = null;
+        state.perfAnchor = null;
+        stopTimerLoop();
+        saveAll();
+        render();
+      }
+
+      function resetSession() {
+        if (state.pendingMemo) return;
+        setIdleSession(state.sessionType);
+        state.clockChangePending = false;
+        stopTimerLoop();
+        resetAttentionTitle();
+        saveAll();
+        render();
+      }
+
+      function skipSession() {
+        if (state.pendingMemo || !['Idle', 'Running', 'Paused'].includes(state.status)) return;
+        const skippedType = state.sessionType;
+        if (skippedType === 'Focus') state.focusSlotsUsed = Math.min(MAX_FOCUS_SLOTS, state.focusSlotsUsed + 1);
+        if (skippedType === 'LongBreak') state.focusSlotsUsed = 0;
+        const nextType = skippedType === 'Focus' ? getNextTypeAfterFocus(state.focusSlotsUsed) : 'Focus';
+        setIdleSession(nextType);
+        resetAttentionTitle();
+        startSession(false);
+      }
+
+      function resolveMemo(text) {
+        const pending = state.pendingMemo;
+        if (!pending) return;
+        const value = typeof text === 'string' ? text.trim() : '';
+        const day = ensureLogDay(pending.logDate);
+        const entry = day.entries.find((candidate) => candidate.id === pending.id);
+        if (entry) entry.text = value;
+        else day.entries.push({ id: pending.id, completedAt: pending.completedAt, text: value });
+        day.entries.sort((a, b) => a.completedAt - b.completedAt);
+        day.count = day.entries.length;
+        const shouldAutoStart = pending.autoStart;
+        state.pendingMemo = null;
+        setIdleSession(pending.nextSessionType);
+        memoWasVisible = false;
+        resetAttentionTitle();
+        if (shouldAutoStart) startSession(false);
+        else {
+          stopTimerLoop();
+          saveAll();
+          render();
+        }
+      }
+
+      function restoreTimerState() {
+        if (state.pendingMemo) {
+          state.status = 'Idle';
+          state.endTimestamp = null;
+          return;
+        }
+        if (state.status === 'Running') {
+          const now = Date.now();
+          if (Number.isFinite(state.endTimestamp) && state.endTimestamp > now) {
+            state.remainingMs = state.endTimestamp - now;
+            state.lastValidRemainingMs = state.remainingMs;
+            setTimeAnchors(now);
+            startTimerLoop();
+          } else {
+            handleRunningExpiry(false);
+          }
+        } else if (state.status === 'Paused') {
+          state.remainingMs = Math.max(MIN_REMAINING_MS, state.remainingMs);
+          state.endTimestamp = null;
+          state.dateAnchor = null;
+          state.perfAnchor = null;
+          stopTimerLoop();
+        } else {
+          setIdleSession(state.sessionType);
+          stopTimerLoop();
+        }
+      }
+
+      function renderTimer() {
+        const type = state.sessionType;
+        const displayRemaining = state.status === 'Running' ? Math.max(0, Number(state.endTimestamp) - Date.now()) : state.remainingMs;
+        const slots = state.focusSlotsUsed;
+        const nextType = type === 'Focus' ? getNextTypeAfterFocus(Math.min(MAX_FOCUS_SLOTS, slots + 1)) : type === 'LongBreak' ? 'Focus' : 'Focus';
+        el.sessionPill.dataset.type = type;
+        el.timerOrb.dataset.type = type;
+        el.sessionName.textContent = SESSION_LABELS[type];
+        el.timerDisplay.textContent = formatRemaining(displayRemaining);
+        el.statusLabel.textContent = state.status === 'Running' ? '진행 중' : state.status === 'Paused' ? '일시정지됨' : '대기 중';
+        el.timerCaption.textContent = state.pendingMemo ? '완료 기록을 남기는 중' : state.status === 'Running' ? `${SESSION_LABELS[type]} 세션에 집중하고 있습니다` : state.status === 'Paused' ? '원할 때 다시 시작할 수 있습니다' : '다음 세션을 준비하세요';
+        el.timerHint.textContent = state.pendingMemo ? '메모를 저장하거나 건너뛰면 다음 세션으로 이동합니다.' : state.status === 'Running' ? '시간은 실제 시각을 기준으로 계산됩니다.' : state.status === 'Paused' ? '일시정지 중에는 남은 시간이 줄어들지 않습니다.' : '시작 버튼을 누르면 카운트다운이 시작됩니다.';
+        el.cycleSlotText.textContent = `${slots} / ${MAX_FOCUS_SLOTS} 슬롯 소모`;
+        el.cycleNextText.textContent = `다음: ${SESSION_LABELS[nextType]}`;
+        [...el.cycleBar.children].forEach((segment, index) => { segment.dataset.filled = String(index < slots); });
+        el.timerControls.hidden = Boolean(state.pendingMemo);
+        el.primaryLabel.textContent = state.status === 'Running' ? '일시정지' : state.status === 'Paused' ? '재개' : '시작';
+        el.primaryIcon.innerHTML = state.status === 'Running' ? '<rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect>' : '<path d="M8 5v14l11-7z"></path>';
+        el.primaryIcon.setAttribute('fill', state.status === 'Running' ? 'none' : 'currentColor');
+        el.primaryIcon.setAttribute('stroke', state.status === 'Running' ? 'currentColor' : 'none');
+        el.primaryButton.setAttribute('aria-label', state.status === 'Running' ? '타이머 일시정지' : state.status === 'Paused' ? '타이머 재개' : '타이머 시작');
+        el.focusDurationSummary.textContent = `${settings.focus}분`;
+        el.shortDurationSummary.textContent = `${settings.shortBreak}분`;
+        el.longDurationSummary.textContent = `${settings.longBreak}분`;
+        const progress = Math.max(0, Math.min(100, slots / MAX_FOCUS_SLOTS * 100));
+        el.timerOrb.style.background = `conic-gradient(${SESSION_COLORS[type]} 0 ${progress}%, ${type === 'Focus' ? '#eef1f6' : type === 'ShortBreak' ? '#eaf3f0' : '#f8eee3'} ${progress}% 100%)`;
+      }
+
+      function renderLog() {
+        const dateKey = el.logDate.value || localDateKey(new Date());
+        const day = logs[dateKey] || { count: 0, entries: [] };
+        const entries = [...day.entries].sort((a, b) => a.completedAt - b.completedAt);
+        el.logCount.textContent = String(day.count || entries.length);
+        el.logDateLabel.textContent = localDateLabel(dateKey);
+        el.logList.innerHTML = '';
+        if (!entries.length) {
+          const empty = document.createElement('div');
+          empty.className = 'log-empty';
+          empty.textContent = '이 날짜에는 완료한 집중 세션이 없습니다.';
+          el.logList.appendChild(empty);
+          return;
+        }
+        entries.forEach((entry) => {
+          const row = document.createElement('div');
+          row.className = 'log-entry';
+          const time = document.createElement('time');
+          time.className = 'log-time';
+          time.dateTime = new Date(entry.completedAt).toISOString();
+          time.textContent = timeLabel(entry.completedAt);
+          const text = document.createElement('div');
+          text.className = `log-text${entry.text ? '' : ' is-empty'}`;
+          text.textContent = entry.text || '메모 없음';
+          row.append(time, text);
+          el.logList.appendChild(row);
+        });
+      }
+
+      function renderSettingsForm() {
+        el.focusMinutes.value = String(settings.focus);
+        el.shortBreakMinutes.value = String(settings.shortBreak);
+        el.longBreakMinutes.value = String(settings.longBreak);
+        el.settingsError.hidden = true;
+      }
+
+      function renderMemoOverlay() {
+        const visible = Boolean(state.pendingMemo);
+        el.memoOverlay.hidden = !visible;
+        el.mainNav.hidden = visible;
+        el.brandButton.hidden = visible;
+        if (visible && !memoWasVisible) {
+          el.memoInput.value = '';
+          memoWasVisible = true;
+          window.setTimeout(() => el.memoInput.focus(), 0);
+        }
+        if (!visible) memoWasVisible = false;
+      }
+
+      function renderClockOverlay() {
+        el.clockOverlay.hidden = !state.clockChangePending;
+      }
+
+      function render() {
+        renderStorageWarning();
+        renderTimer();
+        renderLog();
+        renderMemoOverlay();
+        renderClockOverlay();
+        el.timerView.hidden = currentView !== 'timer';
+        el.logView.hidden = currentView !== 'log';
+        el.settingsView.hidden = currentView !== 'settings';
+        el.navButtons.forEach((button) => {
+          button.setAttribute('aria-current', button.dataset.view === currentView ? 'page' : 'false');
+        });
+      }
+
+      function setView(view) {
+        if (state.pendingMemo || state.clockChangePending) return;
+        if (!['timer', 'log', 'settings'].includes(view)) return;
+        currentView = view;
+        if (view === 'settings') renderSettingsForm();
+        render();
+      }
+
+      function parseSettingInput(input) {
+        const value = input.value.trim();
+        if (!/^\d+$/.test(value)) return null;
+        const number = Number(value);
+        return Number.isInteger(number) && number >= 1 && number <= 180 ? number : null;
+      }
+
+      function saveSettings(event) {
+        event.preventDefault();
+        const nextSettings = {
+          focus: parseSettingInput(el.focusMinutes),
+          shortBreak: parseSettingInput(el.shortBreakMinutes),
+          longBreak: parseSettingInput(el.longBreakMinutes)
+        };
+        if (Object.values(nextSettings).some((value) => value === null)) {
+          el.settingsError.textContent = '각 항목은 1분 이상 180분 이하의 정수만 입력할 수 있습니다.';
+          el.settingsError.hidden = false;
+          return;
+        }
+        settings = nextSettings;
+        if (state.status === 'Idle' && !state.pendingMemo) setIdleSession(state.sessionType);
+        saveAll();
+        render();
+        showToast('세션 설정을 저장했습니다.');
+      }
+
+      function onPrimaryButton() {
+        resetAttentionTitle();
+        if (state.status === 'Running') pauseSession();
+        else startSession(true);
+      }
+
+      function onVisibilityChange() {
+        if (document.visibilityState !== 'visible') return;
+        if (state.status === 'Running') {
+          setTimeAnchors(Date.now());
+          refreshRunningTimer();
+        }
+        render();
+      }
+
+      function bindEvents() {
+        el.brandButton.addEventListener('click', () => setView('timer'));
+        el.navButtons.forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
+        el.primaryButton.addEventListener('click', onPrimaryButton);
+        el.resetButton.addEventListener('click', () => { resetAttentionTitle(); resetSession(); });
+        el.skipButton.addEventListener('click', skipSession);
+        el.logDate.addEventListener('change', renderLog);
+        el.settingsForm.addEventListener('submit', saveSettings);
+        el.memoForm.addEventListener('submit', (event) => { event.preventDefault(); resolveMemo(el.memoInput.value); });
+        el.memoSkipButton.addEventListener('click', () => resolveMemo(''));
+        el.clockResumeButton.addEventListener('click', () => {
+          state.clockChangePending = false;
+          startSession(false);
+        });
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        document.addEventListener('pointerdown', () => {
+          activateAudio();
+          requestNotificationPermission();
+          if (!state.pendingMemo && !state.clockChangePending) resetAttentionTitle();
+        }, { passive: true });
+        document.addEventListener('keydown', () => {
+          if (!state.pendingMemo && !state.clockChangePending) resetAttentionTitle();
+        }, { passive: true });
+      }
+
+      function init() {
+        try {
+          storage = window.localStorage;
+        } catch (error) {
+          storage = null;
+          storageStatus = 'write-failed';
+        }
+        settings = normalizeSettings(readJson(STORAGE_KEYS.settings));
+        logs = normalizeLogs(readJson(STORAGE_KEYS.logs));
+        state = normalizeTimer(readJson(STORAGE_KEYS.timer));
+        el.logDate.value = localDateKey(new Date());
+        bindEvents();
+        restoreTimerState();
+        saveAll();
+        renderSettingsForm();
+        render();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>

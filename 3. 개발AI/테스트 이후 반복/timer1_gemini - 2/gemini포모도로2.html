@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>뽀모도로 타이머</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --focus-color: #ef4444;
+      --focus-glow: rgba(239, 68, 68, 0.25);
+      --short-break-color: #10b981;
+      --short-break-glow: rgba(16, 185, 129, 0.25);
+      --long-break-color: #3b82f6;
+      --long-break-glow: rgba(59, 130, 246, 0.25);
+      
+      --accent-color: #ef4444;
+      --accent-glow: rgba(239, 68, 68, 0.25);
+      
+      --btn-primary-bg: #ef4444;
+      --btn-primary-hover: #dc2626;
+      --btn-secondary-bg: #334155;
+      --btn-secondary-hover: #475569;
+      
+      --warning-bg: #eab308;
+      --warning-text: #78350f;
+      --danger-bg: #ef4444;
+      --danger-text: #ffffff;
+      
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 1.5rem 1rem;
+      transition: background-color 0.4s ease;
+    }
+
+    /* Warning Banner (EC-05) */
+    .banner {
+      width: 100%;
+      max-width: 540px;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      animation: slideDown 0.3s ease;
+    }
+
+    .banner.visible {
+      display: flex;
+    }
+
+    .banner-warning {
+      background-color: #451a03;
+      border: 1px solid #b45309;
+      color: #fde68a;
+    }
+
+    .banner-danger {
+      background-color: #450a0a;
+      border: 1px solid #b91c1c;
+      color: #fecaca;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* App Container */
+    .app-container {
+      width: 100%;
+      max-width: 540px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Navigation */
+    .nav-tabs {
+      display: flex;
+      background-color: #0f172a;
+      padding: 0.25rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      gap: 0.25rem;
+    }
+
+    .nav-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-btn.active {
+      color: #ffffff;
+      background-color: var(--card-bg);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    /* Views */
+    .view-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .view-content.active {
+      display: flex;
+    }
+
+    /* TIMER VIEW */
+    .session-badge {
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .badge-focus {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: var(--focus-color);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-shortBreak {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--short-break-color);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-longBreak {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: var(--long-break-color);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    /* Timer Display with Circular Progress */
+    .timer-display-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .progress-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .progress-track {
+      stroke: rgba(255, 255, 255, 0.07);
+      stroke-width: 8;
+      fill: none;
+    }
+
+    .progress-bar {
+      stroke: var(--accent-color);
+      stroke-width: 8;
+      stroke-linecap: round;
+      fill: none;
+      transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+    }
+
+    .timer-time {
+      font-size: 3.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      z-index: 1;
+    }
+
+    /* Cycle Progress Indicator (4 Slots) */
+    .cycle-indicator {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .slot-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #334155;
+      border: 2px solid #475569;
+      transition: all 0.3s ease;
+    }
+
+    .slot-dot.completed {
+      background-color: var(--focus-color);
+      border-color: var(--focus-color);
+      box-shadow: 0 0 8px var(--focus-glow);
+    }
+
+    .slot-dot.current {
+      border-color: var(--text-main);
+      transform: scale(1.15);
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      min-height: 48px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      color: #ffffff;
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .btn-main {
+      background-color: var(--btn-primary-bg);
+      flex: 2;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .btn-main:hover {
+      background-color: var(--btn-primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-main:active {
+      transform: translateY(0);
+    }
+
+    .btn-sub {
+      background-color: var(--btn-secondary-bg);
+      flex: 1;
+      color: var(--text-muted);
+    }
+
+    .btn-sub:hover {
+      background-color: var(--btn-secondary-hover);
+      color: var(--text-main);
+    }
+
+    /* Overlay / Modals */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      border-radius: 16px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 420px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .modal-input {
+      width: 100%;
+      background-color: #0f172a;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      user-select: text;
+    }
+
+    .modal-input:focus {
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 2px var(--focus-glow);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    /* LOGS VIEW */
+    .logs-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .logs-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      background-color: #0f172a;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+    }
+
+    .date-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-input {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+      cursor: pointer;
+      user-select: text;
+    }
+
+    .daily-stats {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .count-badge {
+      background-color: var(--focus-color);
+      color: #ffffff;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+    }
+
+    .memo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .memo-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .memo-list::-webkit-scrollbar-thumb {
+      background-color: var(--card-border);
+      border-radius: 3px;
+    }
+
+    .memo-item {
+      background-color: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      user-select: text;
+    }
+
+    .memo-time {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .memo-text {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .memo-empty {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .no-data-msg {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    /* SETTINGS VIEW */
+    .settings-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .form-label span {
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .form-input {
+      background-color: #0f172a;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      user-select: text;
+    }
+
+    .form-input:focus {
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 2px var(--focus-glow);
+    }
+
+    .form-input.error {
+      border-color: var(--danger-bg);
+    }
+
+    .error-msg {
+      font-size: 0.75rem;
+      color: var(--focus-color);
+      display: none;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    .notification-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #0f172a;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+
+    .status-tag {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .status-granted {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .status-denied {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .status-default {
+      background-color: rgba(148, 163, 184, 0.2);
+      color: #94a3b8;
+    }
+
+    /* Save Feedback */
+    .save-toast {
+      background-color: #10b981;
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .save-toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Storage Error Banner (EC-05) -->
+  <div id="storageBanner" class="banner banner-warning">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+      <line x1="12" y1="9" x2="12" y2="13"></line>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+    <span>데이터가 저장되지 않고 있습니다 — 새로고침 시 최근 변경사항이 유실될 수 있습니다</span>
+  </div>
+
+  <div class="app-container">
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button id="tabTimer" class="nav-btn active" data-view="timer">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        타이머
+      </button>
+      <button id="tabLogs" class="nav-btn" data-view="logs">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        기록
+      </button>
+      <button id="tabSettings" class="nav-btn" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        설정
+      </button>
+    </nav>
+
+    <!-- 1. TIMER VIEW -->
+    <section id="viewTimer" class="view-content active">
+      <div id="sessionBadge" class="session-badge badge-focus">집중 세션</div>
+
+      <div class="timer-display-container">
+        <svg class="progress-svg" viewBox="0 0 260 260">
+          <circle class="progress-track" cx="130" cy="130" r="115"></circle>
+          <circle id="progressBar" class="progress-bar" cx="130" cy="130" r="115" stroke-dasharray="722.56" stroke-dashoffset="0"></circle>
+        </svg>
+        <div id="timeDisplay" class="timer-time">25:00</div>
+      </div>
+
+      <!-- Cycle slots (4 focus slots before Long Break) -->
+      <div class="cycle-indicator" title="4회 집중 후 긴 휴식">
+        <div id="slot1" class="slot-dot"></div>
+        <div id="slot2" class="slot-dot"></div>
+        <div id="slot3" class="slot-dot"></div>
+        <div id="slot4" class="slot-dot"></div>
+      </div>
+
+      <!-- Controls (BR-04: hidden when Memo-Input-Pending) -->
+      <div id="timerControls" class="controls">
+        <button id="btnStartPause" class="btn btn-main">
+          <svg id="iconPlay" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="iconPause" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+          <span id="labelStartPause">시작</span>
+        </button>
+        <button id="btnReset" class="btn btn-sub" title="타이머 초기화">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+          리셋
+        </button>
+        <button id="btnSkip" class="btn btn-sub" title="다음 세션으로 건너뛰기">
+          <svg viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          스킵
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. LOGS VIEW -->
+    <section id="viewLogs" class="view-content">
+      <div class="logs-container">
+        <div class="logs-header">
+          <div class="date-picker-wrapper">
+            <input type="date" id="logDatePicker" class="date-input">
+          </div>
+          <div class="daily-stats">
+            <span>완료 뽀모도로:</span>
+            <span id="logCompletedCount" class="count-badge">0</span>
+          </div>
+        </div>
+
+        <div id="memoList" class="memo-list">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SETTINGS VIEW -->
+    <section id="viewSettings" class="view-content">
+      <div class="settings-container">
+        <div class="notification-status">
+          <span>브라우저 알림 권한</span>
+          <span id="notifStatusTag" class="status-tag status-default">기본값</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inputFocusTime">집중 시간 (분) <span>기본 25분</span></label>
+          <input type="number" id="inputFocusTime" class="form-input" min="1" max="180" value="25">
+          <div id="errFocusTime" class="error-msg">1분에서 180분 사이의 정수를 입력하세요.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inputShortBreak">짧은 휴식 (분) <span>기본 5분</span></label>
+          <input type="number" id="inputShortBreak" class="form-input" min="1" max="180" value="5">
+          <div id="errShortBreak" class="error-msg">1분에서 180분 사이의 정수를 입력하세요.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="inputLongBreak">긴 휴식 (분) <span>기본 15분</span></label>
+          <input type="number" id="inputLongBreak" class="form-input" min="1" max="180" value="15">
+          <div id="errLongBreak" class="error-msg">1분에서 180분 사이의 정수를 입력하세요.</div>
+        </div>
+
+        <button id="btnSaveSettings" class="btn btn-main" style="width: 100%; margin-top: 0.5rem;">설정 저장</button>
+        <div id="saveToast" class="save-toast">설정이 저장되었습니다.</div>
+      </div>
+    </section>
+
+    <!-- MODAL: Memo Input (FR-05, BR-04) -->
+    <div id="memoModal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--focus-color)" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          집중 세션 완료!
+        </div>
+        <div class="modal-desc">이번 세션에서 수행한 작업 메모를 한 줄로 남겨보세요. (건너뛰거나 빈 값 제출 가능)</div>
+        <input type="text" id="memoInput" class="modal-input" placeholder="작업 내용을 입력하세요..." maxlength="200" autocomplete="off">
+        <div class="modal-actions">
+          <button id="btnSubmitMemo" class="btn btn-main" style="flex: 2;">제출하고 계속</button>
+          <button id="btnSkipMemo" class="btn btn-sub" style="flex: 1;">건너뛰기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: System Clock Changed Alert (EC-04) -->
+    <div id="clockAlertModal" class="modal-overlay">
+      <div class="modal-box">
+        <div class="modal-title" style="color: #f59e0b;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          시간 변경 감지
+        </div>
+        <div class="modal-desc">시스템 시간 변경이 감지되어 타이머가 일시정지되었습니다.<br>계속 진행하려면 아래 [재개] 버튼을 누르세요.</div>
+        <div class="modal-actions">
+          <button id="btnResumeFromClockAlert" class="btn btn-main" style="width: 100%;">재개</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 뽀모도로 타이머 겸 작업 기록 웹앱 Core Logic
+     * Compliant with PRD v4 (Final)
+     */
+
+    // --- Audio Service (Web Audio API Synthesizer) ---
+    class AudioService {
+      constructor() {
+        this.ctx = null;
+        this.unlocked = false;
+      }
+
+      init() {
+        if (!this.ctx && (typeof window !== 'undefined') && (window.AudioContext || window.webkitAudioContext)) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContextClass();
+        }
+      }
+
+      unlock() {
+        this.init();
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().then(() => {
+            this.unlocked = true;
+          }).catch(() => {});
+        } else if (this.ctx) {
+          this.unlocked = true;
+        }
+      }
+
+      playFocusComplete() {
+        return this._playChime([523.25, 659.25, 783.99, 1046.50], 0.15, 'sine'); // C5-E5-G5-C6 cheerful chord
+      }
+
+      playBreakComplete() {
+        return this._playChime([880, 659.25, 523.25], 0.2, 'triangle'); // A5-E5-C5 calm chime
+      }
+
+      _playChime(notes, noteDuration, type) {
+        return new Promise((resolve, reject) => {
+          try {
+            this.init();
+            if (!this.ctx) {
+              return reject(new Error('AudioContext not available'));
+            }
+            if (this.ctx.state === 'suspended') {
+              this.ctx.resume().catch(() => {});
+            }
+
+            const now = this.ctx.currentTime || 0;
+            notes.forEach((freq, index) => {
+              const osc = this.ctx.createOscillator();
+              const gain = this.ctx.createGain();
+
+              osc.type = type;
+              osc.frequency.setValueAtTime(freq, now + index * noteDuration);
+
+              gain.gain.setValueAtTime(0.001, now + index * noteDuration);
+              gain.gain.exponentialRampToValueAtTime(0.3, now + index * noteDuration + 0.02);
+              gain.gain.exponentialRampToValueAtTime(0.0001, now + index * noteDuration + noteDuration + 0.1);
+
+              osc.connect(gain);
+              gain.connect(this.ctx.destination);
+
+              osc.start(now + index * noteDuration);
+              osc.stop(now + index * noteDuration + noteDuration + 0.15);
+            });
+
+            setTimeout(() => resolve(), (notes.length * noteDuration + 0.2) * 1000);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }
+    }
+
+    // --- Notification & Tab Alert Service ---
+    class NotificationService {
+      constructor(audioService) {
+        this.audio = audioService;
+        this.titleInterval = null;
+        this.originalTitle = (typeof document !== 'undefined' && document.title) ? document.title : '뽀모도로 타이머';
+      }
+
+      get permission() {
+        if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+        return Notification.permission;
+      }
+
+      async requestPermission() {
+        if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+        try {
+          return await Notification.requestPermission();
+        } catch (e) {
+          return Notification.permission;
+        }
+      }
+
+      notifySessionEnd(sessionType) {
+        const isFocus = sessionType === 'focus';
+        const title = isFocus ? '집중 세션 종료!' : '휴식 세션 종료!';
+        const body = isFocus
+          ? '수고하셨습니다! 잠시 휴식을 취하세요.'
+          : '휴식 시간이 끝났습니다! 다시 집중해볼까요?';
+
+        // 1. 소리 알림 (항상 시도)
+        const soundPromise = isFocus
+          ? this.audio.playFocusComplete()
+          : this.audio.playBreakComplete();
+
+        let soundFailed = false;
+        soundPromise.catch(() => {
+          soundFailed = true;
+          this.flashTabTitle(title);
+        });
+
+        // 2. 브라우저 알림 (권한 허용 시 동시 발송)
+        let notifSent = false;
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification(title, {
+              body: body,
+              tag: 'pomodoro-session-end',
+              requireInteraction: false
+            });
+            notifSent = true;
+          } catch (e) {
+            notifSent = false;
+          }
+        }
+
+        // 3. Notification 불가/거부 시 탭 제목 대체 (소리가 실패했거나 알림이 안 된 경우 탭 제목 알림)
+        if (!notifSent || soundFailed) {
+          this.flashTabTitle(title);
+        }
+      }
+
+      flashTabTitle(message) {
+        if (typeof document === 'undefined') return;
+        this.stopFlashTabTitle();
+        let toggle = false;
+        this.titleInterval = setInterval(() => {
+          document.title = toggle ? `🔔 ${message}` : `⌛ ${this.originalTitle}`;
+          toggle = !toggle;
+        }, 1000);
+      }
+
+      stopFlashTabTitle() {
+        if (this.titleInterval) {
+          clearInterval(this.titleInterval);
+          this.titleInterval = null;
+          if (typeof document !== 'undefined') {
+            document.title = this.originalTitle;
+          }
+        }
+      }
+    }
+
+    // --- Storage Service (localStorage with write-fail detection EC-05) ---
+    class StorageService {
+      constructor(onStateChange) {
+        this.KEYS = {
+          SETTINGS: 'pomodoro_settings_v4',
+          LOGS: 'pomodoro_daily_logs_v4',
+          TIMER_STATE: 'pomodoro_timer_state_v4'
+        };
+        this.onStateChange = onStateChange; // callback(isWriteFailed)
+        this.isWriteFailed = false;
+      }
+
+      _setFailed(failed) {
+        if (this.isWriteFailed !== failed) {
+          this.isWriteFailed = failed;
+          if (this.onStateChange) {
+            this.onStateChange(this.isWriteFailed);
+          }
+        }
+      }
+
+      getSettings() {
+        try {
+          const data = localStorage.getItem(this.KEYS.SETTINGS);
+          return data ? JSON.parse(data) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      saveSettings(settings) {
+        try {
+          localStorage.setItem(this.KEYS.SETTINGS, JSON.stringify(settings));
+          this._setFailed(false);
+          return true;
+        } catch (e) {
+          this._setFailed(true);
+          return false;
+        }
+      }
+
+      getLogs() {
+        try {
+          const data = localStorage.getItem(this.KEYS.LOGS);
+          return data ? JSON.parse(data) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      saveLogs(logs) {
+        try {
+          localStorage.setItem(this.KEYS.LOGS, JSON.stringify(logs));
+          this._setFailed(false);
+          return true;
+        } catch (e) {
+          this._setFailed(true);
+          return false;
+        }
+      }
+
+      getTimerState() {
+        try {
+          const data = localStorage.getItem(this.KEYS.TIMER_STATE);
+          return data ? JSON.parse(data) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      saveTimerState(state) {
+        try {
+          localStorage.setItem(this.KEYS.TIMER_STATE, JSON.stringify(state));
+          this._setFailed(false);
+          return true;
+        } catch (e) {
+          this._setFailed(true);
+          return false;
+        }
+      }
+    }
+
+    // --- Core Pomodoro Engine ---
+    class PomodoroEngine {
+      constructor(storage, notifier, audio, onUIUpdate, onMemoRequired, onClockAlert) {
+        this.storage = storage;
+        this.notifier = notifier;
+        this.audio = audio;
+        this.onUIUpdate = onUIUpdate;
+        this.onMemoRequired = onMemoRequired;
+        this.onClockAlert = onClockAlert;
+
+        // Default settings
+        this.settings = {
+          focusMinutes: 25,
+          shortBreakMinutes: 5,
+          longBreakMinutes: 15
+        };
+
+        // State variables
+        this.sessionType = 'focus'; // 'focus' | 'shortBreak' | 'longBreak'
+        this.sessionStatus = 'idle'; // 'idle' | 'running' | 'paused' | 'memoPending'
+        this.slotsUsed = 0; // 0 to 4 focus slots consumed
+        this.endTimestamp = null; // Target end timestamp (ms)
+        this.remainingSeconds = 25 * 60; // Current remaining seconds
+        this.allocatedTotalSeconds = 25 * 60; // Total seconds allocated for currently running/active session
+
+        // Clock drift & check anchors (EC-04)
+        this.dateAnchor = Date.now();
+        this.perfAnchor = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
+
+        // Tick loop
+        this.ticker = null;
+        this.pendingMemoData = null; // data for completed focus session awaiting memo
+      }
+
+      init() {
+        // 1. Load settings
+        const loadedSettings = this.storage.getSettings();
+        if (loadedSettings) {
+          if (this.validateDuration(loadedSettings.focusMinutes)) this.settings.focusMinutes = parseInt(loadedSettings.focusMinutes, 10);
+          if (this.validateDuration(loadedSettings.shortBreakMinutes)) this.settings.shortBreakMinutes = parseInt(loadedSettings.shortBreakMinutes, 10);
+          if (this.validateDuration(loadedSettings.longBreakMinutes)) this.settings.longBreakMinutes = parseInt(loadedSettings.longBreakMinutes, 10);
+        }
+
+        // 2. Load and restore timer state (FR-08, EC-03)
+        const savedState = this.storage.getTimerState();
+        this._restoreState(savedState);
+
+        // 3. Setup event listeners for Page Visibility (EC-02)
+        if (typeof document !== 'undefined' && document.addEventListener) {
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+              this.handleVisibilityChange();
+            }
+          });
+        }
+
+        // 4. Setup periodic tick
+        this.startTicker();
+        this.notifyUpdate();
+      }
+
+      validateDuration(val) {
+        const num = Number(val);
+        return Number.isInteger(num) && num >= 1 && num <= 180;
+      }
+
+      getSessionDurationSeconds(type) {
+        if (type === 'focus') return this.settings.focusMinutes * 60;
+        if (type === 'shortBreak') return this.settings.shortBreakMinutes * 60;
+        if (type === 'longBreak') return this.settings.longBreakMinutes * 60;
+        return 25 * 60;
+      }
+
+      _restoreState(savedState) {
+        if (!savedState) {
+          this.sessionType = 'focus';
+          this.sessionStatus = 'idle';
+          this.slotsUsed = 0;
+          this.remainingSeconds = this.getSessionDurationSeconds('focus');
+          this.allocatedTotalSeconds = this.remainingSeconds;
+          return;
+        }
+
+        this.sessionType = savedState.sessionType || 'focus';
+        this.slotsUsed = typeof savedState.slotsUsed === 'number' ? savedState.slotsUsed : 0;
+        this.allocatedTotalSeconds = savedState.allocatedTotalSeconds || this.getSessionDurationSeconds(this.sessionType);
+
+        if (savedState.sessionStatus === 'paused') {
+          // Paused 세션 복원 (FR-08, EC-03)
+          this.sessionStatus = 'paused';
+          this.remainingSeconds = (typeof savedState.remainingSeconds === 'number' && savedState.remainingSeconds > 0)
+            ? savedState.remainingSeconds
+            : this.getSessionDurationSeconds(this.sessionType);
+          this.endTimestamp = null;
+        } else if (savedState.sessionStatus === 'running' && savedState.endTimestamp) {
+          const now = Date.now();
+          if (now < savedState.endTimestamp) {
+            // 아직 진행 중
+            this.sessionStatus = 'running';
+            this.endTimestamp = savedState.endTimestamp;
+            this.remainingSeconds = Math.max(1, Math.ceil((this.endTimestamp - now) / 1000));
+            this.resetAnchors();
+          } else {
+            // 이미 종료됨 (오프라인 경과: 다중 만료 포함 1회만 종료 처리, BR-02, EC-03)
+            this._handleExpiredSessionOnRestore(savedState.endTimestamp);
+          }
+        } else if (savedState.sessionStatus === 'memoPending') {
+          // Memo pending 상태 복원
+          this.sessionStatus = 'memoPending';
+          this.remainingSeconds = 0;
+          this.pendingMemoData = savedState.pendingMemoData || {
+            completedAt: Date.now(),
+            slotsUsed: this.slotsUsed
+          };
+          if (this.onMemoRequired) this.onMemoRequired();
+        } else {
+          // Idle 복원
+          this.sessionStatus = 'idle';
+          this.remainingSeconds = this.getSessionDurationSeconds(this.sessionType);
+          this.allocatedTotalSeconds = this.remainingSeconds;
+        }
+      }
+
+      _handleExpiredSessionOnRestore(endTimestamp) {
+        // 복원 시 만료된 세션 처리: 1회만 종료 처리 후 다음 세션은 Idle로 대기 (BR-02)
+        const expiredType = this.sessionType;
+        const slotsBefore = this.slotsUsed;
+
+        if (expiredType === 'focus') {
+          const newSlots = slotsBefore + 1;
+          this.slotsUsed = newSlots;
+          const nextType = (newSlots >= 4) ? 'longBreak' : 'shortBreak';
+          if (newSlots >= 4) {
+            this.slotsUsed = 0; // 사이클 리셋
+          }
+
+          // 로그 기록 (종료 시각 기준 날짜에 기록, FR-08, EC-03)
+          this.recordFocusCompletion(endTimestamp, '');
+
+          // 복원된 만료 세션은 사용자 직접 확인 대기 (Idle)
+          this.sessionType = nextType;
+          this.sessionStatus = 'idle';
+          this.remainingSeconds = this.getSessionDurationSeconds(nextType);
+          this.allocatedTotalSeconds = this.remainingSeconds;
+          this.endTimestamp = null;
+        } else {
+          // 휴식 세션 만료
+          this.sessionType = 'focus';
+          this.sessionStatus = 'idle';
+          this.remainingSeconds = this.getSessionDurationSeconds('focus');
+          this.allocatedTotalSeconds = this.remainingSeconds;
+          this.endTimestamp = null;
+        }
+
+        this.saveState();
+      }
+
+      resetAnchors() {
+        this.dateAnchor = Date.now();
+        this.perfAnchor = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
+      }
+
+      startTicker() {
+        if (this.ticker) clearInterval(this.ticker);
+        this.ticker = setInterval(() => this.tick(), 250);
+      }
+
+      tick() {
+        if (this.sessionStatus !== 'running') return;
+
+        const now = Date.now();
+        const perfNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : 0;
+
+        // 1. EC-04 시스템 시계 변경 감지 알고리즘
+        const dateDelta = now - this.dateAnchor;
+        const perfDelta = perfNow - this.perfAnchor;
+        const drift = Math.abs(dateDelta - perfDelta);
+
+        if (drift >= 5000) { // 5초 이상 오차 시계 변경 감지
+          this.handleClockAnomaly();
+          return;
+        }
+
+        // 2. 남은 시간 계산 (endTimestamp 기반)
+        const diffMs = this.endTimestamp - now;
+        if (diffMs <= 0) {
+          this.remainingSeconds = 0;
+          this.handleSessionComplete();
+        } else {
+          this.remainingSeconds = Math.ceil(diffMs / 1000);
+          this.notifyUpdate();
+        }
+      }
+
+      handleVisibilityChange() {
+        if (this.sessionStatus !== 'running') return;
+
+        // 탭 복귀 시 앵커 재설정 및 만료 여부 즉시 재계산 (EC-02, EC-04)
+        const now = Date.now();
+        if (now >= this.endTimestamp) {
+          this.remainingSeconds = 0;
+          this.handleSessionComplete();
+        } else {
+          this.remainingSeconds = Math.ceil((this.endTimestamp - now) / 1000);
+          this.resetAnchors();
+          this.notifyUpdate();
+        }
+      }
+
+      handleClockAnomaly() {
+        // EC-04: 일시정지 상태로 전환 및 확인 알림
+        this.sessionStatus = 'paused';
+        this.endTimestamp = null;
+        // 남은 시간은 직전 유효 계산값 유지
+        this.saveState();
+        this.notifyUpdate();
+        if (this.onClockAlert) {
+          this.onClockAlert();
+        }
+      }
+
+      resumeFromClockAlert() {
+        // EC-04: 시계 변경 알림 후 재개
+        if (this.sessionStatus === 'paused') {
+          this.start();
+        }
+      }
+
+      // --- Timer Controls (FR-01, FR-04) ---
+
+      start() {
+        this.audio.unlock();
+        this.notifier.stopFlashTabTitle();
+
+        if (this.sessionStatus === 'memoPending') return; // BR-04
+
+        const now = Date.now();
+        if (this.sessionStatus === 'idle') {
+          this.allocatedTotalSeconds = this.getSessionDurationSeconds(this.sessionType);
+          this.remainingSeconds = this.allocatedTotalSeconds;
+        }
+
+        this.endTimestamp = now + this.remainingSeconds * 1000;
+        this.sessionStatus = 'running';
+        this.resetAnchors();
+
+        this.saveState();
+        this.notifyUpdate();
+      }
+
+      pause() {
+        if (this.sessionStatus !== 'running') return;
+
+        const now = Date.now();
+        this.remainingSeconds = Math.max(1, Math.ceil((this.endTimestamp - now) / 1000));
+        this.sessionStatus = 'paused';
+        this.endTimestamp = null;
+
+        this.saveState();
+        this.notifyUpdate();
+      }
+
+      reset() {
+        if (this.sessionStatus === 'memoPending') return; // BR-04
+
+        this.sessionStatus = 'idle';
+        this.endTimestamp = null;
+        this.remainingSeconds = this.getSessionDurationSeconds(this.sessionType);
+        this.allocatedTotalSeconds = this.remainingSeconds;
+        // BR-03: slotsUsed는 리셋의 영향을 받지 않고 그대로 유지됨
+
+        this.saveState();
+        this.notifyUpdate();
+      }
+
+      skip() {
+        if (this.sessionStatus === 'memoPending') return; // BR-04
+
+        // FR-04: 현재 세션 미완료로 즉시 종료하고 다음 세션으로 자동 전환·시작
+        const currentType = this.sessionType;
+        let nextType = 'focus';
+
+        if (currentType === 'focus') {
+          // Focus 스킵: 완료 카운트 미증가, 슬롯은 소모
+          this.slotsUsed += 1;
+          if (this.slotsUsed >= 4) {
+            nextType = 'longBreak';
+            this.slotsUsed = 0; // 4회 도달 후 사이클 초기화
+          } else {
+            nextType = 'shortBreak';
+          }
+        } else if (currentType === 'shortBreak') {
+          nextType = 'focus';
+        } else if (currentType === 'longBreak') {
+          nextType = 'focus';
+          this.slotsUsed = 0;
+        }
+
+        this.sessionType = nextType;
+        this.allocatedTotalSeconds = this.getSessionDurationSeconds(nextType);
+        this.remainingSeconds = this.allocatedTotalSeconds;
+        this.endTimestamp = Date.now() + this.remainingSeconds * 1000;
+        this.sessionStatus = 'running';
+        this.resetAnchors();
+
+        this.saveState();
+        this.notifyUpdate();
+      }
+
+      // --- Session Completion Handlers (FR-02, FR-03, FR-05) ---
+
+      handleSessionComplete() {
+        const completedType = this.sessionType;
+        this.notifier.notifySessionEnd(completedType);
+
+        if (completedType === 'focus') {
+          // Focus 세션 만료: 완료 카운트 증가 + 슬롯 소모 + Memo 대기
+          const completedAt = Date.now();
+          this.slotsUsed += 1;
+          const slotsAfterFocus = this.slotsUsed;
+
+          this.sessionStatus = 'memoPending';
+          this.endTimestamp = null;
+          this.pendingMemoData = {
+            completedAt: completedAt,
+            slotsUsed: slotsAfterFocus
+          };
+
+          this.saveState();
+          this.notifyUpdate();
+
+          if (this.onMemoRequired) {
+            this.onMemoRequired();
+          }
+        } else {
+          // Break 세션 만료: 메모 없이 즉시 다음 Focus 세션 자동 시작 (FR-03)
+          if (completedType === 'longBreak') {
+            this.slotsUsed = 0;
+          }
+          this.sessionType = 'focus';
+          this.allocatedTotalSeconds = this.getSessionDurationSeconds('focus');
+          this.remainingSeconds = this.allocatedTotalSeconds;
+          this.endTimestamp = Date.now() + this.remainingSeconds * 1000;
+          this.sessionStatus = 'running';
+          this.resetAnchors();
+
+          this.saveState();
+          this.notifyUpdate();
+        }
+      }
+
+      submitMemoAndProceed(memoText) {
+        if (this.sessionStatus !== 'memoPending') return;
+
+        const data = this.pendingMemoData || { completedAt: Date.now(), slotsUsed: this.slotsUsed };
+        this.recordFocusCompletion(data.completedAt, (memoText || '').trim());
+
+        // 다음 세션 결정 (BR-01)
+        let nextType = 'shortBreak';
+        if (data.slotsUsed >= 4) {
+          nextType = 'longBreak';
+          this.slotsUsed = 0; // 사이클 초기화
+        } else {
+          nextType = 'shortBreak';
+        }
+
+        this.pendingMemoData = null;
+        this.sessionType = nextType;
+        this.allocatedTotalSeconds = this.getSessionDurationSeconds(nextType);
+        this.remainingSeconds = this.allocatedTotalSeconds;
+        this.endTimestamp = Date.now() + this.remainingSeconds * 1000;
+        this.sessionStatus = 'running';
+        this.resetAnchors();
+
+        this.saveState();
+        this.notifyUpdate();
+      }
+
+      skipMemoAndProceed() {
+        this.submitMemoAndProceed('');
+      }
+
+      // --- Daily Logs (FR-05, FR-06) ---
+
+      getLocalDateString(timestamp) {
+        const d = new Date(timestamp);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      recordFocusCompletion(timestamp, memoText) {
+        const dateKey = this.getLocalDateString(timestamp);
+        const allLogs = this.storage.getLogs();
+
+        if (!allLogs[dateKey]) {
+          allLogs[dateKey] = {
+            date: dateKey,
+            completedCount: 0,
+            memos: []
+          };
+        }
+
+        allLogs[dateKey].completedCount += 1;
+        allLogs[dateKey].memos.push({
+          timestamp: timestamp,
+          text: memoText
+        });
+
+        // 오래된 순 오름차순 보장
+        allLogs[dateKey].memos.sort((a, b) => a.timestamp - b.timestamp);
+
+        this.storage.saveLogs(allLogs);
+      }
+
+      // --- Settings Management (FR-07) ---
+
+      updateSettings(newSettings) {
+        // Validation
+        if (!this.validateDuration(newSettings.focusMinutes) ||
+            !this.validateDuration(newSettings.shortBreakMinutes) ||
+            !this.validateDuration(newSettings.longBreakMinutes)) {
+          return false;
+        }
+
+        this.settings.focusMinutes = parseInt(newSettings.focusMinutes, 10);
+        this.settings.shortBreakMinutes = parseInt(newSettings.shortBreakMinutes, 10);
+        this.settings.longBreakMinutes = parseInt(newSettings.longBreakMinutes, 10);
+
+        this.storage.saveSettings(this.settings);
+
+        // FR-07: Idle 상태인 경우 즉시 화면과 타이머 길이에 반영
+        if (this.sessionStatus === 'idle') {
+          this.allocatedTotalSeconds = this.getSessionDurationSeconds(this.sessionType);
+          this.remainingSeconds = this.allocatedTotalSeconds;
+        }
+        // Running / Paused인 경우 현재 세션은 그대로 유지되고 다음 세션부터 새 값이 반영됨
+
+        this.saveState();
+        this.notifyUpdate();
+        return true;
+      }
+
+      saveState() {
+        const stateToSave = {
+          sessionType: this.sessionType,
+          sessionStatus: this.sessionStatus,
+          slotsUsed: this.slotsUsed,
+          remainingSeconds: this.remainingSeconds,
+          allocatedTotalSeconds: this.allocatedTotalSeconds,
+          endTimestamp: this.endTimestamp,
+          pendingMemoData: this.pendingMemoData
+        };
+        this.storage.saveTimerState(stateToSave);
+      }
+
+      notifyUpdate() {
+        if (this.onUIUpdate) {
+          this.onUIUpdate({
+            sessionType: this.sessionType,
+            sessionStatus: this.sessionStatus,
+            slotsUsed: this.slotsUsed,
+            remainingSeconds: this.remainingSeconds,
+            allocatedTotalSeconds: this.allocatedTotalSeconds
+          });
+        }
+      }
+    }
+
+    // --- UI Controller ---
+    class AppUI {
+      constructor() {
+        // DOM Elements
+        this.storageBanner = document.getElementById('storageBanner');
+        this.tabTimer = document.getElementById('tabTimer');
+        this.tabLogs = document.getElementById('tabLogs');
+        this.tabSettings = document.getElementById('tabSettings');
+        this.viewTimer = document.getElementById('viewTimer');
+        this.viewLogs = document.getElementById('viewLogs');
+        this.viewSettings = document.getElementById('viewSettings');
+
+        // Timer Elements
+        this.sessionBadge = document.getElementById('sessionBadge');
+        this.timeDisplay = document.getElementById('timeDisplay');
+        this.progressBar = document.getElementById('progressBar');
+        this.timerControls = document.getElementById('timerControls');
+        this.btnStartPause = document.getElementById('btnStartPause');
+        this.iconPlay = document.getElementById('iconPlay');
+        this.iconPause = document.getElementById('iconPause');
+        this.labelStartPause = document.getElementById('labelStartPause');
+        this.btnReset = document.getElementById('btnReset');
+        this.btnSkip = document.getElementById('btnSkip');
+        this.slotDots = [
+          document.getElementById('slot1'),
+          document.getElementById('slot2'),
+          document.getElementById('slot3'),
+          document.getElementById('slot4')
+        ];
+
+        // Modals
+        this.memoModal = document.getElementById('memoModal');
+        this.memoInput = document.getElementById('memoInput');
+        this.btnSubmitMemo = document.getElementById('btnSubmitMemo');
+        this.btnSkipMemo = document.getElementById('btnSkipMemo');
+        this.clockAlertModal = document.getElementById('clockAlertModal');
+        this.btnResumeFromClockAlert = document.getElementById('btnResumeFromClockAlert');
+
+        // Logs Elements
+        this.logDatePicker = document.getElementById('logDatePicker');
+        this.logCompletedCount = document.getElementById('logCompletedCount');
+        this.memoList = document.getElementById('memoList');
+
+        // Settings Elements
+        this.notifStatusTag = document.getElementById('notifStatusTag');
+        this.inputFocusTime = document.getElementById('inputFocusTime');
+        this.inputShortBreak = document.getElementById('inputShortBreak');
+        this.inputLongBreak = document.getElementById('inputLongBreak');
+        this.errFocusTime = document.getElementById('errFocusTime');
+        this.errShortBreak = document.getElementById('errShortBreak');
+        this.errLongBreak = document.getElementById('errLongBreak');
+        this.btnSaveSettings = document.getElementById('btnSaveSettings');
+        this.saveToast = document.getElementById('saveToast');
+
+        // Circular progress constants
+        this.TOTAL_CIRCUMFERENCE = 2 * Math.PI * 115; // ~722.56
+        if (this.progressBar) {
+          this.progressBar.style.strokeDasharray = `${this.TOTAL_CIRCUMFERENCE}`;
+        }
+
+        // Initialize Services
+        this.audio = new AudioService();
+        this.notifier = new NotificationService(this.audio);
+        this.storage = new StorageService((isFailed) => this.handleStorageStateChange(isFailed));
+        
+        this.engine = new PomodoroEngine(
+          this.storage,
+          this.notifier,
+          this.audio,
+          (state) => this.renderTimer(state),
+          () => this.showMemoModal(),
+          () => this.showClockAlertModal()
+        );
+      }
+
+      init() {
+        this.bindEvents();
+        this.initSettingsValues();
+        this.initLogsDatePicker();
+        this.updateNotificationStatus();
+        this.engine.init();
+      }
+
+      bindEvents() {
+        // Tab Navigation
+        const tabs = [
+          { btn: this.tabTimer, view: this.viewTimer },
+          { btn: this.tabLogs, view: this.viewLogs, onShow: () => this.renderLogs() },
+          { btn: this.tabSettings, view: this.viewSettings, onShow: () => this.updateNotificationStatus() }
+        ];
+
+        tabs.forEach(({ btn, view, onShow }) => {
+          if (!btn) return;
+          btn.addEventListener('click', () => {
+            tabs.forEach(t => {
+              if (t.btn && t.view) {
+                t.btn.classList.remove('active');
+                t.view.classList.remove('active');
+              }
+            });
+            btn.classList.add('active');
+            if (view) view.classList.add('active');
+            if (onShow) onShow();
+          });
+        });
+
+        // Timer Buttons
+        if (this.btnStartPause) {
+          this.btnStartPause.addEventListener('click', () => {
+            if (this.engine.sessionStatus === 'running') {
+              this.engine.pause();
+            } else {
+              this.engine.start();
+            }
+          });
+        }
+
+        if (this.btnReset) {
+          this.btnReset.addEventListener('click', () => {
+            this.engine.reset();
+          });
+        }
+
+        if (this.btnSkip) {
+          this.btnSkip.addEventListener('click', () => {
+            this.engine.skip();
+          });
+        }
+
+        // Memo Modal Buttons
+        if (this.btnSubmitMemo) {
+          this.btnSubmitMemo.addEventListener('click', () => {
+            const text = this.memoInput.value;
+            this.hideMemoModal();
+            this.engine.submitMemoAndProceed(text);
+          });
+        }
+
+        if (this.btnSkipMemo) {
+          this.btnSkipMemo.addEventListener('click', () => {
+            this.hideMemoModal();
+            this.engine.skipMemoAndProceed();
+          });
+        }
+
+        if (this.memoInput) {
+          this.memoInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              this.btnSubmitMemo.click();
+            }
+          });
+        }
+
+        // Clock Alert Modal Button
+        if (this.btnResumeFromClockAlert) {
+          this.btnResumeFromClockAlert.addEventListener('click', () => {
+            this.hideClockAlertModal();
+            this.engine.resumeFromClockAlert();
+          });
+        }
+
+        // Logs Date Picker
+        if (this.logDatePicker) {
+          this.logDatePicker.addEventListener('change', () => {
+            this.renderLogs();
+          });
+        }
+
+        // Settings Save
+        if (this.btnSaveSettings) {
+          this.btnSaveSettings.addEventListener('click', () => {
+            this.saveSettings();
+          });
+        }
+
+        // Notification permission request on click
+        if (this.notifStatusTag) {
+          this.notifStatusTag.addEventListener('click', async () => {
+            await this.notifier.requestPermission();
+            this.updateNotificationStatus();
+          });
+        }
+      }
+
+      handleStorageStateChange(isFailed) {
+        if (!this.storageBanner) return;
+        if (isFailed) {
+          this.storageBanner.classList.add('visible');
+        } else {
+          this.storageBanner.classList.remove('visible');
+        }
+      }
+
+      updateNotificationStatus() {
+        if (!this.notifStatusTag) return;
+        const perm = this.notifier.permission;
+        this.notifStatusTag.className = 'status-tag';
+        if (perm === 'granted') {
+          this.notifStatusTag.textContent = '허용됨';
+          this.notifStatusTag.classList.add('status-granted');
+        } else if (perm === 'denied') {
+          this.notifStatusTag.textContent = '차단됨';
+          this.notifStatusTag.classList.add('status-denied');
+        } else {
+          this.notifStatusTag.textContent = '권한 요청 (클릭)';
+          this.notifStatusTag.classList.add('status-default');
+          this.notifStatusTag.style.cursor = 'pointer';
+        }
+      }
+
+      renderTimer(state) {
+        if (!this.sessionBadge || !this.timeDisplay) return;
+        const { sessionType, sessionStatus, slotsUsed, remainingSeconds, allocatedTotalSeconds } = state;
+
+        // 1. Session Badge & Styling
+        this.sessionBadge.className = `session-badge badge-${sessionType}`;
+        let label = '집중 세션';
+        let themeColor = 'var(--focus-color)';
+        if (sessionType === 'shortBreak') {
+          label = '짧은 휴식';
+          themeColor = 'var(--short-break-color)';
+        } else if (sessionType === 'longBreak') {
+          label = '긴 휴식';
+          themeColor = 'var(--long-break-color)';
+        }
+        this.sessionBadge.textContent = label;
+        if (typeof document !== 'undefined' && document.documentElement) {
+          document.documentElement.style.setProperty('--accent-color', themeColor);
+          document.documentElement.style.setProperty('--btn-primary-bg', themeColor);
+        }
+
+        // 2. Time Display (MM:SS)
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        this.timeDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        // 3. Circular Progress
+        if (this.progressBar) {
+          const total = allocatedTotalSeconds > 0 ? allocatedTotalSeconds : 1;
+          const progress = Math.max(0, Math.min(1, remainingSeconds / total));
+          const offset = this.TOTAL_CIRCUMFERENCE * (1 - progress);
+          this.progressBar.style.strokeDashoffset = offset;
+        }
+
+        // 4. Slots Indicator
+        this.slotDots.forEach((dot, idx) => {
+          if (!dot) return;
+          dot.className = 'slot-dot';
+          if (idx < slotsUsed) {
+            dot.classList.add('completed');
+          } else if (idx === slotsUsed && sessionType === 'focus') {
+            dot.classList.add('current');
+          }
+        });
+
+        // 5. Controls Visibility (BR-04: Memo-Input-Pending 상태에서 숨김)
+        if (this.timerControls) {
+          if (sessionStatus === 'memoPending') {
+            this.timerControls.style.display = 'none';
+          } else {
+            this.timerControls.style.display = 'flex';
+          }
+        }
+
+        // 6. Start/Pause Button State
+        if (this.iconPlay && this.iconPause && this.labelStartPause) {
+          if (sessionStatus === 'running') {
+            this.iconPlay.style.display = 'none';
+            this.iconPause.style.display = 'block';
+            this.labelStartPause.textContent = '일시정지';
+          } else {
+            this.iconPlay.style.display = 'block';
+            this.iconPause.style.display = 'none';
+            this.labelStartPause.textContent = '시작';
+          }
+        }
+      }
+
+      showMemoModal() {
+        if (!this.memoModal) return;
+        this.memoInput.value = '';
+        this.memoModal.classList.add('active');
+        setTimeout(() => {
+          if (this.memoInput) this.memoInput.focus();
+        }, 100);
+      }
+
+      hideMemoModal() {
+        if (!this.memoModal) return;
+        this.memoModal.classList.remove('active');
+      }
+
+      showClockAlertModal() {
+        if (!this.clockAlertModal) return;
+        this.clockAlertModal.classList.add('active');
+      }
+
+      hideClockAlertModal() {
+        if (!this.clockAlertModal) return;
+        this.clockAlertModal.classList.remove('active');
+      }
+
+      // --- Logs View ---
+      initLogsDatePicker() {
+        if (!this.logDatePicker) return;
+        const todayStr = this.engine.getLocalDateString(Date.now());
+        this.logDatePicker.value = todayStr;
+      }
+
+      renderLogs() {
+        if (!this.logDatePicker || !this.logCompletedCount || !this.memoList) return;
+        const selectedDate = this.logDatePicker.value || this.engine.getLocalDateString(Date.now());
+        const allLogs = this.storage.getLogs();
+        const dayData = allLogs[selectedDate] || { completedCount: 0, memos: [] };
+
+        this.logCompletedCount.textContent = dayData.completedCount;
+        this.memoList.innerHTML = '';
+
+        if (!dayData.memos || dayData.memos.length === 0) {
+          const emptyDiv = document.createElement('div');
+          emptyDiv.className = 'no-data-msg';
+          emptyDiv.textContent = '이 날짜에 기록된 완료 내역이 없습니다.';
+          this.memoList.appendChild(emptyDiv);
+          return;
+        }
+
+        dayData.memos.forEach(item => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'memo-item';
+
+          const timeSpan = document.createElement('div');
+          timeSpan.className = 'memo-time';
+          const timeObj = new Date(item.timestamp);
+          const timeFormatted = timeObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          timeSpan.textContent = `완료 시각: ${timeFormatted}`;
+
+          const textSpan = document.createElement('div');
+          textSpan.className = 'memo-text';
+          if (item.text && item.text.trim().length > 0) {
+            textSpan.textContent = item.text;
+          } else {
+            textSpan.innerHTML = '<span class="memo-empty">(메모 없음)</span>';
+          }
+
+          itemDiv.appendChild(timeSpan);
+          itemDiv.appendChild(textSpan);
+          this.memoList.appendChild(itemDiv);
+        });
+      }
+
+      // --- Settings View ---
+      initSettingsValues() {
+        if (!this.inputFocusTime) return;
+        this.inputFocusTime.value = this.engine.settings.focusMinutes;
+        this.inputShortBreak.value = this.engine.settings.shortBreakMinutes;
+        this.inputLongBreak.value = this.engine.settings.longBreakMinutes;
+      }
+
+      saveSettings() {
+        if (!this.inputFocusTime) return;
+        let valid = true;
+
+        const fVal = String(this.inputFocusTime.value || '').trim();
+        const sVal = String(this.inputShortBreak.value || '').trim();
+        const lVal = String(this.inputLongBreak.value || '').trim();
+
+        if (!this.engine.validateDuration(fVal)) {
+          this.inputFocusTime.classList.add('error');
+          this.errFocusTime.classList.add('visible');
+          valid = false;
+        } else {
+          this.inputFocusTime.classList.remove('error');
+          this.errFocusTime.classList.remove('visible');
+        }
+
+        if (!this.engine.validateDuration(sVal)) {
+          this.inputShortBreak.classList.add('error');
+          this.errShortBreak.classList.add('visible');
+          valid = false;
+        } else {
+          this.inputShortBreak.classList.remove('error');
+          this.errShortBreak.classList.remove('visible');
+        }
+
+        if (!this.engine.validateDuration(lVal)) {
+          this.inputLongBreak.classList.add('error');
+          this.errLongBreak.classList.add('visible');
+          valid = false;
+        } else {
+          this.inputLongBreak.classList.remove('error');
+          this.errLongBreak.classList.remove('visible');
+        }
+
+        if (!valid) return;
+
+        const updated = this.engine.updateSettings({
+          focusMinutes: fVal,
+          shortBreakMinutes: sVal,
+          longBreakMinutes: lVal
+        });
+
+        if (updated && this.saveToast) {
+          this.saveToast.classList.add('visible');
+          setTimeout(() => {
+            this.saveToast.classList.remove('visible');
+          }, 2000);
+        }
+      }
+    }
+
+    // Export classes for testing in Node.js environment
+    if (typeof module !== 'undefined' && module.exports) {
+      module.exports = {
+        AudioService,
+        NotificationService,
+        StorageService,
+        PomodoroEngine,
+        AppUI
+      };
+    }
+
+    // Launch app on DOMContentLoaded in browser
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      document.addEventListener('DOMContentLoaded', () => {
+        window.pomodoroApp = new AppUI();
+        window.pomodoroApp.init();
+      });
+    }
+  </script>
+</body>
+</html>

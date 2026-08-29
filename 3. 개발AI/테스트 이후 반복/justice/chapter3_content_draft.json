@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "sourceVersion": "justice_law.v1",
+  "sourceHash": "47073df19edf4a76ac4cba0f08cf39d52a794522997e86a7525b070b658840b1",
+  "chapterId": "ch3",
+  "title": "규범 논리학 — 대당 사각형",
+  "openingQuestion": "좋은 사람(Vir Bonus)에게 가능한 것과 해야만 하는 것은 같은가?",
+
+  "readingCards": [
+    {
+      "id": "rc1",
+      "body": "라이프니츠에 따르면 자연법 이론은 경험이 아니라 정의(定義)에 의존하며, 감각적 증명이 아닌 이성적 증명에 의존하는 학문이다. 정의 개념은 신조차 바꿀 수 없는 필연적 진리며, 정의(正義)에 대한 정의(定義)와 논리학 규칙으로 증명 가능하다.",
+      "claimType": "source",
+      "src": { "from": 103, "to": 103 }
+    },
+    {
+      "id": "rc2",
+      "body": "라이프니츠는 정의와 자연법에 관련된 주요 개념들을 정의하고 그 정의로부터 연역적으로 도출될 수 있는 정리들을 기술했다. 이 작업으로 인해 라이프니츠는 규범 논리학이라는 새로운 분야를 발견한 것으로 알려지게 된다.",
+      "claimType": "source",
+      "src": { "from": 105, "to": 107 }
+    },
+    {
+      "id": "rc3",
+      "body": "[자연적] 권리 및 의무는 좋은 사람의 자질 같은 것임. 정의 = 모든 사람을 사랑하는 태도. 좋은 사람 = 모든 사람을 사랑하는 사람. (자연적)권리 = 좋은 사람에게 잠재력(적)인 것(허용된 것). (자연적)의무 = 좋은 사람에게 필연적인 것.",
+      "claimType": "source",
+      "src": { "from": 109, "to": 119 }
+    },
+    {
+      "id": "rc4",
+      "body": "vir Bonus(좋은 사람)이라는 가상의 주체를 설정하여, 좋은 사람에게 일어날 수 있는 것(존재론적 사실)과 해야만 하는 것(규범적 당위)이 동일하거나 함축관계로 연결될 수 있다는 것을 양상 논리를 통해 보여주고자 함. 라이프니츠는 법적/도덕적 개념들을 양상 논리 위에 재정의함.",
+      "claimType": "source",
+      "src": { "from": 121, "to": 125 }
+    },
+    {
+      "id": "rc5",
+      "body": "(논리학에서)가능한 것 = (법학에서)정의로운 것. (논리학에서)불가능한 것 = (법학에서)부정의한 것. (논리학에서)필연적인 것 = (법학에서)의무. (논리학에서)우연적인 것 = (법학에서)의무가 아닌 것. 정의롭고 의무인 것의 기준은 '좋은 사람'에게 적용되는 기준이다.",
+      "tokens": [
+        { "text": "가능한 것", "conceptId": "concept_I" },
+        { "text": "불가능한 것", "conceptId": "concept_E" },
+        { "text": "필연적인 것", "conceptId": "concept_A" },
+        { "text": "우연적인 것", "conceptId": "concept_O" }
+      ],
+      "claimType": "source",
+      "src": { "from": 127, "to": 135 }
+    },
+    {
+      "id": "rc6",
+      "body": "라이프니츠는 양상논리로 번역한 정의 개념들을 대당 사각형이라는 도식으로 그 관계를 보여준다. 정의로운 것이 가능성에 있다는 것은 정의로운 것이 가변적이라는 뜻이 아니라, 좋은 사람의 이성의 범위(가능한 행위 집합 or 도덕적 자유)를 의미하는 것이며, 그 중에서도 필연적인 의무는 그 집합 중 하나를 해야만 하는 상태를 가리킴.",
+      "tokens": [
+        { "text": "도덕적 자유", "conceptId": "concept_liberty" }
+      ],
+      "claimType": "source",
+      "src": { "from": 137, "to": 143 }
+    },
+    {
+      "id": "rc7",
+      "body": "의무(A: 필연성)는 '모순율'에 근거한다 — 좋은 사람이 그 행위를 하지 않는다고 가정했을 때 우주의 조화와 이성에 모순이 발생한다면, 그 행위는 의무가 된다. 정의로운 것/허용(I: 가능성)은 '충족이유율'에 근거한다 — 그 행위를 하는 것이 이성적으로 가능하고 조화롭지만 하지 않는다고 곧바로 모순에 빠지지 않는다면 그것은 허용의 영역이다. 체스 게임의 규칙과 같다: '퀸은 대각선으로 갈 수 있다'는 허용(가능성)이고, '왕이 체크메이트를 당하면 게임이 끝난다'는 필연(의무)이다. 이 두 규칙은 체스가 성립하기 위해 둘 다 똑같이 필연적인 규칙이지만, 게이머에게 퀸을 대각선으로 옮기는 것은 선택 사항인 반면 체크메이트를 피하는 것은 반드시 해야만 하는 일(당위)이다. 당위성의 원천은 '최선(Optimum)'이다 — 그 행위가 최선의 질서를 위해 필수불가결하기 때문에 당위성을 갖는다.",
+      "claimType": "source",
+      "src": { "from": 145, "to": 149 }
+    },
+    {
+      "id": "rc8",
+      "body": "내 의문점: 그런데 가능성과 우연성은 사실상 논리적 동치 아닌가? 일어날 수 있는 것이란 말은 일어나지 않을 수 있는 것이란 의미를 함축하며, 일어나지 않을 수 있는 것은 일어날 수 있는 것이란 의미 또한 함축하니까. 물론 필연성, 가능성, 우연성 그 단어명만 놓고 봤을 땐 직관적으로 필연적이라는건 가능하다는거고, 필연적인데 우연적인건 불가능하다고 생각되지만, 일어나지 않을 수 없는 것, 일어날 수 있는 것, 일어나지 않을 수 있는 것이란 해석으로 치환해서 생각해보면 오류가 생기는 것 같다. 따라서 나는 필연성, 가능성, 우연성에 대한 도식의 해석이 틀린 것 같다.",
+      "claimType": "source",
+      "src": { "from": 151, "to": 151 }
+    },
+    {
+      "id": "rc9",
+      "body": "라이프니츠에겐 모든 진리가 동일한 '이유'에서 근거하는가? 아니다. 모순율은 그 반대가 논리적으로 불가능한 필연적 진리를 지배한다. 충족이유율은 반대가 논리적으로 가능하지만(모순은 아니지만) '왜 하필 다른 것이 아니고 이것인가'에 대한 충분한 근거가 필요한 우연적/사실적 진리를 지배한다. 허용된 행위(가능성)는 그것을 하지 않아도 우주에 논리적 모순이 생기지는 않지만, 하는 것이 하지 않는 것보다 더 적합하거나 조화로운 이유가 있기 때문에 존재하게 된다.",
+      "claimType": "source",
+      "src": { "from": 153, "to": 161 }
+    },
+    {
+      "id": "rc10",
+      "body": "자연법의 규범 논리학적인 구조 증명이 개인의 도덕적 자질 증진에 기여하는가? 그런 것은 아니다. '타인에 피해를 주지 말라'는 규범 명제가 의무라 해서, 어떤 사람이 그 의무를 인정하지만 타인에게 피해를 줄 수도 있다. 왜냐하면 개인의 행동은 개인의 자유에 달려있기 때문이다.",
+      "claimType": "source",
+      "src": { "from": 162, "to": 164 }
+    },
+    {
+      "id": "rc11",
+      "body": "결론: '모든 사람을 사랑하는 사람'이 자연법 명제를 의무로 여기고, 그 명제대로 행하는 것은 도덕적으로 필연적이다. 또한 그런 행위를 의무로 그가 여기는 이유는 '모든 사람을 사랑하는 사람이' 그렇게 행동하는 것이 가능하기 때문이다. 내 의문점: 논리적 문제와 도덕적 문제 총 세 가지가 있다. 첫째, 가능성은 의무의 필요조건 중 하나일 뿐인데 어떻게 가능성 때문에 의무가 발생한다고 하는 것인가? 둘째, 트롤리 딜레마처럼 모두를 살릴 가능성이 없다고 여겨지는 상황에서 내가 이들의 목숨을 선택할 사람이라면 모두를 살리는게 의무가 아닌가? 불가능하다 해서 의무가 아니게 되는가? 셋째, '좋은 사람'은 단지 모든 사람을 사랑하는 사람일 뿐인데, 어떤 두 사람이 둘 다 '좋은 사람'이라 할 때, 이 둘의 가능성의 영역은 동일한가?",
+      "claimType": "source",
+      "src": { "from": 166, "to": 170 }
+    }
+  ],
+
+  "concepts": [
+    {
+      "id": "concept_A",
+      "termKo": "필연 · 의무",
+      "termLa": "Necessarium / Debitum",
+      "definition": "논리학에서 필연적인 것은 법학에서 의무에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 120, "y": 80 },
+      "claimType": "source",
+      "src": { "from": 131, "to": 131 }
+    },
+    {
+      "id": "concept_E",
+      "termKo": "불가능 · 부정의한 것",
+      "termLa": "Impossibile / Iniustum",
+      "definition": "논리학에서 불가능한 것은 법학에서 부정의한 것에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 360, "y": 80 },
+      "claimType": "source",
+      "src": { "from": 129, "to": 129 }
+    },
+    {
+      "id": "concept_I",
+      "termKo": "가능 · 정의로운 것(허용)",
+      "termLa": "Possibile / Iustum",
+      "definition": "논리학에서 가능한 것은 법학에서 정의로운 것(허용)에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 120, "y": 280 },
+      "claimType": "source",
+      "src": { "from": 127, "to": 127 }
+    },
+    {
+      "id": "concept_O",
+      "termKo": "우연 · 의무 아닌 것",
+      "termLa": "Contingens",
+      "definition": "논리학에서 우연적인 것은 법학에서 의무가 아닌 것에 대응한다.",
+      "derivedFrom": [],
+      "pos": { "x": 360, "y": 280 },
+      "claimType": "source",
+      "src": { "from": 133, "to": 133 }
+    },
+    {
+      "id": "concept_liberty",
+      "termKo": "자유(허용이면서 의무 아님)",
+      "termLa": "Libertas",
+      "definition": "허용되면서 동시에 의무는 아닌 상태. 가능(I)과 우연(O)이 함께 성립하는 행위 영역을 가리킨다.",
+      "derivedFrom": ["concept_I", "concept_O"],
+      "pos": { "x": 240, "y": 400 },
+      "claimType": "model",
+      "src": { "from": 127, "to": 143 }
+    }
+  ],
+
+  "stages": [
+    {
+      "stage": 1,
+      "activeRelations": ["contradictory_AO", "contradictory_EI"],
+      "itemIds": ["item_duty_love", "item_forbidden_harm"],
+      "goal": "네 항의 대응 확인. 필연↔우연, 불가능↔가능이 서로를 배제한다는 관계 파악"
+    },
+    {
+      "stage": 2,
+      "activeRelations": ["contradictory_AO", "contradictory_EI", "contrary_AE", "subcontrary_IO"],
+      "itemIds": ["item_duty_love", "item_forbidden_harm"],
+      "goal": "상단 두 항은 함께 참일 수 없고 하단 두 항은 함께 거짓일 수 없다는 비대칭 파악"
+    },
+    {
+      "stage": 3,
+      "activeRelations": ["contradictory_AO", "contradictory_EI", "contrary_AE", "subcontrary_IO", "subalternation_AI", "subalternation_EO"],
+      "itemIds": ["item_duty_checkmate", "item_liberty_queen"],
+      "goal": "의무가 허용을 함축한다는 상하 관계 파악"
+    }
+  ],
+
+  "boardItems": [
+    {
+      "id": "item_duty_love",
+      "label": "모든 사람을 사랑하는 사람이 자연법 명제대로 행하는 것",
+      "truth": { "A": true, "E": false, "I": true, "O": false },
+      "rationale": "'모든 사람을 사랑하는 사람'이 자연법 명제를 의무로 여기고 그대로 행하는 것은 도덕적으로 필연적이라고 서술된다. 필연(A)이므로 불가능(E)일 수 없고, 가능(I)하며 우연(O)은 아니다.",
+      "claimType": "interpretation",
+      "src": { "from": 167, "to": 168 }
+    },
+    {
+      "id": "item_forbidden_harm",
+      "label": "타인에게 피해를 주는 것",
+      "truth": { "A": false, "E": true, "I": false, "O": true },
+      "rationale": "'타인에 피해를 주지 말라'는 명제가 의무라는 서술은, 그 반대 행위인 '타인에게 피해를 주는 것'이 불가능(부정의)의 영역에 있음을 함축한다.",
+      "claimType": "interpretation",
+      "src": { "from": 164, "to": 164 }
+    },
+    {
+      "id": "item_duty_checkmate",
+      "label": "체크메이트를 피하는 것",
+      "truth": { "A": true, "E": false, "I": true, "O": false },
+      "rationale": "'왕이 체크메이트를 당하면 게임이 끝난다'는 규칙은 체스가 성립하기 위해 반드시 지켜야 하는 필연적 규칙이며, 게이머에게 반드시 해야만 하는 일(당위)로 서술된다. 의무에 해당한다.",
+      "claimType": "interpretation",
+      "src": { "from": 147, "to": 148 }
+    },
+    {
+      "id": "item_liberty_queen",
+      "label": "퀸을 대각선으로 옮기는 것",
+      "truth": { "A": false, "E": false, "I": true, "O": true },
+      "rationale": "'퀸은 대각선으로 갈 수 있다'는 규칙은 허용(가능성)이며, 게이머에게 선택 사항이라고 서술된다. 허용되면서도 반드시 해야 하는 일은 아니므로 자유(I∧O)에 해당한다.",
+      "claimType": "interpretation",
+      "src": { "from": 147, "to": 148 }
+    }
+  ],
+
+  "propositions": [
+    {
+      "id": "prop_leibniz",
+      "claim": "모든 사람을 사랑하는 사람이 그 행위를 의무로 여기고 행하는 것은, 그 행위가 가능하기 때문이다.",
+      "premiseIds": ["premise_possibility_sufficient", "premise_impossibility_negates_duty"],
+      "claimType": "interpretation",
+      "src": { "from": 166, "to": 168 }
+    }
+  ],
+
+  "premises": [
+    {
+      "id": "premise_possibility_sufficient",
+      "text": "그 행위가 가능하다는 것만으로 그것은 의무가 된다.",
+      "claimType": "interpretation",
+      "src": { "from": 168, "to": 168 }
+    },
+    {
+      "id": "premise_impossibility_negates_duty",
+      "text": "그 행위가 불가능하다면 그것은 의무가 아니다.",
+      "claimType": "interpretation",
+      "src": { "from": 168, "to": 168 }
+    }
+  ],
+
+  "counterexamples": [
+    {
+      "id": "cx_necessity_sufficiency",
+      "label": "필요조건과 충분조건의 혼동",
+      "defeats": "premise_possibility_sufficient",
+      "explain": "가능성은 의무가 성립하기 위한 필요조건 중 하나일 뿐이다. 가능하다는 사실만으로 의무가 발생한다고 결론 내리는 것은 필요조건을 충분조건으로 오인한 것이다.",
+      "acquiredAt": "reading_complete",
+      "claimType": "interpretation",
+      "src": { "from": 170, "to": 170 }
+    },
+    {
+      "id": "cx_trolley",
+      "label": "트롤리 딜레마",
+      "defeats": "premise_impossibility_negates_duty",
+      "explain": "트롤리 딜레마처럼 모두를 살릴 가능성이 없다고 여겨지는 상황에서도, 모두를 살리는 것은 여전히 의무처럼 느껴진다. 불가능성이 곧바로 그 행위를 의무의 영역에서 제외하지 않는다면, '불가능하면 의무가 아니다'라는 전제는 성립하지 않는다.",
+      "acquiredAt": "board_stage_3",
+      "claimType": "interpretation",
+      "src": { "from": 170, "to": 170 }
+    }
+  ],
+
+  "arguments": [
+    {
+      "id": "arg_defense_equivalence",
+      "side": "defense",
+      "text": "'일어날 수 있음'은 '일어나지 않을 수 있음'을 함축하고 그 역도 성립한다. 따라서 가능성과 우연성은 논리적으로 동치다.",
+      "claimType": "interpretation",
+      "src": { "from": 151, "to": 151 }
+    },
+    {
+      "id": "arg_objection_duty_vector",
+      "side": "objection",
+      "text": "채택된 형식 모델에서 의무에 해당하는 행위는 가능(I)=참이면서 우연(O)=거짓이다. 가능성과 우연성이 항상 함께 참이거나 함께 거짓인 것은 아니므로, 둘은 동치가 아니다.",
+      "claimType": "model",
+      "src": { "from": 127, "to": 135 }
+    },
+    {
+      "id": "arg_objection_liberty_overlap",
+      "side": "objection",
+      "text": "다만 '자유'(허용이면서 의무 아님)에 해당하는 행위에서는 가능(I)과 우연(O)이 함께 참이다. 이 영역에 한정해서는 가능성과 우연성이 동치처럼 보이지만, 이는 전체 동치가 아니라 특정 영역에서의 일치일 뿐이다.",
+      "claimType": "model",
+      "src": { "from": 127, "to": 135 }
+    }
+  ],
+
+  "inquiries": [
+    {
+      "id": "inq_possibility_contingency",
+      "quote": "가능성과 우연성은 사실상 논리적 동치 아닌가? 일어날 수 있는 것이란 말은 일어나지 않을 수 있는 것이란 의미를 함축하며, 일어나지 않을 수 있는 것은 일어날 수 있는 것이란 의미 또한 함축하니까.",
+      "argumentIds": ["arg_defense_equivalence", "arg_objection_duty_vector", "arg_objection_liberty_overlap"],
+      "claimType": "source",
+      "src": { "from": 151, "to": 151 }
+    }
+  ]
+}
