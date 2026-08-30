@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="REV-STRUCT-01 [3.2, 12.1, NFR-02, NFR-03] single-file offline constraints are observable" time="0.003776" classname="test"/>
+	<testcase name="REV-STRUCT-02 [3.2, 7.5, 12.2] out of scope exclusions (no diary deletion, no title, no manual date edit) are respected" time="0.000341" classname="test"/>
+	<testcase name="REV-STRUCT-03 [BR-05, 12.2, 12.3] diary ID generator is deterministic without crypto.randomUUID" time="0.004176" classname="test"/>
+	<testcase name="REV-FR01-01 [FR-01, 13.1] user controls follow Idle → Running → Paused → Idle and absolute time advances" time="0.002181" classname="test"/>
+	<testcase name="REV-FR01-02 [FR-01, BR-03, 13.1] reset does not consume an already completed Focus slot" time="0.002754" classname="test"/>
+	<testcase name="REV-FR01-03 [FR-01, BR-04, 13.1] timer controls are hidden during Memo-Input-Pending" time="0.001570" classname="test"/>
+	<testcase name="REV-FR02-01 [FR-02, EC-01, 13.1] granted notification permission triggers sound and browser notification together" time="0.001456" classname="test"/>
+	<testcase name="REV-FR02-02 [FR-02, EC-01, 13.1] unsupported notification and failed audio use the title fallback" time="0.001471" classname="test"/>
+	<testcase name="REV-FR03-01 [FR-03, FR-05, BR-01, 13.1] Focus completion records before memo resolution and starts Short Break after submission" time="0.019787" classname="test"/>
+	<testcase name="REV-FR03-02 [FR-03, BR-01, 13.1] Break expiry starts Focus without showing memo UI" time="0.006757" classname="test"/>
+	<testcase name="REV-FR03-03 [FR-03, BR-01, 13.1] consuming the fourth Focus slot selects Long Break" time="0.004485" classname="test"/>
+	<testcase name="REV-FR04-01 [FR-04, BR-01, 13.1] skipping Focus advances the slot without changing completion count or requesting memo" time="0.003155" classname="test"/>
+	<testcase name="REV-FR04-02 [FR-04, BR-01, 13.1] two skipped Focus slots plus two timed completions reach Long Break with count two" time="0.004504" classname="test"/>
+	<testcase name="REV-FR05-01 [FR-05, 13.1] blank submission is accepted and displayed as no memo" time="0.002723" classname="test"/>
+	<testcase name="REV-FR06-01 [FR-06, 13.1] selected day shows the saved count and chronological memo order" time="0.004231" classname="test"/>
+	<testcase name="REV-FR07-01 [FR-07, 13.1] invalid duration inputs are rejected and Idle settings update immediately" time="0.002091" classname="test"/>
+	<testcase name="REV-FR07-02 [FR-07, 13.1] Running and Paused sessions retain their current timing while settings change" time="0.004598" classname="test"/>
+	<testcase name="REV-FR08-01 [FR-08, EC-03, 13.1] Running state restores with its absolute end time after reload" time="0.003432" classname="test"/>
+	<testcase name="REV-FR08-02 [FR-08, EC-03, 13.1] Paused state restores the same positive snapshot after offline time" time="0.003808" classname="test"/>
+	<testcase name="REV-FR09-01 [FR-09, BR-05, 13.1] diary view provides two-pane layout, new button, and empty state" time="0.001628" classname="test"/>
+	<testcase name="REV-FR09-02 [FR-09, BR-05, 13.1] diary list displays all entries sorted descending by date then creation time" time="0.002184" classname="test"/>
+	<testcase name="REV-FR09-03 [FR-09, 13.1] selecting an entry opens its body in the editor" time="0.002077" classname="test"/>
+	<testcase name="REV-FR09-04 [FR-09, BR-05, 13.1] invalid or corrupted diary records in localStorage are excluded without crashing" time="0.001860" classname="test"/>
+	<testcase name="REV-FR10-01 [FR-10, 13.1] '새 일기' clears editor and enters empty new draft state" time="0.001930" classname="test"/>
+	<testcase name="REV-FR10-02 [FR-10, BR-05, 13.1] saving new diary entry assigns local date, unique ID, prepends to list, and transitions to editing" time="0.002369" classname="test"/>
+	<testcase name="REV-FR10-03 [FR-10, BR-05, 13.1] multiple diary entries on the same date are kept as distinct items" time="0.002158" classname="test"/>
+	<testcase name="REV-FR10-04 [FR-10, 13.1] empty or whitespace-only diary submission is rejected with error" time="0.001768" classname="test"/>
+	<testcase name="REV-FR10-05 [FR-10, 13.1] unsaved diary input does not appear in list before explicit save" time="0.002429" classname="test"/>
+	<testcase name="REV-FR11-01 [FR-11, 13.1] modifying existing diary updates body and updatedAt while keeping id, date, createdAt intact" time="0.002097" classname="test"/>
+	<testcase name="REV-FR11-02 [FR-11, 13.1] editing diary updates list preview without increasing entry count" time="0.002246" classname="test"/>
+	<testcase name="REV-FR12-01 [FR-12, NFR-04, 13.1] typing debounces draft to storage and reload restores draft with unsaved badge" time="0.004028" classname="test"/>
+	<testcase name="REV-FR12-02 [FR-12, 13.1] editing existing diary saves draft and reload restores edit target and body" time="0.003898" classname="test"/>
+	<testcase name="REV-FR12-03 [FR-12, 13.1] successful save clears draft so subsequent reload shows saved state" time="0.003493" classname="test"/>
+	<testcase name="REV-FR12-04 [FR-12, 13.1] switching editor target clears the previous draft" time="0.002097" classname="test"/>
+	<testcase name="REV-FR12-05 [FR-12, 13.1] missing target entry for draft on reload falls back to new diary mode preserving body" time="0.001848" classname="test"/>
+	<testcase name="REV-FR13-01 [FR-13, 13.1] Memo-Input-Pending state displays visual badge on Timer nav across all views" time="0.001828" classname="test"/>
+	<testcase name="REV-FR13-02 [FR-13, 13.1] resolving memo clears the timer nav badge" time="0.007081" classname="test"/>
+	<testcase name="REV-FR13-03 [FR-13, 13.1] break session expiry does not show timer nav badge" time="0.002624" classname="test"/>
+	<testcase name="REV-EC01-01 [EC-01, FR-02] Notification denied or missing AudioContext uses document title fallback" time="0.002264" classname="test"/>
+	<testcase name="REV-EC02-01 [EC-02, BR-06] hidden tab defers expiry until visibilitychange and reconciles target time without corrupting diary editor" time="0.002360" classname="test"/>
+	<testcase name="REV-EC03-01 [EC-03, BR-02] multi-session offline expiry completes only once and leaves next session Idle" time="0.004019" classname="test"/>
+	<testcase name="REV-EC03-02 [EC-03, FR-08] offline expired session log is attributed to original endTimestamp date" time="0.003964" classname="test"/>
+	<testcase name="REV-EC04-01 [EC-04, NFR-01, 12.2] wall/performance delta of 5s or more pauses timer at last valid state with resume dialog" time="0.002425" classname="test"/>
+	<testcase name="REV-EC04-02 [EC-04, BR-06] clock drift pause does not overwrite in-progress diary editor text" time="0.001983" classname="test"/>
+	<testcase name="REV-EC05-01 [EC-05, 6.2] storage write failure keeps timer and diary usable in memory with warning banner" time="0.002134" classname="test"/>
+	<testcase name="REV-EC05-02 [EC-05] subsequent successful write clears warning banner and syncs data" time="0.002453" classname="test"/>
+	<testcase name="REV-EC06-01 [EC-06, 12.2] diary body input enforces 5000 character upper bound without data loss" time="0.003656" classname="test"/>
+	<testcase name="REV-NFR01-01 [NFR-01, 13.3-U3] elapsed interval is computed from wall time without cumulative drift" time="0.005086" classname="test"/>
+	<testcase name="REV-NFR02-01 [NFR-02, 12.1] zero external HTTP/HTTPS requests and completely self-contained" time="0.000214" classname="test"/>
+	<testcase name="REV-NFR03-01 [NFR-03, 12.1] standalone single HTML file runs cleanly" time="0.000157" classname="test"/>
+	<testcase name="REV-NFR04-01 [NFR-04, BR-06] diary input is never overwritten by background timer ticks, session end, or settings updates" time="0.001227" classname="test"/>
+	<testcase name="REV-13.2-01 [13.2 System Acceptance Scenario 1] foreground flow connects start, expiry, memo, break, next Focus, and daily log" time="0.001817" classname="test"/>
+	<testcase name="REV-13.2-02 [13.2 System Acceptance Scenario 2] reconnection recovery processes single expired session and waits for user" time="0.002338" classname="test"/>
+	<testcase name="REV-13.2-03 [13.2 System Acceptance Scenario 3] full diary workflow from creation, save, list lookup, select, edit, to re-save" time="0.001291" classname="test"/>
+	<testcase name="REV-13.2-04 [13.2 System Acceptance Scenario 4] timer running and Focus completion do not interfere with diary typing and badge alerts user" time="0.001561" classname="test"/>
+	<testcase name="REV-13.3-U1 [13.3 User Acceptance 1] timed daily usage with elapsed times matches log counts and empty memos" time="0.002548" classname="test"/>
+	<testcase name="REV-13.3-U2 [13.3 User Acceptance 2] reload boundary preserves active timer, custom settings, daily logs, and diary entries" time="0.002488" classname="test"/>
+	<testcase name="REV-13.3-U3 [13.3 User Acceptance 3] long timer execution over hours retains exact remaining time matching elapsed wall time" time="0.001487" classname="test"/>
+	<testcase name="REV-13.3-U4 [13.3 User Acceptance 4] arbitrary system clock shift pauses timer and requests user confirmation without time jump" time="0.001197" classname="test"/>
+	<testcase name="REV-13.3-U5 [13.3 User Acceptance 5] storage quota error notifies user via banner while app remains fully operational" time="0.001301" classname="test"/>
+	<testcase name="REV-13.3-U6 [13.3 User Acceptance 6] multi-day multi-entry diary workflow allows browsing and viewing in descending order" time="0.001273" classname="test"/>
+	<testcase name="REV-13.3-U7 [13.3 User Acceptance 7] closing/reloading app while writing diary recovers draft and indicates unsaved state" time="0.002081" classname="test"/>
+	<testcase name="REV-13.3-U8 [13.3 User Acceptance 8] running timer alongside diary writing preserves text and alerts session completion" time="0.001510" classname="test"/>
+	<!-- tests 63 -->
+	<!-- suites 0 -->
+	<!-- pass 63 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 289.290955 -->
+</testsuites>

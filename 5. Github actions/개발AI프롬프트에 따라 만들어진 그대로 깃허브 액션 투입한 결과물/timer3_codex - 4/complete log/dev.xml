@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="core validates durations, formats time, and computes the approved clock-shift algorithm" time="0.004478" classname="test"/>
+	<testcase name="start, pause, and reset preserve accurate state and cycle slots" time="0.001266" classname="test"/>
+	<testcase name="a completed Focus increments the count, enters memo pending, then auto-starts Short Break" time="0.013713" classname="test"/>
+	<testcase name="memo skip stores an empty memo and the fourth Focus slot selects Long Break" time="0.001548" classname="test"/>
+	<testcase name="skipping Long Break resets the cycle and starts Focus" time="0.000972" classname="test"/>
+	<testcase name="settings apply immediately to Idle sessions but preserve active-session timing" time="0.001128" classname="test"/>
+	<testcase name="restoring an expired Running session processes exactly one session and waits Idle" time="0.000970" classname="test"/>
+	<testcase name="restoring a Paused session preserves its snapshot regardless of elapsed wall time" time="0.001274" classname="test"/>
+	<testcase name="clock-shift detection pauses without changing the last valid remaining snapshot" time="0.001658" classname="test"/>
+	<testcase name="storage write failures show a warning while timer actions continue" time="0.001623" classname="test"/>
+	<testcase name="allowed browser notification and synthesized sound are attempted together" time="0.001598" classname="test"/>
+	<testcase name="failed audio falls back to a changed tab title" time="0.001411" classname="test"/>
+	<testcase name="test doubles use the standard Node mock facility and leave no pending timer handles" time="0.000410" classname="test"/>
+	<testcase name="diary list shows an empty state and a new entry requires non-empty trimmed body (FR-09, FR-10)" time="0.001827" classname="test"/>
+	<testcase name="editing an existing diary entry updates only body/updatedAt and keeps id/date/createdAt (FR-11, BR-05)" time="0.002149" classname="test"/>
+	<testcase name="diary entries sort by date desc, then createdAt desc within the same date (BR-05)" time="0.002451" classname="test"/>
+	<testcase name="unsaved diary drafts autosave after input settles and restore on reload (FR-12)" time="0.002620" classname="test"/>
+	<testcase name="a draft targeting a deleted entry falls back to new-entry mode without losing its body (FR-12)" time="0.001381" classname="test"/>
+	<testcase name="invalid stored diary entries are skipped on restore without breaking the app (FR-09)" time="0.001523" classname="test"/>
+	<testcase name="diary body input is capped at 5000 characters without dropping earlier content (EC-06)" time="0.001373" classname="test"/>
+	<testcase name="generated diary identifiers stay unique even within the same millisecond (BR-05, 12.3 exclusion)" time="0.001241" classname="test"/>
+	<testcase name="diary text survives Focus completion processing and the timer nav badge appears (BR-06, FR-13, 13.2)" time="0.003583" classname="test"/>
+	<!-- tests 22 -->
+	<!-- suites 0 -->
+	<!-- pass 22 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 883.804822 -->
+</testsuites>
